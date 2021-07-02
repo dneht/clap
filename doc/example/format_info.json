@@ -1,0 +1,107 @@
+{
+  "from": {
+    "java": "registry.cn-hangzhou.aliyuncs.com/dneht/debian-openj9:8-customise",
+    "nginx": "registry.cn-hangzhou.aliyuncs.com/dneht/debian-nginx:1.18.0"
+  },
+  "spec": {
+    "chuge": {
+      "jvmFlags": "-server,-Xms8g,-Xmx24g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "16000m",
+      "requestCpu": "4000m",
+      "limitMemory": "32Gi",
+      "requestMemory": "12Gi"
+    },
+    "ehuge": {
+      "jvmFlags": "-server,-Xms8g,-Xmx24g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "8000m",
+      "requestCpu": "2000m",
+      "limitMemory": "32Gi",
+      "requestMemory": "12Gi"
+    },
+    "cgreat": {
+      "jvmFlags": "-server,-Xms12g,-Xmx48g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "32000m",
+      "requestCpu": "8000m",
+      "limitMemory": "64Gi",
+      "requestMemory": "16Gi"
+    },
+    "chugex": {
+      "jvmFlags": "-server,-Xms8g,-Xmx24g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "32000m",
+      "requestCpu": "8000m",
+      "limitMemory": "32Gi",
+      "requestMemory": "12Gi"
+    },
+    "csmall": {
+      "jvmFlags": "-server,-Xms1g,-Xmx3g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "2000m",
+      "requestCpu": "200m",
+      "limitMemory": "4Gi",
+      "requestMemory": "1500Mi"
+    },
+    "egreat": {
+      "jvmFlags": "-server,-Xms12g,-Xmx48g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "16000m",
+      "requestCpu": "4000m",
+      "limitMemory": "64Gi",
+      "requestMemory": "16Gi"
+    },
+    "ehugex": {
+      "jvmFlags": "-server,-Xms8g,-Xmx31g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "8000m",
+      "requestCpu": "2000m",
+      "limitMemory": "36Gi",
+      "requestMemory": "12Gi"
+    },
+    "elarge": {
+      "jvmFlags": "-server,-Xms4g,-Xmx12g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "4000m",
+      "requestCpu": "1000m",
+      "limitMemory": "16Gi",
+      "requestMemory": "6Gi"
+    },
+    "esmall": {
+      "jvmFlags": "-server,-Xms1g,-Xmx3g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "1000m",
+      "requestCpu": "200m",
+      "limitMemory": "4Gi",
+      "requestMemory": "1500Mi"
+    },
+    "cnormal": {
+      "jvmFlags": "-server,-Xms2g,-Xmx6g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "4000m",
+      "requestCpu": "1000m",
+      "limitMemory": "8Gi",
+      "requestMemory": "3Gi"
+    },
+    "csmallx": {
+      "jvmFlags": "-server,-Xms1g,-Xmx3g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "4000m",
+      "requestCpu": "1000m",
+      "limitMemory": "4Gi",
+      "requestMemory": "1500Mi"
+    },
+    "enormal": {
+      "jvmFlags": "-server,-Xms2g,-Xmx6g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "2000m",
+      "requestCpu": "500m",
+      "limitMemory": "8Gi",
+      "requestMemory": "3Gi"
+    },
+    "cnormalx": {
+      "jvmFlags": "-server,-Xms2g,-Xmx6g,-XX:+DisableExplicitGC,-XX:+UseConcMarkSweepGC,-XX:+CMSParallelRemarkEnabled,-XX:LargePageSizeInBytes=128m,-XX:+UseFastAccessorMethods,-XX:+UseCMSInitiatingOccupancyOnly,-XX:CMSInitiatingOccupancyFraction=70",
+      "limitCpu": "8000m",
+      "requestCpu": "2000m",
+      "limitMemory": "8Gi",
+      "requestMemory": "3Gi"
+    }
+  },
+  "agent": [
+    {
+      "path": "/agent/skywalking-agent.jar",
+      "type": "skywalking",
+      "param": "-Dskywalking.agent.namespace=business",
+      "backend": "skywalking-oap.internal:11800"
+    }
+  ]
+}
