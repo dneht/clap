@@ -85,6 +85,8 @@ local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Con
                         {
                             name: if "name" in one then one.name else app.name,
                             image: if "image" in one then one.image else app.image,
+                            [if "stdin" in one then "stdin"]: one.stdin,
+                            [if "tty" in one then "tty"]: one.tty,
                             [if "env" in one || "generalEnvs" in app then "env"]: mergeallenvs(one),
                             [if "envFrom" in one then "envFrom"]: one.envFrom,
                             [if "ports" in one then "ports"]: one.ports,
