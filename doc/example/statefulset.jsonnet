@@ -118,7 +118,7 @@ local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Con
                                     readOnly: true,
                                 }
                             ] +
-                            (if firstcontainer == one && "volumeMounts" in app && std.length(app.volumeMounts) > 0 && (!std.objectHas(app, "volumeNames") || std.length(app.volumeNames) == 0) then [
+                            (if firstcontainer == one && "volumeMounts" in app && std.length(app.volumeMounts) > 0 && (!std.objectHas(one, "volumeNames") || std.length(one.volumeNames) == 0) then [
                                 {
                                     name: volume.name,
                                     mountPath: volume.mountPath,
