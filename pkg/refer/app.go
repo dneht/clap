@@ -22,7 +22,7 @@ type AppInfo struct {
 type AppReadyInfo struct {
 	Url     string   `json:"url"`
 	Version string   `json:"version"`
-	Exec    []string `json:"exec"`
+	Ingress []string `json:"ingress"`
 }
 
 type AppFactorInfo struct {

@@ -5,6 +5,7 @@ import Page from 'src/components/Page'
 import http from 'src/requests'
 import {currentEnvId, currentEnvName} from 'src/sessions'
 import EnvironmentSpaceCard from './EnvironmentSpaceCard'
+import {ShowSnackbar} from '../../../utils/globalshow'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -19,10 +20,21 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 const MainView = () => {
-  const classes = useStyles();
+  const classes = useStyles()
   const [dataList, setDataList] = useState({results: []})
+  const [powerMap, setPowerMap] = useState({})
+
   useEffect(() => {
-    http.getList('/api/space', {envId: currentEnvId()}).then(data => setDataList(data))
+    http.getList('/api/space', {envId: currentEnvId()})
+      .then(data => {
+        setDataList(data)
+
+        http.getSimple('/api/pow', {type: 'environment_space'}).then(pow => {
+          setPowerMap(pow)
+        }).catch(err => {
+          ShowSnackbar('get pow err:' + err, 'error')
+        })
+      })
   }, [])
 
   return (
@@ -47,6 +59,7 @@ const MainView = () => {
                 <EnvironmentSpaceCard
                   className={classes.dataProviderCard}
                   dataProvider={data}
+                  powerMap={powerMap}
                 />
               </Grid>
             ))}

@@ -17,7 +17,12 @@ limitations under the License.
 package base
 
 import (
+	"cana.io/clap/pkg/model"
+	"cana.io/clap/pkg/refer"
 	"flag"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 var nowSeq uint64
@@ -29,12 +34,24 @@ var confFlag = flag.String("conf", "", "Config file path")
 var namespaceFlag = flag.String("namespace", "clap-system", "The namespace where the app & job is located")
 var timezoneFlag = flag.String("timezone", "Local", "App timezone, please use go format")
 
+var k8sMap = make(map[uint64]*kubernetes.Clientset)
+var k8sConfMap = make(map[uint64]*rest.Config)
+var crdMap = make(map[uint64]dynamic.Interface)
+
+var deployMap = make(map[uint64]*refer.DeployInfo)
+var envIdMap = make(map[uint64]*model.Environment)
+var envNameMap = make(map[string]uint64)
+var resIdMap = make(map[uint64]*model.Resource)
+var resNameMap = make(map[string]uint64)
+var resInfoMap = make(map[uint64]*map[string]interface{})
+
 func Init() {
 	flag.Parse()
 	DbInit()
 	WebInit()
 	SeqInit()
 	EnvInit()
+	ResInit()
 }
 
 func Seq() uint64 {
@@ -47,4 +64,23 @@ func Now() *Property {
 
 func IsOffline() bool {
 	return *envFlag == "dev"
+}
+
+func Reset() {
+	lock.Lock()
+	defer lock.Unlock()
+
+	k8sMap = make(map[uint64]*kubernetes.Clientset)
+	k8sConfMap = make(map[uint64]*rest.Config)
+	crdMap = make(map[uint64]dynamic.Interface)
+
+	deployMap = make(map[uint64]*refer.DeployInfo)
+	envIdMap = make(map[uint64]*model.Environment)
+	envNameMap = make(map[string]uint64)
+	EnvInit()
+
+	resIdMap = make(map[uint64]*model.Resource)
+	resNameMap = make(map[string]uint64)
+	resInfoMap = make(map[uint64]*map[string]interface{})
+	ResInit()
 }

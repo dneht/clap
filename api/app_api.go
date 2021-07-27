@@ -1,10 +1,13 @@
 package api
 
 import (
+	"cana.io/clap/pkg/base"
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/util"
 	"github.com/gofiber/fiber/v2"
 )
+
+const AppApiPre = "/api/app"
 
 func GetApp(c *fiber.Ctx) error {
 	id, err := util.CheckIdInput(c, "id")
@@ -41,7 +44,7 @@ func CreateApp(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	result, err := insertApp(info)
+	result, err := insertApp(c, base.Engine.NewSession(), info)
 	return util.ResultParamWithMessage(c, err, result > 0, "create app error", info.Id)
 }
 
@@ -50,7 +53,7 @@ func UpdateApp(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	result, err := updateAppById(info)
+	result, err := updateAppById(c, base.Engine.NewSession(), info)
 	return util.ResultParamWithMessage(c, err, result > 0, "create app error", info.Id)
 }
 

@@ -20,6 +20,10 @@ func ListSpacePod(c *fiber.Ctx) error {
 	if nil != err {
 		return util.ErrorInput(c, "space id must be set")
 	}
+	err = DeploymentAuth(c, spaceId, AllowThisPodSpace)
+	if nil != err {
+		return err
+	}
 	spaceBase, err := getSpaceById(spaceId)
 	if nil != err {
 		return util.ErrorInternal(c, err)
@@ -36,6 +40,10 @@ func ListDeployPod(c *fiber.Ctx) error {
 	if nil != err {
 		return util.ErrorInput(c, "env id must be set")
 	}
+	err = DeploymentAuth(c, deployId, AllowThisPodLog+AllowThisPodExec)
+	if nil != err {
+		return err
+	}
 	envBase, spaceBase, appBase, deployBase, err := getMoreModels(deployId)
 	if nil != err {
 		return util.ErrorInternal(c, err)
@@ -47,6 +55,10 @@ func RestartDeployPod(c *fiber.Ctx) error {
 	deployId, err := util.CheckIdInput(c, "id")
 	if nil != err {
 		return util.ErrorInput(c, "env id must be set")
+	}
+	err = DeploymentAuth(c, deployId, AllowThisPodRestart)
+	if nil != err {
+		return err
 	}
 	spaceId, err := util.CheckIdQuery(c, "sid")
 	if nil != err {
@@ -86,9 +98,37 @@ func execInnerSelect(ws *websocket.Conn) (*xterm.ExecInput, error) {
 	if nil != err {
 		return nil, errors.New("env must be set")
 	}
+	spaceStr := ws.Query("space")
+	if "" == spaceStr {
+		return nil, errors.New("space must be set")
+	}
+	spaceId, err := strconv.ParseUint(spaceStr, 10, 64)
+	if nil != err {
+		return nil, errors.New("space id is error")
+	}
+	deployStr := ws.Query("deploy")
+	if "" == deployStr {
+		return nil, errors.New("deploy must be set")
+	}
+	deployId, err := strconv.ParseUint(deployStr, 10, 64)
+	if nil != err {
+		return nil, errors.New("deploy id is error")
+	}
 	podName := ws.Params("pod")
 	if "" == podName {
 		return nil, errors.New("pod name must be set")
+	}
+
+	token := ws.Query("token")
+	if "" == token {
+		return nil, errors.New("token must be set")
+	}
+	err = WebsocketAuth(token, spaceId, AllowThisPodSpace)
+	if nil != err {
+		err = WebsocketAuth(token, deployId, AllowThisPackageDeploy)
+		if nil != err {
+			return nil, err
+		}
 	}
 
 	containerName := ws.Query("container")
@@ -112,10 +152,15 @@ func execOtherSelect(ws *websocket.Conn, resourceType string) (*xterm.ExecInput,
 	spaceStr := ws.Query("space")
 	projectStr := ws.Query("project")
 	deployStr := ws.Query("deploy")
+	token := ws.Query("token")
+	if "" == token {
+		return nil, errors.New("token must be set")
+	}
 
 	var envBase *model.Environment
 	var spaceBase *model.EnvironmentSpace
 	var appBase *model.Project
+	var ingress []string
 	var deploy bool
 	var err error
 	if "" == deployStr {
@@ -133,6 +178,10 @@ func execOtherSelect(ws *websocket.Conn, resourceType string) (*xterm.ExecInput,
 		if nil != err {
 			return nil, errors.New("space id is error")
 		}
+		err = WebsocketAuth(token, spaceId, AllowThisPodSpace)
+		if nil != err {
+			return nil, err
+		}
 		var projectId uint64
 		projectId, err = strconv.ParseUint(projectStr, 10, 64)
 		if nil != err {
@@ -148,7 +197,19 @@ func execOtherSelect(ws *websocket.Conn, resourceType string) (*xterm.ExecInput,
 		if nil != err {
 			return nil, errors.New("deploy id is error")
 		}
-		envBase, spaceBase, appBase, _, err = getMoreModels(deployId)
+		err = WebsocketAuth(token, deployId, AllowThisPodExec)
+		if nil != err {
+			return nil, err
+		}
+		var deployBase *model.Deployment
+		envBase, spaceBase, appBase, deployBase, err = getMoreModels(deployId)
+		if nil == err {
+			var appInfo *refer.AppInfo
+			_, appInfo, err = getMoreInfos(envBase.Id, appBase.Id, deployBase.Id)
+			if nil == err && nil != appInfo.Ready && len(appInfo.Ready.Ingress) > 0 {
+				ingress = appInfo.Ready.Ingress
+			}
+		}
 	}
 	if nil != err {
 		return nil, err
@@ -186,7 +247,7 @@ func execOtherSelect(ws *websocket.Conn, resourceType string) (*xterm.ExecInput,
 	if nil != err {
 		return nil, err
 	}
-	return &xterm.ExecInput{
+	input := &xterm.ExecInput{
 		EnvId:         envBase.Id,
 		Namespace:     namespace,
 		PodName:       podName,
@@ -194,7 +255,11 @@ func execOtherSelect(ws *websocket.Conn, resourceType string) (*xterm.ExecInput,
 		Resource:      resourceType,
 		TailLines:     tailLines,
 		Timeout:       600,
-	}, nil
+	}
+	if len(ingress) > 0 {
+		input.Ingress = ingress
+	}
+	return input, nil
 }
 
 func listPodByType(c *fiber.Ctx, envId uint64, labels *[]string) error {

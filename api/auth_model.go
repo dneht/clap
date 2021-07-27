@@ -22,26 +22,12 @@ import (
 	"cana.io/clap/util"
 	"errors"
 	"github.com/gofiber/fiber/v2"
+	"xorm.io/xorm"
 )
 
-var resourceMap = make(map[uint64]*model.Resource)
-var permissionMap = make(map[uint64]*model.Permission)
-
 func getResourceById(id uint64) (*model.Resource, error) {
-	value, ok := resourceMap[id]
-	if ok {
-		return value, nil
-	}
-
-	var info model.Resource
-	result, err := base.Engine.ID(id).Get(&info)
-	if nil == err {
-		resourceMap[id] = &info
-	}
-	if !result {
-		return nil, errors.New("can not found resource")
-	}
-	return &info, err
+	info, _ := base.Resource(id)
+	return info, nil
 }
 
 func countResourceWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
@@ -87,10 +73,17 @@ func findPermissionWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.
 	return len(list), &list, err
 }
 
-func findPermissionByRole(c *fiber.Ctx, input *util.MainInput, role []uint64) (int, *[]model.Permission, error) {
+func findPermissionByRole(c *fiber.Ctx, role []uint64) (*[]model.Permission, error) {
 	var list []model.Permission
-	sql := base.Engine.Omit(model.CreatedAtInPermission, model.UpdatedAtInPermission).
-		In(model.RoleIdInPermission, role)
-	err := input.Apply(sql).Find(&list)
-	return len(list), &list, err
+	err := base.Engine.Omit(model.CreatedAtInPermission, model.UpdatedAtInPermission).
+		In(model.RoleIdInPermission, role).Find(&list)
+	return &list, err
+}
+
+func batchInsertPermission(c *fiber.Ctx, session *xorm.Session, list *[]model.Permission) (int64, error) {
+	batch := make([]interface{}, 0, len(*list))
+	for _, one := range *list {
+		batch = append(batch, one)
+	}
+	return session.Insert(batch...)
 }

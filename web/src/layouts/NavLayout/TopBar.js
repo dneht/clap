@@ -1,12 +1,13 @@
-import React, {useState} from 'react';
-import {Link as RouterLink} from 'react-router-dom';
-import clsx from 'clsx';
-import PropTypes from 'prop-types';
-import {AppBar, Badge, Box, Hidden, IconButton, makeStyles, Toolbar} from '@material-ui/core';
-import MenuIcon from '@material-ui/icons/Menu';
-import NotificationsIcon from '@material-ui/icons/NotificationsOutlined';
-import InputIcon from '@material-ui/icons/Input';
-import Logo from 'src/components/Logo';
+import React, {useState} from 'react'
+import {Link as RouterLink, useNavigate} from 'react-router-dom'
+import clsx from 'clsx'
+import PropTypes from 'prop-types'
+import {AppBar, Badge, Box, Hidden, IconButton, makeStyles, Toolbar} from '@material-ui/core'
+import MenuIcon from '@material-ui/icons/Menu'
+import NotificationsIcon from '@material-ui/icons/NotificationsOutlined'
+import InputIcon from '@material-ui/icons/Input'
+import Logo from 'src/components/Logo'
+import {delCurrentToken} from 'src/sessions'
 
 const useStyles = makeStyles(() => ({
   root: {},
@@ -14,15 +15,21 @@ const useStyles = makeStyles(() => ({
     width: 60,
     height: 60
   }
-}));
+}))
 
 const TopBar = ({
                   className,
                   onMobileNavOpen,
                   ...rest
                 }) => {
-  const classes = useStyles();
-  const [notifications] = useState([]);
+  const classes = useStyles()
+  const navigate = useNavigate()
+  const [notifications] = useState([])
+
+  const handleLogout = () => {
+    delCurrentToken()
+    navigate('/login')
+  }
 
   return (
     <AppBar
@@ -45,7 +52,7 @@ const TopBar = ({
               <NotificationsIcon/>
             </Badge>
           </IconButton>
-          <IconButton color="inherit">
+          <IconButton color="inherit" onClick={handleLogout}>
             <InputIcon/>
           </IconButton>
         </Hidden>
@@ -59,12 +66,12 @@ const TopBar = ({
         </Hidden>
       </Toolbar>
     </AppBar>
-  );
-};
+  )
+}
 
 TopBar.propTypes = {
   className: PropTypes.string,
   onMobileNavOpen: PropTypes.func
-};
+}
 
-export default TopBar;
+export default TopBar

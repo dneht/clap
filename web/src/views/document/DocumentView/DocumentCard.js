@@ -24,9 +24,9 @@ import {
 } from '@material-ui/core'
 import DocumentTable from './DocumentTable'
 import Paper from '@material-ui/core/Paper'
-import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
-import IfReactJson from './IfReactJson';
-import {ShowSnackbar} from 'src/utils/globalshow';
+import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
+import IfReactJson from './IfReactJson'
+import {ShowSnackbar} from 'src/utils/globalshow'
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -61,7 +61,7 @@ const DocumentCard = ({
                         ...rest
                       }) => {
   const classes = useStyles()
-  const [tenant, setTenant] = useState('caihui')
+  const [tenant, setTenant] = useState('board')
   const [group, setGroup] = useState(spaceName)
   const [token, setToken] = useState('')
   const [startRequest, setStartRequest] = useState(false)

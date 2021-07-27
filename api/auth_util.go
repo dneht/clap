@@ -17,97 +17,94 @@ limitations under the License.
 package api
 
 import (
+	"cana.io/clap/pkg/base"
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/pkg/refer"
 	"cana.io/clap/util"
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
+	"log"
 	"strings"
 	"xorm.io/xorm"
 )
 
-var (
-	backAuth = map[string]*[]string{
-		"env": {
-			"id in (1, 2, 8, 9)",
-		},
-		"space": {
-			"id in (1000001, 1000011, 1000021, 1000031, 1000041, 2000001, 2000011, 2000021, 8000001, 9000001)",
-		},
-		"app": {
-			"id > 10000",
-			"id < 1000000",
-		},
-		"deploy": {
-			"space_id in (1000001, 1000011, 1000021, 1000031, 1000041, 2000001, 2000011, 2000021, 8000001, 9000001)",
-			"app_id > 10000",
-			"app_id < 1000000",
-		},
-	}
-	frontAuth = map[string]*[]string{
-		"env": {
-			"id in (1, 2, 8, 9)",
-		},
-		"space": {
-			"id in (1000002, 1000012, 1000022, 1000032, 1000042, 2000002, 2000012, 2000022, 8000002, 9000002)",
-		},
-		"app": {
-			"id >= 3000000",
-			"id < 4000000",
-		},
-		"deploy": {
-			"space_id in (1000002, 1000012, 1000022, 1000032, 1000042, 2000002, 2000012, 2000022, 8000002, 9000002)",
-			"app_id >= 3000000",
-			"app_id < 4000000",
-		},
-	}
-)
-
 const (
-	TokenHeader = "X-Clap-Access-Token"
-	DataBasePre = "clap:mysql:where"
+	TokenHeader               = "X-Clap-Access-Token"
+	MenuPre                   = "menu:"
+	CommonPre                 = "base:"
+	CreatePre                 = "add:"
+	ListSuffix                = "/list"
+	SimpleSuffix              = "/simple"
+	AllowThisSelect           = 1
+	AllowThisUpdate           = 1 << 1
+	AllowThisCreate           = 1 << 2
+	AllowThisDelete           = 1 << 3
+	AllowThisGrant            = 1 << 8
+	AllowThisAndSubGrant      = 1 << 9
+	AllowThisDocumentView     = 1 << 12
+	AllowThisPackageDeploy    = 1 << 13
+	AllowThisPropertyView     = 1 << 16
+	AllowThisPropertyCreate   = 1 << 17
+	AllowThisPropertyUpdate   = 1 << 18
+	AllowThisDeployPlanCreate = 1 << 20
+	AllowThisPodLog           = 1 << 22
+	AllowThisPodExec          = 1 << 23
+	AllowThisPodRestart       = 1 << 24
+	AllowThisPodRollback      = 1 << 25
+	AllowThisPodSpace         = 1 << 28
 )
-
-var authInfoMap = make(map[string]*refer.AuthInfo)
 
 func CheckAuth(c *fiber.Ctx) error {
-	token := c.Get("Authorization")
-	if "" != token {
-		token = token[7:]
+	token, err := getInputToken(c)
+	if nil != err {
+		return err
 	}
-	if "" == token {
-		return fiber.ErrUnauthorized
-	}
+	c.Request().Header.Set(TokenHeader, token)
 
 	_, ok := authInfoMap[token]
-	c.Request().Header.Set(TokenHeader, token)
-	if ok {
-		return c.Next()
-	} else {
-		err := getAllAuthInfo(c, token)
+	if !ok {
+		err = getAllAuthInfo(c, token)
 		if nil != err {
 			return err
 		}
-		return c.Next()
 	}
+	err = RequestAuth(c)
+	if nil != err {
+		return err
+	}
+	return c.Next()
+}
+
+func getInputToken(c *fiber.Ctx) (string, error) {
+	token := c.Get("Authorization")
+	if len(token) >= 30 {
+		token = token[7:]
+	}
+	if len(token) <= 22 {
+		return "", fiber.ErrUnauthorized
+	}
+	return utils.CopyString(token), nil
 }
 
 func getAllAuthInfo(c *fiber.Ctx, token string) error {
 	user, err := getUserByToken(token)
 	if nil != err {
-		return err
+		log.Print(err)
+		return fiber.ErrUnauthorized
 	}
-	input := &util.MainInput{}
 	roleIds, err := getUserRoleIds(user)
 	if nil != err {
-		return err
+		log.Print(err)
+		return fiber.ErrUnauthorized
 	}
 	if len(roleIds) == 0 {
 		return fiber.ErrForbidden
 	}
-	authInfo := refer.AuthInfo{}
-	input.Ids = roleIds
-	_, roleInfos, err := findRoleWithPage(c, input)
+	authInfo := refer.AuthInfo{
+		UserId: user.Id,
+	}
+	roleInfos, err := findRoleSimpleByIds(c, roleIds)
 	if nil != err {
 		return err
 	}
@@ -115,56 +112,55 @@ func getAllAuthInfo(c *fiber.Ctx, token string) error {
 		if roleInfo.IsSuper == 1 {
 			authInfo.IsSuper = true
 			authInfo.IsManage = true
-			authInfoMap[token] = &authInfo
-			return nil
 		}
 		if roleInfo.IsManage == 1 {
 			authInfo.IsManage = true
 		}
+		if authInfo.IsSuper || authInfo.IsManage {
+			authInfo.ResInfo = getAdminResInfo()
+			authInfoMap[token] = &authInfo
+			return nil
+		}
 	}
-	authResMap := make(map[uint64]*refer.AuthResInfo)
-	input.Ids = make([]uint64, 0)
-	_, powerInfos, err := findPermissionByRole(c, input, roleIds)
+	authPower := make(map[string][]refer.AuthPower)
+	powerInfos, err := findPermissionByRole(c, roleIds)
 	if nil != err {
-		return err
+		log.Print(err)
+		return fiber.ErrUnauthorized
 	}
 	if nil == powerInfos {
 		return fiber.ErrForbidden
 	}
+	resIds := make([]uint64, 0, len(*powerInfos))
 	for _, powerInfo := range *powerInfos {
-		powerList, err := getUserPowerInfo(&powerInfo)
-		if nil != err {
-			return err
-		}
 		resInfo, err := getResourceById(powerInfo.ResId)
 		if nil != err {
 			return err
 		}
-		authResOne, ok := authResMap[resInfo.Id]
+		resIds = append(resIds, resInfo.Id)
+		powerOne, ok := authPower[resInfo.ResName]
+		if powerInfo.ResPower <= 0 {
+			continue
+		}
 		if ok {
-			*authResOne.PowerInfo = append(*authResOne.PowerInfo, refer.AuthPowerInfo{
-				PowerData: powerInfo.ResPower,
-				PowerList: &powerList,
+			powerOne = append(powerOne, refer.AuthPower{
+				Power:  powerInfo.ResPower,
+				RoleId: powerInfo.RoleId,
+				LinkId: powerInfo.LinkId,
 			})
 		} else {
-			authResOne = &refer.AuthResInfo{
-				ResName:   resInfo.ResName,
-				ResExtend: resInfo.ResInfo,
-				PowerInfo: &[]refer.AuthPowerInfo{
-					{
-						PowerData: powerInfo.ResPower,
-						PowerList: &powerList,
-					},
+			powerOne = []refer.AuthPower{
+				{
+					Power:  powerInfo.ResPower,
+					RoleId: powerInfo.RoleId,
+					LinkId: powerInfo.LinkId,
 				},
 			}
 		}
-		authResMap[resInfo.Id] = authResOne
+		authPower[resInfo.ResName] = powerOne
 	}
-	authResInfo := make([]refer.AuthResInfo, 0, len(*roleInfos)*2)
-	for _, authResOne := range authResMap {
-		authResInfo = append(authResInfo, *authResOne)
-	}
-	authInfo.ResInfo = &authResInfo
+	authInfo.ResInfo = getUserResInfo(resIds)
+	authInfo.ResPower = &authPower
 	authInfoMap[token] = &authInfo
 	return nil
 }
@@ -183,83 +179,227 @@ func getUserRoleIds(user *model.UserInfo) ([]uint64, error) {
 	return arr, nil
 }
 
-func getUserPowerInfo(power *model.Permission) ([]string, error) {
-	var arr []string
-	info := power.PowerInfo
-	if "" != info && "[]" != info {
-		err := json.Unmarshal([]byte(info), &arr)
-		if nil != err {
-			return nil, err
+func getAdminResInfo() *map[string]interface{} {
+	allInfo, allRes := base.Resources()
+	resOrder := make(map[string]int)
+	resInfo := make(map[string]interface{})
+	for id, oneRes := range *allRes {
+		oneInfo, ok := (*allInfo)[id]
+		if ok {
+			for key, value := range *oneRes {
+				order, sok := resOrder[key]
+				if !sok || oneInfo.ResOrder > order {
+					resOrder[key] = oneInfo.ResOrder
+					resInfo[key] = value
+				}
+			}
 		}
-	} else {
-		arr = make([]string, 0)
 	}
-	return arr, nil
+	return &resInfo
 }
 
-func DatabaseAuth(t string, c *fiber.Ctx, sql *xorm.Session) error {
+func getUserResInfo(ids []uint64) *map[string]interface{} {
+	resInfo := make(map[string]interface{})
+	if len(ids) == 0 {
+		return &resInfo
+	}
+
+	for _, id := range ids {
+		_, oneRes := base.Resource(id)
+		for key, value := range *oneRes {
+			resInfo[key] = value
+		}
+	}
+	return &resInfo
+}
+
+func getAuthFromHeader(c *fiber.Ctx) (*refer.AuthInfo, error) {
 	token := c.Get(TokenHeader)
 	if "" == token {
-		return fiber.ErrUnauthorized
+		return nil, fiber.ErrUnauthorized
 	}
+	return getAuthFromToken(token)
+}
+
+func getAuthFromToken(token string) (*refer.AuthInfo, error) {
 	auth, ok := authInfoMap[token]
 	if !ok {
+		return nil, fiber.ErrForbidden
+	}
+	return auth, nil
+}
+
+func ManagerAuth(c *fiber.Ctx) bool {
+	auth, err := getAuthFromHeader(c)
+	if nil != err {
+		return false
+	}
+	if auth.IsManage {
+		return true
+	}
+	return false
+}
+
+func RequestAuth(c *fiber.Ctx) error {
+	auth, err := getAuthFromHeader(c)
+	if nil != err {
+		return err
+	}
+	if auth.IsManage {
+		return nil
+	}
+	if nil == auth.ResPower {
 		return fiber.ErrForbidden
 	}
 
+	path := c.Path()
+	if path == ConfigApi || path == CleanApi || path == StaticApi {
+		return nil
+	}
+	if strings.HasSuffix(path, ListSuffix) || strings.HasSuffix(path, SimpleSuffix) {
+		return nil
+	}
+	switch c.Method() {
+	case fiber.MethodOptions:
+		return nil
+	case fiber.MethodConnect:
+		return nil
+	case fiber.MethodGet:
+		return requestAuth(c, auth.ResPower, path, CommonPre, AllowThisSelect)
+	case fiber.MethodPut:
+		return requestAuth(c, auth.ResPower, path, CreatePre, AllowThisCreate)
+	case fiber.MethodPost:
+		return requestAuth(c, auth.ResPower, path, CommonPre, AllowThisUpdate)
+	case fiber.MethodDelete:
+		return requestAuth(c, auth.ResPower, path, CommonPre, AllowThisDelete)
+	}
+	return fiber.ErrForbidden
+}
+
+func requestAuth(c *fiber.Ctx, pow *map[string][]refer.AuthPower, path, pre string, allow uint) error {
+	table, err := getTableByPath(path)
+	if nil != err {
+		return err
+	}
+
+	list, ok := (*pow)[pre+table]
+	if ok {
+		if pre == CommonPre {
+			id, err := util.CheckIdInput(c, "id")
+			if nil != err {
+				log.Print(err)
+				return fiber.ErrForbidden
+			}
+			for _, one := range list {
+				if one.LinkId == id && one.Power&allow > 0 {
+					return nil
+				}
+			}
+		} else {
+			for _, one := range list {
+				if one.Power&allow > 0 {
+					return nil
+				}
+			}
+		}
+	}
+	return fiber.ErrForbidden
+}
+
+func getTableByPath(path string) (string, error) {
+	if strings.HasPrefix(path, EnvApiPre) {
+		return model.EnvironmentTable, nil
+	} else if strings.HasPrefix(path, SpaceApiPre) {
+		return model.EnvironmentSpaceTable, nil
+	} else if strings.HasPrefix(path, DeployApiPre) {
+		return model.DeploymentTable, nil
+	} else if strings.HasPrefix(path, RenderApiPre) {
+		return model.TemplateTable, nil
+	} else if strings.HasPrefix(path, UserApiPre) {
+		return model.UserInfoTable, nil
+	} else if strings.HasPrefix(path, RoleApiPre) {
+		return model.RoleInfoTable, nil
+	} else if strings.HasPrefix(path, ResApiPre) {
+		return model.ResourceTable, nil
+	} else if strings.HasPrefix(path, PowApiPre) {
+		return model.PermissionTable, nil
+	}
+	return "", fiber.ErrForbidden
+}
+
+func SelectAuth(c *fiber.Ctx, table string, sql *xorm.Session) error {
+	auth, err := getAuthFromHeader(c)
+	if nil != err {
+		return err
+	}
 	if auth.IsSuper {
 		return nil
 	}
-	if nil == auth.ResInfo {
+	if nil == auth.ResPower {
 		return fiber.ErrForbidden
 	}
-	for _, res := range *auth.ResInfo {
-		if res.ResName == DataBasePre {
-			return nil
-		} else if res.ResName == DataBasePre+":"+t {
-			if nil == res.PowerInfo {
-				return fiber.ErrForbidden
-			}
-			for _, pow := range *res.PowerInfo {
-				if !checkDBPower(c, pow.PowerData) || nil == pow.PowerList {
-					return fiber.ErrForbidden
-				}
-				for _, val := range *pow.PowerList {
-					if "" != val {
-						sql.Where(val)
-					}
+
+	now := CommonPre + table
+	list, ok := (*auth.ResPower)[now]
+	if ok {
+		ids := make([]uint64, 0, len(list))
+		hash := make(map[uint64]bool)
+		for _, one := range list {
+			if one.LinkId > 0 && (one.Power&AllowThisSelect > 0 || one.Power&AllowThisDocumentView > 0) {
+				_, get := hash[one.LinkId]
+				if !get {
+					ids = append(ids, one.LinkId)
+					hash[one.LinkId] = true
 				}
 			}
-			return nil
 		}
+		if len(ids) == 0 {
+			return fiber.ErrForbidden
+		}
+		sql.In("id", ids)
+		return nil
 	}
-	return nil
+	return fiber.ErrForbidden
 }
 
-func checkDBPower(c *fiber.Ctx, p uint) bool {
-	if p&(1<<5) > 0 {
-		return true
+func DeploymentAuth(c *fiber.Ctx, id uint64, allow uint) error {
+	token, err := getInputToken(c)
+	if nil != err {
+		return err
 	}
-	return false
+	auth, err := getAuthFromToken(token)
+	if nil != err {
+		return err
+	}
+	return checkInnerAuth(auth, id, allow)
 }
 
-func checkURIPower(c *fiber.Ctx, p uint) bool {
-	if p&(1<<4) > 0 {
-		return true
+func WebsocketAuth(token string, id uint64, allow uint) error {
+	auth, err := getAuthFromToken(token)
+	if nil != err {
+		return err
 	}
-	method := strings.ToUpper(c.Method())
-	if method == "GET" {
-		return p&1 > 0
-	} else if method == "POST" {
-		if strings.HasSuffix(c.Path(), "list") {
-			return p&1 > 0
-		} else {
-			return p&(1<<1) > 0
+	return checkInnerAuth(auth, id, allow)
+}
+
+func checkInnerAuth(auth *refer.AuthInfo, id uint64, allow uint) error {
+	if auth.IsSuper {
+		return nil
+	}
+	if nil == auth.ResPower {
+		return fiber.ErrForbidden
+	}
+	if id <= 0 {
+		return fiber.ErrForbidden
+	}
+
+	list, ok := (*auth.ResPower)[CommonPre+model.DeploymentTable]
+	if ok {
+		for _, one := range list {
+			if one.LinkId == id && one.Power&allow > 0 {
+				return nil
+			}
 		}
-	} else if method == "PUT" {
-		return p&(1<<2) > 0
-	} else if method == "DELETE" {
-		return p&(1<<3) > 0
 	}
-	return false
+	return fiber.ErrForbidden
 }

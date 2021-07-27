@@ -16,20 +16,4 @@ limitations under the License.
 
 package api
 
-import (
-	"cana.io/clap/pkg/base"
-	"cana.io/clap/pkg/refer"
-	"github.com/gofiber/fiber/v2"
-)
-
-func PropBase(c *fiber.Ctx) error {
-	now := base.Now()
-	return c.JSON(map[string]interface{}{
-		"env":       now.Env,
-		"type":      refer.AppTypeMap,
-		"namespace": now.Namespace,
-		"timezone":  now.Timezone,
-		"document":  now.Document,
-		"package":   now.Package,
-	})
-}
+const PropApiPre = "/api/prop"

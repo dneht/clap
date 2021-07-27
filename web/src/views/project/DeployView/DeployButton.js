@@ -3,6 +3,7 @@ import {Button, ButtonGroup} from '@material-ui/core'
 import {convertAppType} from 'src/utils/convertvalue'
 import {ShowSnackbar} from 'src/utils/globalshow'
 import {currentBaseProp, currentEnvName} from 'src/sessions'
+import hiddenEle from '../../../utils/hiddenele'
 
 class DeployButton extends React.Component {
   constructor(props) {
@@ -11,6 +12,7 @@ class DeployButton extends React.Component {
       buttonStatus: props.dataProvider.deployStatus
     }
     this.dataProvider = props.dataProvider
+    this.powerMap = props.powerMap
     this.deployId = props.dataProvider.id
     this.appId = props.dataProvider.appId
     this.spaceName = 'stable'
@@ -34,10 +36,10 @@ class DeployButton extends React.Component {
     this.navigateToDoc = props.navigateToDoc
     this.navigateToInner = props.navigateToInner
     this.gotoAppDocument = this.gotoAppDocument.bind(this)
-    this.logPackageApp = this.logPackageApp.bind(this);
-    this.reloadPackageStatus = this.reloadPackageStatus.bind(this);
-    this.doPackageApp = this.doPackageApp.bind(this);
-    this.doPublishApp = this.doPublishApp.bind(this);
+    this.logPackageApp = this.logPackageApp.bind(this)
+    this.reloadPackageStatus = this.reloadPackageStatus.bind(this)
+    this.doPackageApp = this.doPackageApp.bind(this)
+    this.doPublishApp = this.doPublishApp.bind(this)
   }
 
   gotoAppDocument() {
@@ -49,7 +51,7 @@ class DeployButton extends React.Component {
       if (!data.pods || data.pods.length === 0) {
         ShowSnackbar('创建中，请稍后...', 'info')
       } else {
-        this.navigateToInner(data.pods[0])
+        this.navigateToInner(this.deployId, data.pods[0])
       }
     })
   }
@@ -91,98 +93,130 @@ class DeployButton extends React.Component {
   render() {
     if (this.appType === 0) {
       return (
-        <ButtonGroup color="primary" aria-label="outlined primary button group">
-          <Button variant="outlined" onClick={this.doPublishApp}>
+        <div>
+          <Button variant="outlined" color="primary"
+                  style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                  onClick={this.doPublishApp}>
             发布
           </Button>
-          <Button variant="outlined" onClick={() => this.openPodDialog(this.dataProvider)}>
+          <Button variant="outlined" color="primary"
+                  style={{display: hiddenEle(this.deployId, 'deployment', 'podLog', this.powerMap)}}
+                  onClick={() => this.openPodDialog(this.dataProvider)}>
             查看
           </Button>
-        </ButtonGroup>
+        </div>
       )
     } else {
       if (this.state.buttonStatus === 1) {
         return (
-          <ButtonGroup color="primary" aria-label="outlined primary button group">
-            <Button variant="outlined" onClick={this.logPackageApp}>
+          <div>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    onClick={this.logPackageApp}>
               打包中
             </Button>
-            <Button variant="outlined" onClick={this.reloadPackageStatus}>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    onClick={this.reloadPackageStatus}>
               刷新状态
             </Button>
-          </ButtonGroup>
+          </div>
         )
       } else if (this.state.buttonStatus === 2) {
         return (
-          <ButtonGroup color="primary" aria-label="outlined primary button group">
-            <Button variant="outlined" onClick={this.doPublishApp}>
+          <div>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    onClick={this.doPublishApp}>
               立即发布
             </Button>
-            <Button>
+            <Button variant="outlined" color="primary"
+              style={{display: hiddenEle(this.deployId, 'deployment', 'docView', this.powerMap)}}>
               配置
             </Button>
-          </ButtonGroup>
+          </div>
         )
       } else if (this.state.buttonStatus === 3) {
         return (
-          <ButtonGroup color="primary" aria-label="outlined primary button group">
-            <Button variant="outlined" onClick={this.logPackageApp}>
+          <div>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    onClick={this.logPackageApp}>
               打包失败
             </Button>
-            <Button variant="outlined" onClick={this.doPackageApp}>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    onClick={this.doPackageApp}>
               重新打包
             </Button>
-          </ButtonGroup>
+          </div>
         )
       } else if (this.state.buttonStatus >= 6) {
         if (this.enableDocument) {
           return (
-            <ButtonGroup color="primary" aria-label="outlined primary button group">
-              <Button variant="outlined" onClick={this.doPackageApp}
+            <div>
+              <Button variant="outlined" color="primary"
+                      style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                      onClick={this.doPackageApp}
                       disabled={this.disablePack}>
                 打包
               </Button>
-              <Button variant="outlined" onClick={() => this.openPodDialog(this.dataProvider)}>
+              <Button variant="outlined" color="primary"
+                      style={{display: hiddenEle(this.deployId, 'deployment', 'podLog', this.powerMap)}}
+                      onClick={() => this.openPodDialog(this.dataProvider)}>
                 查看
               </Button>
-              <Button>
+              <Button variant="outlined" color="primary"
+                      style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}>
                 配置
               </Button>
-              <Button variant="outlined" onClick={this.gotoAppDocument}>
+              <Button variant="outlined" color="primary"
+                      style={{display: hiddenEle(this.deployId, 'deployment', 'docView', this.powerMap)}}
+                      onClick={this.gotoAppDocument}>
                 文档
               </Button>
-            </ButtonGroup>
+            </div>
           )
         } else {
           return (
-            <ButtonGroup color="primary" aria-label="outlined primary button group">
-              <Button variant="outlined" onClick={this.doPackageApp}
+            <div>
+              <Button variant="outlined" color="primary"
+                      style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                      onClick={this.doPackageApp}
                       disabled={this.disablePack}>
                 打包
               </Button>
-              <Button variant="outlined" onClick={() => this.openPodDialog(this.dataProvider)}>
+              <Button variant="outlined" color="primary"
+                      style={{display: hiddenEle(this.deployId, 'deployment', 'podLog', this.powerMap)}}
+                      onClick={() => this.openPodDialog(this.dataProvider)}>
                 查看
               </Button>
-              <Button>
+              <Button variant="outlined" color="primary"
+                      style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}>
                 配置
               </Button>
-            </ButtonGroup>
+            </div>
           )
         }
       } else {
         return (
-          <ButtonGroup color="primary" aria-label="outlined primary button group">
-            <Button variant="outlined" onClick={this.doPackageApp}
+          <div>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    onClick={this.doPackageApp}
                     disabled={this.disablePack}>
               打包
             </Button>
-            <Button variant="outlined" onClick={this.doPublishApp}>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    onClick={this.doPublishApp}>
               发布
             </Button>
-            <Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}>
               配置
             </Button>
-          </ButtonGroup>
+          </div>
         )
       }
     }

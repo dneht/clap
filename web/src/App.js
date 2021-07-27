@@ -27,7 +27,7 @@ const App = () => {
   Init(setSnackbar, setBackdrop)
 
   if (!error && !currentBaseProp()) {
-    http.initBase().catch((err) => {
+    http.initProp().catch((err) => {
       setError(true)
     })
   }

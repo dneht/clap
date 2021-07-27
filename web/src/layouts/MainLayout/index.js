@@ -1,7 +1,7 @@
-import React from 'react';
-import {Outlet} from 'react-router-dom';
-import {makeStyles} from '@material-ui/core';
-import TopBar from './TopBar';
+import React from 'react'
+import {Outlet} from 'react-router-dom'
+import {makeStyles} from '@material-ui/core'
+import TopBar from './TopBar'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -27,10 +27,10 @@ const useStyles = makeStyles((theme) => ({
     height: '100%',
     overflow: 'auto'
   }
-}));
+}))
 
 const MainLayout = () => {
-  const classes = useStyles();
+  const classes = useStyles()
 
   return (
     <div className={classes.root}>
@@ -43,7 +43,7 @@ const MainLayout = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default MainLayout;
+export default MainLayout

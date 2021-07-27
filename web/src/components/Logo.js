@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 const Logo = (props) => {
   return (
@@ -7,7 +7,7 @@ const Logo = (props) => {
       src="/static/logo.svg"
       {...props}
     />
-  );
-};
+  )
+}
 
-export default Logo;
+export default Logo

@@ -4,6 +4,7 @@ import {Pagination} from '@material-ui/lab'
 import Page from 'src/components/Page'
 import EnvironmentCard from './EnvironmentCard'
 import http from 'src/requests'
+import {ShowSnackbar} from '../../../utils/globalshow'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -20,8 +21,18 @@ const useStyles = makeStyles((theme) => ({
 const MainView = () => {
   const classes = useStyles()
   const [dataList, setDataList] = useState({results: []})
+  const [powerMap, setPowerMap] = useState({})
+
   useEffect(() => {
-    http.getList('/api/env').then(data => setDataList(data))
+    http.getList('/api/env').then(data => {
+      setDataList(data)
+
+      http.getSimple('/api/pow', {type: 'environment'}).then(pow => {
+        setPowerMap(pow)
+      }).catch(err => {
+        ShowSnackbar('get pow err:' + err, 'error')
+      })
+    })
   }, [])
 
   return (
@@ -46,6 +57,7 @@ const MainView = () => {
                 <EnvironmentCard
                   className={classes.dataProviderCard}
                   dataProvider={data}
+                  powerMap={powerMap}
                 />
               </Grid>
             ))}

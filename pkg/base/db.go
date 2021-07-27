@@ -67,8 +67,9 @@ func DbInit() {
 
 func dangListFullProp() *[]model.Property {
 	var list []model.Property
-	err := Engine.Where(model.EnvInProperty+"=?", *envFlag).
-		Where(model.IsDisableInProperty+"=?", 0).Find(&list)
+	err := Engine.Omit(model.CreatedAtInProperty, model.UpdatedAtInProperty).
+		Where(model.EnvInProperty+"=?", *envFlag).
+		Where(model.IsDisableInProperty+"=0").Find(&list)
 	if nil != err {
 		panic(err)
 	}

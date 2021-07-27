@@ -30,13 +30,6 @@ import (
 )
 
 var lock sync.Mutex
-var k8sMap = make(map[uint64]*kubernetes.Clientset)
-var k8sConfMap = make(map[uint64]*rest.Config)
-var crdMap = make(map[uint64]dynamic.Interface)
-
-var deployMap = make(map[uint64]*refer.DeployInfo)
-var envIdMap = make(map[uint64]*model.Environment)
-var envNameMap = make(map[string]uint64)
 
 func EnvInit() {
 	list := dangListFullEnv()
@@ -114,21 +107,10 @@ func K8D(envId uint64) (dynamic.Interface, *rest.Config, error) {
 	return crdCli, k8sConf, nil
 }
 
-func Reset() {
-	lock.Lock()
-	k8sMap = make(map[uint64]*kubernetes.Clientset)
-	k8sConfMap = make(map[uint64]*rest.Config)
-	crdMap = make(map[uint64]dynamic.Interface)
-
-	deployMap = make(map[uint64]*refer.DeployInfo)
-	envIdMap = make(map[uint64]*model.Environment)
-	EnvInit()
-	lock.Unlock()
-}
-
 func dangListFullEnv() *[]model.Environment {
 	var list []model.Environment
-	err := Engine.Find(&list)
+	err := Engine.Omit(model.CreatedAtInEnvironment, model.UpdatedAtInEnvironment).
+		Where(model.IsDisableInEnvironment + "=0").Find(&list)
 	if nil != err {
 		panic(err)
 	}

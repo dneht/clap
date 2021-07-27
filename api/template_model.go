@@ -5,9 +5,9 @@ import (
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/util"
 	"errors"
+	"github.com/gofiber/fiber/v2"
+	"xorm.io/xorm"
 )
-
-var templateMap = make(map[uint64]*model.Template)
 
 func getTemplateById(id uint64) (*model.Template, error) {
 	value, ok := templateMap[id]
@@ -36,27 +36,35 @@ func findAllTemplateSimple() (int, *[]model.Environment, error) {
 	return len(list), &list, err
 }
 
-func countTemplateWithPage(input *util.MainInput) (int64, error) {
+func countTemplateWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.Template
 	sql := base.Engine.Cols(model.IdInTemplate)
+	err := SelectAuth(c, model.TemplateTable, sql)
+	if nil != err {
+		return 0, err
+	}
 	return input.Apply(sql).Count(&info)
 }
 
-func findTemplateWithPage(input *util.MainInput) (int, *[]model.Template, error) {
+func findTemplateWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Template, error) {
 	var list []model.Template
 	sql := base.Engine.AllCols()
-	err := input.Apply(sql).Find(&list)
+	err := SelectAuth(c, model.TemplateTable, sql)
+	if nil != err {
+		return 0, nil, err
+	}
+	err = input.Apply(sql).Find(&list)
 	return len(list), &list, err
 }
 
-func updateTemplateById(info *model.Template) (int64, error) {
+func updateTemplateById(c *fiber.Ctx, session *xorm.Session, info *model.Template) (int64, error) {
 	if nil == info || info.Id <= 0 {
 		return -1, errors.New("input model error, id is empty")
 	}
 	invalidTemplateById(info.Id)
-	return base.Engine.Omit(model.IdInTemplate).Update(info)
+	return session.Omit(model.IdInTemplate).Update(info)
 }
 
-func insertTemplate(info *model.Template) (int64, error) {
-	return base.Engine.InsertOne(info)
+func insertTemplate(c *fiber.Ctx, session *xorm.Session, info *model.Template) (int64, error) {
+	return session.InsertOne(info)
 }

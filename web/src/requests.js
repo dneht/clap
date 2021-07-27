@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {isDevMode, setCurrentBaseProp} from 'src/sessions'
+import {currentToken, delCurrentToken, isDevMode, setCurrentBaseProp, setCurrentUserRes} from 'src/sessions'
 import getCookie from 'src/utils/getcookie'
 import {ShowSnackbar} from 'src/utils/globalshow'
 
@@ -33,7 +33,8 @@ const buildHeader = (header = {}) => {
     header = {}
   }
   if (!('Authorization' in header) || !header['Authorization']) {
-    header['Authorization'] = 'Bearer ' + localStorage.getItem('.token')
+    const token = currentToken()
+    header['Authorization'] = token ? ('Bearer ' + token) : ''
   }
   if (!('X-Csrf-Token' in header) || !header['X-Csrf-Token']) {
     header['X-Csrf-Token'] = getCookie('csrf_clap')
@@ -55,6 +56,8 @@ const handleError = (err, reject) => {
         if (!has) {
           msg = 'Unauthorized'
         }
+        delCurrentToken()
+        window.location.href = '/login'
         break
       case 403:
         if (!has) {
@@ -84,9 +87,19 @@ const handleError = (err, reject) => {
 const http = {
   apiUrl: apiUrl,
   wsUrl: wsUrl,
-  initBase: (header = {}) => {
+  initRes: (func, header = {}) => {
     return new Promise((resolve, reject) => {
-      axios.get('/api/prop/base', {headers: buildHeader(header)}).then(result => {
+      axios.get('/api/static', {headers: buildHeader(header)}).then(result => {
+        setCurrentUserRes(result.data)
+        resolve(func(result.data))
+      }).catch(err => {
+        handleError(err, reject)
+      })
+    })
+  },
+  initProp: (header = {}) => {
+    return new Promise((resolve, reject) => {
+      axios.get('/config', {headers: buildHeader(header)}).then(result => {
         setCurrentBaseProp(result.data)
         resolve(result.data)
       }).catch(err => {

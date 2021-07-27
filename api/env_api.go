@@ -5,6 +5,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+const EnvApiPre = "/api/env"
+const SpaceApiPre = "/api/space"
+
 func GetEnv(c *fiber.Ctx) error {
 	id, err := util.CheckIdInput(c, "id")
 	if nil != err {

@@ -1,5 +1,5 @@
-let setSnackbar;
-let setBackdrop;
+let setSnackbar
+let setBackdrop
 
 const Init = (snackbar, backdrop) => {
   setSnackbar = snackbar

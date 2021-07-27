@@ -1,12 +1,16 @@
 package api
 
 import (
+	"cana.io/clap/pkg/base"
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/pkg/refer"
 	"cana.io/clap/util"
 	"errors"
 	"github.com/gofiber/fiber/v2"
+	"xorm.io/xorm"
 )
+
+const DeployApiPre = "/api/deploy"
 
 func GetDeploy(c *fiber.Ctx) error {
 	id, err := util.CheckIdInput(c, "id")
@@ -44,7 +48,7 @@ func CreateDeploy(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	result, err := insertDeploy(info)
+	result, err := insertDeploy(c, base.Engine.NewSession(), info)
 	return util.ResultParamWithMessage(c, err, result > 0, "create app error", info.Id)
 }
 
@@ -53,7 +57,7 @@ func UpdateDeploy(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	result, err := updateDeployById(info)
+	result, err := updateDeployById(c, base.Engine.NewSession(), info)
 	return util.ResultParamWithMessage(c, err, result > 0, "create app error", info.Id)
 }
 
@@ -65,8 +69,29 @@ func checkDeployInput(c *fiber.Ctx) (*model.Deployment, error) {
 	return info, nil
 }
 
+func updateDeployStatus(c *fiber.Ctx, id uint64, status int, tag string) error {
+	if id <= 0 || status == 0 {
+		return errors.New("input id or status is empty")
+	}
+	_, err := base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
+		return updateDeployStatusById(c, session, id, status, tag)
+	})
+	if nil != err {
+		return err
+	}
+	deployMap[id].DeployStatus = status
+	if "" != tag {
+		deployMap[id].DeployTag = tag
+	}
+	return nil
+}
+
 func ExecDeploy(c *fiber.Ctx) error {
 	deployId, err := util.CheckIdInput(c, "deploy")
+	if nil != err {
+		return err
+	}
+	err = DeploymentAuth(c, deployId, AllowThisPackageDeploy)
 	if nil != err {
 		return err
 	}
@@ -86,9 +111,9 @@ func ExecDeploy(c *fiber.Ctx) error {
 				return err
 			}
 			if status.Succeeded > 0 {
-				err = updateDeployStatusById(deployId, refer.DeployStatusBuildEnd, "")
+				err = updateDeployStatus(c, deployId, refer.DeployStatusBuildEnd, "")
 			} else if status.Failed > 0 {
-				err = updateDeployStatusById(deployId, refer.DeployStatusBuildFail, "")
+				err = updateDeployStatus(c, deployId, refer.DeployStatusBuildFail, "")
 			}
 			return util.ResultParamMapTwo(c, err, "pods", pods, "status", status)
 		} else if "build" == selectType {
@@ -96,14 +121,14 @@ func ExecDeploy(c *fiber.Ctx) error {
 			if nil != err {
 				return err
 			}
-			err = updateDeployStatusById(deployId, refer.DeployStatusBuilding, tag)
+			err = updateDeployStatus(c, deployId, refer.DeployStatusBuilding, tag)
 			return util.ResultParamMapTwo(c, err, "tag", tag, "status", status)
 		} else if "deploy" == selectType {
 			status, err := createTemplateApp(deployId)
 			if nil != err {
 				return err
 			}
-			err = updateDeployStatusById(deployId, refer.DeployStatusPackHear, "")
+			err = updateDeployStatus(c, deployId, refer.DeployStatusPackHear, "")
 			return util.ResultParamMapOne(c, err, "status", status)
 		}
 		return errors.New("select type is not support")

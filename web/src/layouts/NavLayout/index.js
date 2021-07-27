@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
-import {Outlet} from 'react-router-dom';
-import {makeStyles} from '@material-ui/core';
-import NavBar from './NavBar';
-import TopBar from './TopBar';
+import React, {useState} from 'react'
+import {Outlet} from 'react-router-dom'
+import {makeStyles} from '@material-ui/core'
+import NavBar from './NavBar'
+import TopBar from './TopBar'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -31,11 +31,11 @@ const useStyles = makeStyles((theme) => ({
     height: '100%',
     overflow: 'auto'
   }
-}));
+}))
 
 const NavLayout = () => {
-  const classes = useStyles();
-  const [isMobileNavOpen, setMobileNavOpen] = useState(false);
+  const classes = useStyles()
+  const [isMobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
     <div className={classes.root}>
@@ -52,7 +52,7 @@ const NavLayout = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default NavLayout;
+export default NavLayout

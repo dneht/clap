@@ -1,6 +1,6 @@
-import React, {forwardRef} from 'react';
-import {Helmet} from 'react-helmet';
-import PropTypes from 'prop-types';
+import React, {forwardRef} from 'react'
+import {Helmet} from 'react-helmet'
+import PropTypes from 'prop-types'
 
 const Page = forwardRef(({
                            children,
@@ -17,12 +17,12 @@ const Page = forwardRef(({
       </Helmet>
       {children}
     </div>
-  );
-});
+  )
+})
 
 Page.propTypes = {
   children: PropTypes.node.isRequired,
   title: PropTypes.string
-};
+}
 
-export default Page;
+export default Page

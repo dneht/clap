@@ -1,9 +1,9 @@
-import React, {useEffect} from 'react';
-import {useLocation} from 'react-router-dom';
-import PropTypes from 'prop-types';
-import {Box, Divider, Drawer, Hidden, List, makeStyles} from '@material-ui/core';
-import NavItem from './NavItem';
-import {routeItems} from 'src/routes';
+import React, {useEffect, useState} from 'react'
+import {useLocation} from 'react-router-dom'
+import PropTypes from 'prop-types'
+import {Box, Divider, Drawer, Hidden, List, makeStyles} from '@material-ui/core'
+import NavItem from './NavItem'
+import routeItems from 'src/utils/routeitems'
 
 const useStyles = makeStyles(() => ({
   mobileDrawer: {
@@ -19,18 +19,22 @@ const useStyles = makeStyles(() => ({
     width: 64,
     height: 64
   }
-}));
+}))
 
 const NavBar = ({onMobileClose, openMobile}) => {
-  const classes = useStyles();
-  const location = useLocation();
+  const classes = useStyles()
+  const location = useLocation()
+  const [routeData, setRouteData] = useState([])
 
-  useEffect(() => {
+  useEffect(async () => {
+    const routeData = await routeItems()
+    setRouteData(routeData)
+
     if (openMobile && onMobileClose) {
-      onMobileClose();
+      onMobileClose()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
+  }, [location.pathname])
 
   const content = (
     <Box
@@ -41,7 +45,7 @@ const NavBar = ({onMobileClose, openMobile}) => {
       <Divider/>
       <Box p={2}>
         <List>
-          {routeItems.map((item) => (
+          {routeData.map(item => (
             <NavItem
               href={item.href}
               key={item.title}
@@ -53,7 +57,7 @@ const NavBar = ({onMobileClose, openMobile}) => {
       </Box>
       <Box flexGrow={1}/>
     </Box>
-  );
+  )
 
   return (
     <>
@@ -79,18 +83,18 @@ const NavBar = ({onMobileClose, openMobile}) => {
         </Drawer>
       </Hidden>
     </>
-  );
-};
+  )
+}
 
 NavBar.propTypes = {
   onMobileClose: PropTypes.func,
   openMobile: PropTypes.bool
-};
+}
 
 NavBar.defaultProps = {
   onMobileClose: () => {
   },
   openMobile: false
-};
+}
 
-export default NavBar;
+export default NavBar

@@ -17,18 +17,15 @@ limitations under the License.
 package refer
 
 type AuthInfo struct {
-	IsManage bool
+	UserId   uint64
 	IsSuper  bool
-	ResInfo  *[]AuthResInfo
+	IsManage bool
+	ResPower *map[string][]AuthPower
+	ResInfo  *map[string]interface{}
 }
 
-type AuthResInfo struct {
-	ResName   string
-	ResExtend string
-	PowerInfo *[]AuthPowerInfo
-}
-
-type AuthPowerInfo struct {
-	PowerData uint
-	PowerList *[]string
+type AuthPower struct {
+	Power  uint
+	RoleId uint64
+	LinkId uint64
 }

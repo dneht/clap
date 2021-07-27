@@ -1,9 +1,10 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import clsx from 'clsx'
-import {Box, Button, ButtonGroup, Card, CardContent, Divider, Grid, makeStyles, Typography} from '@material-ui/core'
+import {Box, Button, Card, CardContent, Divider, Grid, makeStyles, Typography} from '@material-ui/core'
 import {useNavigate} from 'react-router-dom'
 import {setCurrentEnvId, setCurrentEnvName} from 'src/sessions'
+import hiddenEle from 'src/utils/hiddenele'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -19,7 +20,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }))
 
-const EnvironmentCard = ({className, dataProvider, ...rest}) => {
+const EnvironmentCard = ({className, dataProvider, powerMap, ...rest}) => {
   const classes = useStyles()
   const navigate = useNavigate()
 
@@ -80,17 +81,21 @@ const EnvironmentCard = ({className, dataProvider, ...rest}) => {
             className={classes.statsItem}
             item
           >
-            <ButtonGroup color="primary" aria-label="outlined primary button group">
-              <Button>
-                详情
-              </Button>
-              <Button>
-                编辑
-              </Button>
-              <Button onClick={navigateToSpace}>
-                空间
-              </Button>
-            </ButtonGroup>
+            <Button variant="outlined" color="primary">
+              详情
+            </Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: hiddenEle(dataProvider.id, 'environment', 'editThis', powerMap)}}>
+              编辑
+            </Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: hiddenEle(dataProvider.id, 'environment', 'propView', powerMap)}}>
+              配置
+            </Button>
+            <Button variant="outlined" color="primary"
+                    onClick={navigateToSpace}>
+              空间
+            </Button>
           </Grid>
         </Grid>
       </Box>

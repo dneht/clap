@@ -28,6 +28,7 @@ web/node_modules
 
 conf/*.properties
 generate.sh
+generate.go
 
 *.iml
 .metadata

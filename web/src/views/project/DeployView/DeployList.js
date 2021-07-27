@@ -5,7 +5,6 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import {
   Box,
   Button,
-  ButtonGroup,
   Card,
   Checkbox,
   Dialog,
@@ -27,6 +26,7 @@ import {useNavigate} from 'react-router-dom'
 import navigateToTerm from 'src/utils/gototerm'
 import {ShowSnackbar} from 'src/utils/globalshow'
 import {convertAppType} from 'src/utils/convertvalue'
+import hiddenEle from 'src/utils/hiddenele'
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -39,11 +39,12 @@ const useStyles = makeStyles((theme) => ({
 const DeployList = ({
                       className,
                       dataProvider,
+                      powerMap,
                       getDeployPods,
                       getBuildPods,
+                      restartPod,
                       gotoPackageApp,
                       gotoPublishApp,
-                      restartPod,
                       ...rest
                     }) => {
   const classes = useStyles()
@@ -70,7 +71,8 @@ const DeployList = ({
     navigateToTerm(navigate, 'exec', podData)
   }
 
-  const navigateToInner = (podData) => {
+  const navigateToInner = (id, podData) => {
+    podData.deployId = id
     navigateToTerm(navigate, 'inner', podData)
   }
 
@@ -232,74 +234,82 @@ const DeployList = ({
                       className={classes.statsItem}
                       item
                     >
-                      <DeployButton dataProvider={data} openPodDialog={handleDialogOpen} navigateToDoc={navigateToDoc}
+                      <DeployButton dataProvider={data} powerMap={powerMap}
+                                    openPodDialog={handleDialogOpen}
+                                    navigateToDoc={navigateToDoc}
                                     navigateToInner={navigateToInner}
-                                    getBuildPods={getBuildPods} gotoPackageApp={requirePackageApp}
+                                    getBuildPods={getBuildPods}
+                                    gotoPackageApp={requirePackageApp}
                                     gotoPublishApp={requirePublishApp}/>
-                      <Dialog maxWidth="lg" open={podDialog} onClose={handleDialogClose}
-                              aria-labelledby="pod-dialog-title">
-                        <Table>
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>
-                                名称
-                              </TableCell>
-                              <TableCell>
-                                状态
-                              </TableCell>
-                              <TableCell>
-                                创建时间
-                              </TableCell>
-                              <TableCell>
-                                操作
-                              </TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {podList.slice(0, limit).map((pod) => (
-                              <TableRow
-                                hover
-                                key={`pod-select-${data.id}-${pod.podName}`}
-                              >
-                                <TableCell>
-                                  {pod.podName}
-                                </TableCell>
-                                <TableCell>
-                                  {pod.status.phase}
-                                </TableCell>
-                                <TableCell>
-                                  {pod.status.startTime}
-                                </TableCell>
-                                <TableCell>
-                                  <Grid
-                                    className={classes.statsItem}
-                                    item
-                                  >
-                                    <ButtonGroup color="primary" aria-label="outlined primary button group">
-                                      <Button variant="outlined" onClick={() => navigateToAttach(selectDeploy, pod)}>
-                                        日志
-                                      </Button>
-                                      <Button variant="outlined" onClick={() => navigateToExec(selectDeploy, pod)}
-                                              disabled={selectDeploy.appBase && selectDeploy.appBase.isIngress === 0}>
-                                        命令
-                                      </Button>
-                                      <Button onClick={() => restartPod(selectDeploy, pod)}>
-                                        重启
-                                      </Button>
-                                    </ButtonGroup>
-                                  </Grid>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </Dialog>
                     </Grid>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          <Dialog maxWidth="lg" open={podDialog} onClose={handleDialogClose}
+                  aria-labelledby="pod-dialog-title">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    名称
+                  </TableCell>
+                  <TableCell>
+                    状态
+                  </TableCell>
+                  <TableCell>
+                    创建时间
+                  </TableCell>
+                  <TableCell>
+                    操作
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {podList.slice(0, limit).map((pod) => (
+                  <TableRow
+                    hover
+                    key={`pod-select-${pod.podName}`}
+                  >
+                    <TableCell>
+                      {pod.podName}
+                    </TableCell>
+                    <TableCell>
+                      {pod.status.phase}
+                    </TableCell>
+                    <TableCell>
+                      {pod.status.startTime}
+                    </TableCell>
+                    <TableCell>
+                      <Grid
+                        className={classes.statsItem}
+                        item
+                      >
+                        <Button variant="outlined" color="primary"
+                                style={{display: hiddenEle(selectDeploy.id, 'deployment', 'podLog', powerMap)}}
+                                onClick={() => navigateToAttach(selectDeploy, pod)}>
+                          日志
+                        </Button>
+                        <Button variant="outlined" color="primary"
+                                style={{display: selectDeploy.appBase && selectDeploy.appBase.isIngress === 0 ? 'none'
+                                    : hiddenEle(selectDeploy.id, 'deployment', 'podExec', powerMap)}}
+                                onClick={() => navigateToExec(selectDeploy, pod)}
+                                disabled={selectDeploy.appBase && selectDeploy.appBase.isIngress === 0}>
+                          命令
+                        </Button>
+                        <Button variant="outlined" color="primary"
+                                style={{display: hiddenEle(selectDeploy.id, 'deployment', 'podRestart', powerMap)}}
+                                onClick={() => restartPod(selectDeploy, pod)}>
+                          重启
+                        </Button>
+                      </Grid>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Dialog>
           <Dialog
             open={require.open}
             onClose={handleRequireClose}

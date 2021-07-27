@@ -15,6 +15,13 @@ const setObjectCurrent = (key, value) => {
   }
 }
 
+const currentUserRes = () => {
+  return getObjectCurrent('currentUserRes')
+}
+const setCurrentUserRes = (value) => {
+  setObjectCurrent('currentUserRes', value)
+}
+
 const currentBaseProp = () => {
   return getObjectCurrent('currentBaseProp')
 }
@@ -49,9 +56,22 @@ const setCurrentDocumentDetail = (id, value) => {
   setObjectCurrent('currentDocument:' + id, value)
 }
 
+const currentToken = () => {
+  return localStorage.getItem('.token')
+}
+const setCurrentToken = (token) => {
+  localStorage.setItem('.token', token)
+}
+
+const delCurrentToken = () => {
+  sessionStorage.clear()
+  localStorage.removeItem('.token')
+}
+
 export {
-  isDevMode, currentBaseProp, setCurrentBaseProp,
+  isDevMode, currentBaseProp, setCurrentBaseProp, currentUserRes, setCurrentUserRes,
   currentEnvId, currentEnvName, setCurrentEnvId, setCurrentEnvName,
   currentSpaceId, setCurrentSpaceId,
-  currentDocumentDetail, setCurrentDocumentDetail
+  currentDocumentDetail, setCurrentDocumentDetail,
+  currentToken, setCurrentToken, delCurrentToken
 }

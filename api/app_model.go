@@ -8,10 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gofiber/fiber/v2"
+	"xorm.io/xorm"
 )
-
-var appMap = make(map[uint64]*model.Project)
-var appInfoMap = make(map[uint64]*refer.AppInfo)
 
 func getAppById(id uint64) (*model.Project, error) {
 	value, ok := appMap[id]
@@ -58,7 +56,7 @@ func findAllAppSimple(c *fiber.Ctx) (int, *[]model.Project, error) {
 	var list []model.Project
 	sql := base.Engine.Cols(model.IdInProject, model.AppKeyInProject, model.AppTypeInProject).
 		Where("is_disable = 0")
-	err := DatabaseAuth(model.ProjectTable, c, sql)
+	err := SelectAuth(c, model.ProjectTable, sql)
 	if nil != err {
 		return 0, nil, err
 	}
@@ -69,7 +67,7 @@ func findAllAppSimple(c *fiber.Ctx) (int, *[]model.Project, error) {
 func countAppWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.Project
 	sql := base.Engine.Cols(model.IdInProject)
-	err := DatabaseAuth(model.ProjectTable, c, sql)
+	err := SelectAuth(c, model.ProjectTable, sql)
 	if nil != err {
 		return 0, err
 	}
@@ -79,7 +77,7 @@ func countAppWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 func findAppWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Project, error) {
 	var list []model.Project
 	sql := base.Engine.Omit(model.AppDescInProject, model.AppInfoInProject, model.SourceInfoInProject, model.InjectInfoInProject)
-	err := DatabaseAuth(model.ProjectTable, c, sql)
+	err := SelectAuth(c, model.ProjectTable, sql)
 	if nil != err {
 		return 0, nil, err
 	}
@@ -87,13 +85,13 @@ func findAppWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Project
 	return len(list), &list, err
 }
 
-func updateAppById(info *model.Project) (int64, error) {
+func updateAppById(c *fiber.Ctx, session *xorm.Session, info *model.Project) (int64, error) {
 	if nil == info || info.Id <= 0 {
 		return -1, errors.New("input model error, id is empty")
 	}
-	return base.Engine.Omit(model.IdInProject, model.AppKeyInProject, model.AppNameInProject).Update(info)
+	return session.Omit(model.IdInProject, model.AppKeyInProject, model.AppNameInProject).Update(info)
 }
 
-func insertApp(info *model.Project) (int64, error) {
-	return base.Engine.InsertOne(info)
+func insertApp(c *fiber.Ctx, session *xorm.Session, info *model.Project) (int64, error) {
+	return session.InsertOne(info)
 }

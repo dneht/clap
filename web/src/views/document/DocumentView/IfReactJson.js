@@ -1,6 +1,6 @@
-import {TextField} from '@material-ui/core';
-import ReactJson from 'react-json-view';
-import React from 'react';
+import {TextField} from '@material-ui/core'
+import ReactJson from 'react-json-view'
+import React from 'react'
 
 const IfReactJson = ({mockData, ...rest}) => {
   if (mockData.indexOf('{') < 0 && mockData.indexOf('}') < 0) {

@@ -22,14 +22,15 @@ const pingPeriod = 5 * time.Second
 var ingress = []string{"/bin/sh", "-c", "TERM=xterm-256color; export TERM; [ -x /bin/bash ] && ([ -x /usr/bin/script ] && /usr/bin/script -q -c \"/bin/bash\" /dev/null || exec /bin/bash) || exec /bin/sh"}
 
 type ExecInput struct {
-	EnvId         uint64 `json:"env"`
-	Namespace     string `json:"namespace"`
-	PodName       string `json:"pod"`
-	ContainerName string `json:"container"`
-	SinceSecond   int64  `json:"since"`
-	TailLines     int64  `json:"tail"`
-	Resource      string `json:"resource"`
-	Timeout       int    `json:"timeout"`
+	EnvId         uint64   `json:"env"`
+	Namespace     string   `json:"namespace"`
+	PodName       string   `json:"pod"`
+	ContainerName string   `json:"container"`
+	SinceSecond   int64    `json:"since"`
+	TailLines     int64    `json:"tail"`
+	Resource      string   `json:"resource"`
+	Timeout       int      `json:"timeout"`
+	Ingress       []string `json:"ingress"`
 }
 
 func ExecSelectPod(ws *websocket.Conn, f func(ws *websocket.Conn) (*ExecInput, error)) error {
@@ -82,6 +83,10 @@ func ExecSelectPod(ws *websocket.Conn, f func(ws *websocket.Conn) (*ExecInput, e
 		SubResource(t.input.Resource)
 
 	tty := false
+	cmd := ingress
+	if nil != in.Ingress && len(in.Ingress) > 0 {
+		cmd = in.Ingress
+	}
 	if t.input.Resource == "exec" {
 		tty = true
 		req.VersionedParams(&corev1.PodExecOptions{
@@ -89,7 +94,7 @@ func ExecSelectPod(ws *websocket.Conn, f func(ws *websocket.Conn) (*ExecInput, e
 			Stdout:    true,
 			Stderr:    true,
 			TTY:       true,
-			Command:   ingress,
+			Command:   cmd,
 			Container: t.input.ContainerName,
 		}, scheme.ParameterCodec)
 	} else {

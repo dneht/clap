@@ -1,7 +1,10 @@
 package util
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -36,4 +39,22 @@ func IfNotExistTailAdd(input string, suffix string) string {
 	} else {
 		return input + suffix
 	}
+}
+
+func SpliceNumbersToMD5(nums ...uint64) string {
+	hash := md5.New()
+	for idx, num := range nums {
+		hash.Write([]byte(strconv.FormatInt(int64(idx), 10)))
+		hash.Write([]byte(strconv.FormatUint(num, 10)))
+	}
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func GenerateMD5(list ...string) string {
+	hash := md5.New()
+	for idx, one := range list {
+		hash.Write([]byte(strconv.FormatInt(int64(idx), 10)))
+		hash.Write([]byte(one))
+	}
+	return hex.EncodeToString(hash.Sum(nil))
 }

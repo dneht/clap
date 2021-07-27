@@ -1,8 +1,8 @@
-import React from 'react';
-import {NavLink as RouterLink} from 'react-router-dom';
-import clsx from 'clsx';
-import PropTypes from 'prop-types';
-import {Button, ListItem, makeStyles} from '@material-ui/core';
+import React from 'react'
+import {NavLink as RouterLink} from 'react-router-dom'
+import clsx from 'clsx'
+import PropTypes from 'prop-types'
+import {Button, ListItem, makeStyles} from '@material-ui/core'
 
 const useStyles = makeStyles((theme) => ({
   item: {
@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
       color: theme.palette.primary.main
     }
   }
-}));
+}))
 
 const NavItem = ({
                    className,
@@ -43,7 +43,7 @@ const NavItem = ({
                    title,
                    ...rest
                  }) => {
-  const classes = useStyles();
+  const classes = useStyles()
 
   return (
     <ListItem
@@ -68,14 +68,14 @@ const NavItem = ({
         </span>
       </Button>
     </ListItem>
-  );
-};
+  )
+}
 
 NavItem.propTypes = {
   className: PropTypes.string,
   href: PropTypes.string,
   icon: PropTypes.elementType,
   title: PropTypes.string
-};
+}
 
-export default NavItem;
+export default NavItem

@@ -18,21 +18,46 @@ package api
 
 import (
 	"cana.io/clap/pkg/base"
-	"cana.io/clap/pkg/model"
 	"cana.io/clap/pkg/refer"
 	"github.com/gofiber/fiber/v2"
+	"sync"
 )
 
+const ConfigApi = "/config"
+const CleanApi = "/api/clean"
+
+var cleanLock sync.Mutex
+var cleanAll = false
+
+func ConfigBase(c *fiber.Ctx) error {
+	now := base.Now()
+	return c.JSON(map[string]interface{}{
+		"env":       now.Env,
+		"type":      refer.AppTypeMap,
+		"namespace": now.Namespace,
+		"timezone":  now.Timezone,
+		"document":  now.Document,
+		"package":   now.Package,
+	})
+}
+
 func CleanAll(c *fiber.Ctx) error {
+	if !ManagerAuth(c) {
+		return fiber.ErrForbidden
+	}
+	if cleanAll {
+		return c.SendString("ok")
+	}
+
+	cleanLock.Lock()
+	cleanAll = true
+	defer func() {
+		cleanAll = false
+		cleanLock.Unlock()
+	}()
+
 	base.BuildProperty()
 	base.Reset()
-
-	spaceMap = make(map[uint64]*model.EnvironmentSpace)
-	spaceInfoMap = make(map[uint64]*refer.SpaceInfo)
-	appMap = make(map[uint64]*model.Project)
-	appInfoMap = make(map[uint64]*refer.AppInfo)
-	deployMap = make(map[uint64]*model.Deployment)
-	appDeployMap = make(map[uint64]*refer.AppInfo)
-	templateMap = make(map[uint64]*model.Template)
-	return c.JSON("ok")
+	resetAllCache()
+	return c.SendString("ok")
 }

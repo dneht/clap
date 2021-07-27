@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 )
@@ -13,6 +14,13 @@ const size = 1000000
 const thread = 64
 
 var sm sync.Map
+
+func TestOneUniqueId(t *testing.T) {
+	for i :=0; i < 100; i ++ {
+		id := UniqueId()
+		fmt.Println(id)
+	}
+}
 
 func TestUniqueId(t *testing.T) {
 	channel := make(chan bool, thread)

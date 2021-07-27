@@ -7,7 +7,8 @@ import {WebLinksAddon} from 'xterm-addon-web-links'
 import 'xterm/css/xterm.css'
 import Requests from 'src/requests'
 import {ShowSnackbar} from 'src/utils/globalshow'
-import {Helmet} from 'react-helmet';
+import {Helmet} from 'react-helmet'
+import {currentToken} from 'src/sessions'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -30,12 +31,12 @@ const MainView = () => {
   term.loadAddon(fitAddon)
   term.loadAddon(new SearchAddon())
   term.loadAddon(new WebLinksAddon())
-  // term.open(document.getElementById('terminal'));
+  // term.open(document.getElementById('terminal'))
   const params = JSON.parse(atob(window.location.search.substring(4)))
   const resource = params[6]
   const connect = new WebSocket(Requests.wsUrl + '/select/' + resource + '/' + params[4]
     + '?env=' + params[0] + '&space=' + params[1] + '&project=' + params[2] + '&deploy=' + params[3]
-    + '&container=' + params[5] + '&token=' + localStorage.getItem('.token'))
+    + '&container=' + params[5] + '&token=' + encodeURIComponent(currentToken()))
 
   const resize = () => {
     fitAddon.fit()
@@ -56,13 +57,13 @@ const MainView = () => {
   }
 
   connect.onclose = function (event) {
-    term.writeln('\r\n\x1b[1;33mconnection close\x1B[0m');
-    term.setOption('cursorBlink', false);
+    term.writeln('\r\n\x1b[1;33mconnection close\x1B[0m')
+    term.setOption('cursorBlink', false)
     window.removeEventListener('resize', resize)
   }
 
   connect.onmessage = function (event) {
-    const message = JSON.parse(event.data);
+    const message = JSON.parse(event.data)
     if (message.Op === 'stdout') {
       if (resource === 'attach') {
         term.write(message.Data.replace(/\r?\n/g, '\r\n'))

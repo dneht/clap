@@ -18,11 +18,13 @@ const useStyles = makeStyles((theme) => ({
 
 const MainView = () => {
   const classes = useStyles()
-  const [envSelect, setEnvSelect] = useState(0);
+  const [envSelect, setEnvSelect] = useState(0)
   const [envList, setEnvList] = useState([])
-  const [spaceSelect, setSpaceSelect] = useState(0);
+  const [spaceSelect, setSpaceSelect] = useState(0)
   const [spaceList, setSpaceList] = useState([])
   const [deployList, setDeployList] = useState({total: 0, size: 10, results: []})
+  const [powerMap, setPowerMap] = useState({})
+
   const getDeployList = (spaceId) => {
     setSpaceSelect(spaceId)
     setCurrentSpaceId(spaceId)
@@ -86,6 +88,12 @@ const MainView = () => {
         setEnvSelect(envId)
         setEnvList(data)
         getSpaceList(envId)
+
+        http.getSimple('/api/pow', {type: 'deployment'}).then(pow => {
+          setPowerMap(pow)
+        }).catch(err => {
+          ShowSnackbar('get pow err:' + err, 'error')
+        })
       }
     })
   }, [])
@@ -118,8 +126,9 @@ const MainView = () => {
         <Toolbar envProvider={envList} envSelect={envSelect} getDeployList={getDeployList}
                  spaceProvider={spaceList} spaceSelect={spaceSelect} getSpaceList={getSpaceList}/>
         <Box mt={3}>
-          <DeployList dataProvider={deployList} getDeployPods={getDeployPods} getBuildPods={getBuildPods}
-                      gotoPackageApp={gotoPackageApp} gotoPublishApp={gotoPublishApp} restartPod={restartPod}/>
+          <DeployList dataProvider={deployList} powerMap={powerMap}
+                      getDeployPods={getDeployPods} getBuildPods={getBuildPods} restartPod={restartPod}
+                      gotoPackageApp={gotoPackageApp} gotoPublishApp={gotoPublishApp}/>
         </Box>
       </Container>
     </Page>

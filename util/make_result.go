@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"net/http"
+	"reflect"
 )
 
 func ResultEmpty(c *fiber.Ctx) error {
@@ -82,22 +83,26 @@ func paramEmpty(c *fiber.Ctx) error {
 func ResultPageOrList(c *fiber.Ctx, p *MainInput, t func(*MainInput) (int64, error), f func(*MainInput) (int, interface{}, error)) error {
 	size := len(p.Ids)
 	if size > 100 {
-		return ErrorInput(c, "Input size error")
+		return ErrorInput(c, "input size error")
 	}
 	if size > 0 {
 		_, result, err := f(p)
 		if nil != err {
-			return ErrorInput(c, "Can not get list")
+			return ErrorInputOrDirect(c, err, "can not get list")
 		}
 		return listNormal(c, result)
 	} else {
 		total, err := t(p)
 		if nil != err {
-			return ErrorInput(c, "Can not get page")
+			return ErrorInputOrDirect(c, err, "can not get page")
 		}
-		return ResultPage(c, total, p, func(input *MainInput) (int, interface{}, error) {
-			return f(input)
-		})
+		if total == 0 {
+			return ResultPageEmpty(c, nil)
+		} else {
+			return ResultPage(c, total, p, func(input *MainInput) (int, interface{}, error) {
+				return f(input)
+			})
+		}
 	}
 }
 
@@ -182,15 +187,29 @@ func pageEmpty(c *fiber.Ctx) error {
 
 func ErrorInternal(c *fiber.Ctx, e error) error {
 	log.Printf("[error] internal error: %v\n", e)
-	return c.Status(http.StatusInternalServerError).JSON(map[string]string{
-		"message": "Error",
-	})
+	if reflect.TypeOf(e) == reflect.TypeOf(fiber.ErrBadRequest) {
+		return e
+	} else {
+		return c.Status(http.StatusInternalServerError).JSON(map[string]string{
+			"message": "Error",
+		})
+	}
 }
 
 func ErrorInput(c *fiber.Ctx, message string) error {
 	return c.Status(http.StatusBadRequest).JSON(map[string]string{
 		"message": message,
 	})
+}
+
+func ErrorInputOrDirect(c *fiber.Ctx, e error, message string) error {
+	if reflect.TypeOf(e) == reflect.TypeOf(fiber.ErrBadRequest) {
+		return e
+	} else {
+		return c.Status(http.StatusBadRequest).JSON(map[string]string{
+			"message": message,
+		})
+	}
 }
 
 func ErrorInputShowMessage(c *fiber.Ctx, message string) error {

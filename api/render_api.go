@@ -11,6 +11,8 @@ import (
 	"strconv"
 )
 
+const RenderApiPre = "/api/render"
+
 func GetTemplate(c *fiber.Ctx) error {
 	id, err := util.CheckIdInput(c, "id")
 	if nil != err {
@@ -35,14 +37,18 @@ func ListTemplate(c *fiber.Ctx) error {
 	}
 	return util.ResultPageOrList(c, param,
 		func(input *util.MainInput) (int64, error) {
-			return countTemplateWithPage(input)
+			return countTemplateWithPage(c, input)
 		}, func(input *util.MainInput) (int, interface{}, error) {
-			return findTemplateWithPage(input)
+			return findTemplateWithPage(c, input)
 		})
 }
 
 func ExecRender(c *fiber.Ctx) error {
 	deployId, err := util.CheckIdInput(c, "deploy")
+	if nil != err {
+		return err
+	}
+	err = DeploymentAuth(c, deployId, AllowThisPackageDeploy)
 	if nil != err {
 		return err
 	}

@@ -3,6 +3,7 @@ import {Box, Container, makeStyles} from '@material-ui/core'
 import Page from 'src/components/Page'
 import ProjectList from './ProjectList'
 import http from 'src/requests'
+import {ShowSnackbar} from '../../../utils/globalshow'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -16,8 +17,18 @@ const useStyles = makeStyles((theme) => ({
 const MainView = () => {
   const classes = useStyles()
   const [appList, setAppList] = useState({total: 0, size: 10, results: []})
+  const [powerMap, setPowerMap] = useState({})
+
   useEffect(() => {
-    http.getList('/api/app').then(data => setAppList(data))
+    http.getList('/api/app').then(data => {
+      setAppList(data)
+
+      http.getSimple('/api/pow', {type: 'project'}).then(pow => {
+        setPowerMap(pow)
+      }).catch(err => {
+        ShowSnackbar('get pow err:' + err, 'error')
+      })
+    })
   }, [])
 
   return (
@@ -27,7 +38,7 @@ const MainView = () => {
     >
       <Container maxWidth={false}>
         <Box mt={3}>
-          <ProjectList dataProvider={appList}/>
+          <ProjectList dataProvider={appList} powerMap={powerMap}/>
         </Box>
       </Container>
     </Page>

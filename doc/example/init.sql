@@ -4,8 +4,8 @@ use
 clap;
 
 
-drop table if exists property;
-create table property
+drop table if exists bootstrap;
+create table bootstrap
 (
     id         bigint unsigned not null auto_increment,
     env        varchar(128) not null comment '环境',
@@ -14,10 +14,10 @@ create table property
     is_disable boolean               default false comment '是否已被禁用',
     created_at timestamp    not null default current_timestamp comment '添加时间',
     updated_at timestamp    not null default current_timestamp on update current_timestamp comment '更新时间',
-    unique uk_property_key (env, prop),
+    unique uk_bootstrap_key (env, prop),
     primary key (id)
 ) engine = innodb
-  default charset = utf8mb4 comment = '配置信息';
+  default charset = utf8mb4 comment = '启动信息';
 
 
 drop table if exists environment;
@@ -107,7 +107,6 @@ create table deployment
     app_id        bigint unsigned not null comment '项目',
     env_id        bigint unsigned not null comment '环境',
     space_id      bigint unsigned not null comment '环境空间',
-    plan_id       bigint               default 0 comment '计划id，关联使用，如果不为0则包含在发布计划中',
     branch_name   varchar(64) comment '代码分支',
     deploy_name   varchar(64) not null comment '部署名',
     deploy_status tinyint              default 0 comment '部署状态，修改需要加锁。0默认、1打包中、2打包完成、3打包失败、6已发布',
@@ -133,12 +132,12 @@ create table deployment_plan
     id            bigint unsigned not null auto_increment,
     env_id        bigint unsigned not null comment '环境',
     user_id       bigint unsigned not null comment '创建者',
-    deploy_list   json comment '部署列表，里面是deploy_id，只能在同一个env下',
+    deploy_id     bigint unsigned not null comment '部署id',
     deploy_status tinyint            default 0 comment '部署状态，0未知、1成功、2等待、9失败',
     is_disable    boolean            default false comment '是否已被禁用',
     created_at    timestamp not null default current_timestamp comment '添加时间',
-    index         idx_env_id (env_id),
-    primary key (id)
+    index         idx_user_id (user_id),
+    primary key (id, deploy_id)
 ) engine = innodb
   default charset = utf8mb4 comment = '发布计划';
 
@@ -152,9 +151,10 @@ create table deployment_log
     space_id      bigint unsigned not null comment '环境空间',
     deploy_id     bigint unsigned not null comment '部署',
     plan_id       bigint unsigned comment '关联的发布计划id，可以为空',
-    deploy_time   int unsigned comment '部署用时，单位秒',
-    deploy_status tinyint            default 0 comment '部署状态，0未知、1成功、2等待、9失败',
-    snapshot_info json comment '部署时项目、打包及生成的信息快照',
+    prop_id       bigint unsigned comment '关联的配置快照id，可以为空',
+    branch_name   varchar(64) comment '代码分支',
+    deploy_tag    varchar(24) comment '打包使用的tag',
+    snapshot_info json comment '部署时的信息快照，合并后的信息',
     created_at    timestamp not null default current_timestamp comment '添加时间',
     index         idx_app_id (env_id, app_id),
     primary key (id)
@@ -162,10 +162,48 @@ create table deployment_log
   default charset = utf8mb4 comment = '发布日志';
 
 
+drop table if exists property_file;
+create table property_file
+(
+    id           bigint unsigned not null auto_increment,
+    res_id       bigint unsigned not null comment '资源id',
+    link_id      bigint unsigned not null comment '关联id',
+    file_name    varchar(64)  not null comment '文件名，不包含文件路径',
+    file_path    varchar(128) not null comment '文件路径，不包含文件名',
+    link_id      bigint unsigned default 0 comment '关联id',
+    prop_readme  varchar(256) not null comment '配置文件说明',
+    prop_content text         not null comment '配置文件文本',
+    is_disable   boolean               default false comment '是否已被禁用',
+    created_at   timestamp    not null default current_timestamp comment '添加时间',
+    updated_at   timestamp    not null default current_timestamp on update current_timestamp comment '更新时间',
+    index        idx_link_id (link_id),
+    primary key (id)
+) engine = innodb
+  default charset = utf8mb4 comment = '配置文件';
+
+
+drop table if exists property_snap;
+create table property_snap
+(
+    id           bigint unsigned not null auto_increment,
+    res_id       bigint unsigned not null comment '资源id',
+    link_id      bigint unsigned not null comment '关联id',
+    file_name    varchar(64)  not null comment '文件名，不包含文件路径',
+    file_path    varchar(128) not null comment '文件路径，不包含文件名',
+    link_id      bigint unsigned default 0 comment '关联id',
+    prop_content text         not null comment '配置文件文本',
+    created_at   timestamp    not null default current_timestamp comment '添加时间',
+    index        idx_link_id (link_id),
+    primary key (id)
+) engine = innodb
+  default charset = utf8mb4 comment = '配置快照';
+
+
 drop table if exists resource;
 create table resource
 (
     id         bigint unsigned not null auto_increment,
+    sys_id     int unsigned not null default 0 comment '系统id，默认0本系统',
     res_name   varchar(128) not null comment '资源名',
     res_order  int                   default 0 comment '资源排序，在同一个parent_id下有效',
     res_info   json comment '资源附加信息',
@@ -181,14 +219,16 @@ drop table if exists permission;
 create table permission
 (
     id         bigint unsigned not null auto_increment,
+    sys_id     int unsigned not null default 0 comment '系统id，默认0本系统',
     role_id    bigint unsigned not null comment '角色id',
     res_id     bigint unsigned not null comment '资源id',
-    res_power  int unsigned comment '二进制表示，从右到左的二进制位表示select，update、insert、delete、manage、where',
+    res_power  int unsigned comment '二进制表示，从右到左的二进制位表示select，update、insert、delete、grant x4',
+    link_id    bigint unsigned default 0 comment '关联id',
     power_info json comment '权限附加信息',
     created_at timestamp not null default current_timestamp comment '添加时间',
     updated_at timestamp not null default current_timestamp on update current_timestamp comment '更新时间',
     index      idx_role_id (role_id),
-    index      idx_res_id (res_id),
+    index      idx_res_link_id (res_id, link_id),
     primary key (id)
 ) engine = innodb
   default charset = utf8mb4 comment = '权限信息';
@@ -199,7 +239,7 @@ create table role_info
 (
     id          bigint unsigned not null auto_increment,
     role_name   varchar(64)  not null comment '角色名',
-    role_from   int unsigned default 0 comment '角色来源、本系统0',
+    role_from   int unsigned default 0 comment '角色来源、本系统0，自动创建1',
     role_remark varchar(256) not null comment '备注信息',
     is_manage   boolean               default false comment '是否是管理角色',
     is_super    boolean               default false comment '是否是超级管理角色',

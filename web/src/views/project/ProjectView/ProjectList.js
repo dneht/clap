@@ -5,7 +5,6 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import {
   Box,
   Button,
-  ButtonGroup,
   Card,
   Checkbox,
   Grid,
@@ -18,7 +17,8 @@ import {
   TableRow,
   Typography
 } from '@material-ui/core'
-import {convertAppType} from 'src/utils/convertvalue';
+import {convertAppType} from 'src/utils/convertvalue'
+import hiddenEle from '../../../utils/hiddenele'
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }))
 
-const ProjectList = ({className, dataProvider, ...rest}) => {
+const ProjectList = ({className, dataProvider, powerMap, ...rest}) => {
   const classes = useStyles()
   const [selectedListIds, setSelectedListIds] = useState([])
   const [limit, setLimit] = useState(50)
@@ -154,17 +154,17 @@ const ProjectList = ({className, dataProvider, ...rest}) => {
                       className={classes.statsItem}
                       item
                     >
-                      <ButtonGroup color="primary" aria-label="outlined primary button group">
-                        <Button>
-                          详情
-                        </Button>
-                        <Button>
-                          编辑
-                        </Button>
-                        <Button>
-                          配置
-                        </Button>
-                      </ButtonGroup>
+                      <Button variant="outlined" color="primary">
+                        详情
+                      </Button>
+                      <Button variant="outlined" color="primary"
+                              style={{display: hiddenEle(dataProvider.id, 'project', 'editThis', powerMap)}}>
+                        编辑
+                      </Button>
+                      <Button variant="outlined" color="primary"
+                              style={{display: hiddenEle(dataProvider.id, 'project', 'propView', powerMap)}}>
+                        配置
+                      </Button>
                     </Grid>
                   </TableCell>
                 </TableRow>
