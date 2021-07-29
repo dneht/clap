@@ -48,10 +48,10 @@ func ExecRender(c *fiber.Ctx) error {
 	if nil != err {
 		return err
 	}
-	err = DeploymentAuth(c, deployId, AllowThisPackageDeploy)
-	if nil != err {
-		return err
-	}
+	//err = DeploymentAuth(c, deployId, AllowThisPackageDeploy)
+	//if nil != err {
+	//	return err
+	//}
 	envBase, spaceBase, appBase, deployBase, err := getMoreModels(deployId)
 	if nil != err {
 		return util.ErrorInternal(c, err)
@@ -100,6 +100,11 @@ func buildTemplate(envBase *model.Environment, spaceBase *model.EnvironmentSpace
 	if nil != err {
 		return nil, "", err
 	}
+	err = generateRenderProps(appBase.Id, envBase.Id, spaceBase.Id, deployBase.Id, appInfo)
+	if nil != err {
+		return nil, "", err
+	}
+
 	fillMap := make(map[string]interface{}, 40)
 	fillMap["id"] = appBase.Id
 	fillMap["key"] = appBase.AppKey

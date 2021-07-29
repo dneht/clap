@@ -1,9 +1,10 @@
-import React from 'react'
+import React, {useState} from 'react'
 import PropTypes from 'prop-types'
 import clsx from 'clsx'
 import {Box, Button, Card, CardContent, Divider, Grid, makeStyles, Typography} from '@material-ui/core'
-import {currentEnvName, setCurrentSpaceId} from 'src/sessions'
 import {useNavigate} from 'react-router-dom'
+import PropertyView from 'src/views/property/PropertyView'
+import {currentEnvName, setCurrentSpaceId} from 'src/sessions'
 import hiddenEle from 'src/utils/hiddenele'
 
 const useStyles = makeStyles((theme) => ({
@@ -23,6 +24,7 @@ const useStyles = makeStyles((theme) => ({
 const EnvironmentSpaceCard = ({className, dataProvider, powerMap, ...rest}) => {
   const classes = useStyles()
   const navigate = useNavigate()
+  const [propOpen, setPropOpen] = useState(false)
 
   const navigateToCurrent = () => {
     setCurrentSpaceId(dataProvider.id)
@@ -84,11 +86,12 @@ const EnvironmentSpaceCard = ({className, dataProvider, powerMap, ...rest}) => {
               详情
             </Button>
             <Button variant="outlined" color="primary"
-                    style={{display: hiddenEle(dataProvider.id, 'environment_space', 'editThis', powerMap)}}>
+                    style={{display: hiddenEle(dataProvider.id, 'environment_space', 'thisEdit', powerMap)}}>
               编辑
             </Button>
             <Button variant="outlined" color="primary"
-                    style={{display: hiddenEle(dataProvider.id, 'environment_space', 'propView', powerMap)}}>
+                    style={{display: hiddenEle(dataProvider.id, 'environment_space', 'propView', powerMap)}}
+                    onClick={() => setPropOpen(true)}>
               配置
             </Button>
             <Button variant="outlined" color="primary"
@@ -98,6 +101,8 @@ const EnvironmentSpaceCard = ({className, dataProvider, powerMap, ...rest}) => {
             </Button>
           </Grid>
         </Grid>
+        <PropertyView dataProvider={dataProvider} powerMap={powerMap} inputType="environment_space"
+                      propOpen={propOpen} setPropOpen={setPropOpen}/>
       </Box>
     </Card>
   )

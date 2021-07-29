@@ -52,6 +52,10 @@ func invalidDeployById(id uint64) {
 	delete(appDeployMap, id)
 }
 
+func invalidDeployInfoById(id uint64) {
+	delete(appDeployMap, id)
+}
+
 func countDeployWithPage(c *fiber.Ctx, input *util.MainInput, planId uint64) (int64, error) {
 	var info model.Deployment
 	sql := base.Engine.Cols(model.IdInDeployment).Where(model.PlanIdInDeployment + " = ?", planId)

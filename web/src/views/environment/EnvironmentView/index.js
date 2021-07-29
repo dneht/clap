@@ -25,13 +25,15 @@ const MainView = () => {
 
   useEffect(() => {
     http.getList('/api/env').then(data => {
-      setDataList(data)
-
-      http.getSimple('/api/pow', {type: 'environment'}).then(pow => {
-        setPowerMap(pow)
-      }).catch(err => {
-        ShowSnackbar('get pow err:' + err, 'error')
-      })
+      if (data.results) {
+        http.postSimple('/api/pow', {type: 'environment'},
+          data.results.map(e => e.id)).then(pow => {
+          setPowerMap(pow)
+          setDataList(data)
+        }).catch(err => {
+          ShowSnackbar('get pow err:' + err, 'error')
+        })
+      }
     })
   }, [])
 

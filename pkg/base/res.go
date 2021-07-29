@@ -49,6 +49,19 @@ func Resource(id uint64) (*model.Resource, *map[string]interface{}) {
 	return resIdMap[id], resInfoMap[id]
 }
 
+func ResourceId(name string) (uint64, bool) {
+	id, ok := resNameMap[name]
+	return id, ok
+}
+
+func ResourceName(name string) (*model.Resource, *map[string]interface{}) {
+	id, ok := resNameMap[name]
+	if !ok {
+		return nil, nil
+	}
+	return resIdMap[id], resInfoMap[id]
+}
+
 func dangListFullRes() *[]model.Resource {
 	var list []model.Resource
 	err := Engine.Omit(model.CreatedAtInResource, model.UpdatedAtInResource).

@@ -18,7 +18,8 @@ import {
   Typography
 } from '@material-ui/core'
 import {convertAppType} from 'src/utils/convertvalue'
-import hiddenEle from '../../../utils/hiddenele'
+import hiddenEle from 'src/utils/hiddenele'
+import PropertyView from '../../property/PropertyView'
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -158,7 +159,7 @@ const ProjectList = ({className, dataProvider, powerMap, ...rest}) => {
                         详情
                       </Button>
                       <Button variant="outlined" color="primary"
-                              style={{display: hiddenEle(dataProvider.id, 'project', 'editThis', powerMap)}}>
+                              style={{display: hiddenEle(dataProvider.id, 'project', 'thisEdit', powerMap)}}>
                         编辑
                       </Button>
                       <Button variant="outlined" color="primary"

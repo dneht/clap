@@ -39,7 +39,7 @@ func main() {
 	app.Get(api.ResApiPre+api.SimpleSuffix, api.SimpleRes)
 	app.Get(api.ResApiPre+"/:id", api.GetRes)
 	app.Post(api.PowApiPre+api.ListSuffix, api.ListPow)
-	app.Get(api.PowApiPre+api.SimpleSuffix, api.SimplePow)
+	app.Post(api.PowApiPre+api.SimpleSuffix, api.SimplePow)
 	app.Get(api.PowApiPre+"/:id", api.GetPow)
 
 	app.Post(api.UserApiPre+api.ListSuffix, api.ListUser)
@@ -75,6 +75,10 @@ func main() {
 	app.Get(api.DeployApiPre+"/:id", api.GetDeploy)
 	app.Post(api.DeployApiPre, api.CreateDeploy)
 	app.Put(api.DeployApiPre+"/:id", api.UpdateDeploy)
+
+	app.Get("/prop/:type/:id", api.GetProp)
+	app.Post("/prop/:type", api.CreateProp)
+	app.Put("/prop/:type/:id", api.UpdateProp)
 
 	app.Get("/pod/space/:id", api.ListSpacePod)
 	app.Get("/pod/deploy/:id", api.ListDeployPod)

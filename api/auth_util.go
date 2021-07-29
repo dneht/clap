@@ -44,15 +44,15 @@ const (
 	AllowThisAndSubGrant      = 1 << 9
 	AllowThisDocumentView     = 1 << 12
 	AllowThisPackageDeploy    = 1 << 13
-	AllowThisPropertyView     = 1 << 16
-	AllowThisPropertyCreate   = 1 << 17
-	AllowThisPropertyUpdate   = 1 << 18
-	AllowThisDeployPlanCreate = 1 << 20
-	AllowThisPodLog           = 1 << 22
-	AllowThisPodExec          = 1 << 23
-	AllowThisPodRestart       = 1 << 24
-	AllowThisPodRollback      = 1 << 25
-	AllowThisPodSpace         = 1 << 28
+	AllowThisRollbackDeploy   = 1 << 14
+	AllowThisPropertyView     = 1 << 18
+	AllowThisPropertyCreate   = 1 << 19
+	AllowThisPropertyUpdate   = 1 << 20
+	AllowThisDeployPlanCreate = 1 << 22
+	AllowThisPodLog           = 1 << 24
+	AllowThisPodExec          = 1 << 25
+	AllowThisPodRestart       = 1 << 26
+	AllowThisPodSpace         = 1 << 29
 )
 
 func CheckAuth(c *fiber.Ctx) error {
@@ -206,6 +206,9 @@ func getUserResInfo(ids []uint64) *map[string]interface{} {
 
 	for _, id := range ids {
 		_, oneRes := base.Resource(id)
+		if nil == oneRes {
+			continue
+		}
 		for key, value := range *oneRes {
 			resInfo[key] = value
 		}
@@ -371,7 +374,19 @@ func DeploymentAuth(c *fiber.Ctx, id uint64, allow uint) error {
 	if nil != err {
 		return err
 	}
-	return checkInnerAuth(auth, id, allow)
+	return checkInnerAuth(auth, model.DeploymentTable, id, allow)
+}
+
+func ResourceAuth(c *fiber.Ctx, res string, id uint64, allow uint) error {
+	token, err := getInputToken(c)
+	if nil != err {
+		return err
+	}
+	auth, err := getAuthFromToken(token)
+	if nil != err {
+		return err
+	}
+	return checkInnerAuth(auth, res, id, allow)
 }
 
 func WebsocketAuth(token string, id uint64, allow uint) error {
@@ -379,11 +394,11 @@ func WebsocketAuth(token string, id uint64, allow uint) error {
 	if nil != err {
 		return err
 	}
-	return checkInnerAuth(auth, id, allow)
+	return checkInnerAuth(auth, model.DeploymentTable, id, allow)
 }
 
-func checkInnerAuth(auth *refer.AuthInfo, id uint64, allow uint) error {
-	if auth.IsSuper {
+func checkInnerAuth(auth *refer.AuthInfo, res string, id uint64, allow uint) error {
+	if auth.IsManage {
 		return nil
 	}
 	if nil == auth.ResPower {
@@ -393,7 +408,7 @@ func checkInnerAuth(auth *refer.AuthInfo, id uint64, allow uint) error {
 		return fiber.ErrForbidden
 	}
 
-	list, ok := (*auth.ResPower)[CommonPre+model.DeploymentTable]
+	list, ok := (*auth.ResPower)[CommonPre+res]
 	if ok {
 		for _, one := range list {
 			if one.LinkId == id && one.Power&allow > 0 {

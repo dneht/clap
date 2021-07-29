@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react'
 import {Box, Container, FormControl, makeStyles, TextField} from '@material-ui/core'
 import Page from 'src/components/Page'
-import DocumentCard from 'src/views/document/DocumentView/DocumentCard'
 import http from 'src/requests'
+import DocumentCard from 'src/views/document/DocumentView/DocumentCard'
 import {currentBaseProp} from 'src/sessions'
 import {ShowSnackbar} from 'src/utils/globalshow'
 import {Autocomplete} from '@material-ui/lab'
@@ -71,7 +71,6 @@ const MainView = () => {
     }
     for (const idx in inputList) {
       const inputOne = inputList[idx]
-      console.log(inputOne)
       if (inputOne && 'fieldName' in inputOne) {
         if (addSize > 0) {
           inputOne.fieldName = '\t'.repeat(addSize) + inputOne.fieldName

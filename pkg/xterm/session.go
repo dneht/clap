@@ -180,6 +180,9 @@ func Logs(t *TerminalSession, clientset *kubernetes.Clientset) error {
 func (t TerminalSession) Toast(toastType, p string) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
+	if nil == t.ws || nil == t.ws.Conn {
+		return
+	}
 	if err := t.ws.SetWriteDeadline(time.Now().Add(writeWait)); nil != err {
 		println(err)
 		return

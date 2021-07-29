@@ -16,18 +16,29 @@ limitations under the License.
 
 package util
 
-func RemoveRepeatedElement(arr []string) []string {
+import "strings"
+
+func RemoveRepeatedElement(arr []string, sp string) []string {
 	result := make([]string, 0, len(arr))
+	repeat := make(map[string]bool, len(arr))
 	for i := 0; i < len(arr); i++ {
-		repeat := false
-		for j := i + 1; j < len(arr); j++ {
-			if arr[i] == arr[j] {
-				repeat = true
-				break
-			}
+		get := strings.TrimSpace(arr[i])
+		if "" == get || strings.HasPrefix(get, "=") {
+			continue
 		}
-		if !repeat {
-			result = append(result, arr[i])
+		key := get
+		if "" != sp {
+			split := strings.Split(get, sp)
+			if len(split) < 2 {
+				continue
+			}
+			key = strings.TrimSpace(split[0])
+			get = key + sp + strings.TrimSpace(split[1])
+		}
+		_, ok := repeat[key]
+		if !ok {
+			result = append(result, get)
+			repeat[key] = true
 		}
 	}
 	return result

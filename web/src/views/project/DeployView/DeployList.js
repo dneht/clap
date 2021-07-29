@@ -22,6 +22,7 @@ import {
   Typography
 } from '@material-ui/core'
 import DeployButton from './DeployButton'
+import PropertyView from 'src/views/property/PropertyView'
 import {useNavigate} from 'react-router-dom'
 import navigateToTerm from 'src/utils/gototerm'
 import {ShowSnackbar} from 'src/utils/globalshow'
@@ -40,6 +41,7 @@ const DeployList = ({
                       className,
                       dataProvider,
                       powerMap,
+                      getDeployProps,
                       getDeployPods,
                       getBuildPods,
                       restartPod,
@@ -54,7 +56,8 @@ const DeployList = ({
   const [page, setPage] = useState(0)
   const [podDialog, setPodDialog] = useState(false)
   const [podList, setPodList] = useState([])
-  const [selectDeploy, setSelectDeploy] = useState(false)
+  const [selectDeploy, setSelectDeploy] = useState({})
+  const [propOpen, setPropOpen] = useState(false)
   const [require, setRequire] = useState({open: false, keyword: ''})
 
   const navigateToAttach = (data, podData) => {
@@ -129,6 +132,11 @@ const DeployList = ({
 
   const handleDialogClose = () => {
     setPodDialog(false)
+  }
+
+  const handlePropOpen = (deploy) => {
+    setSelectDeploy(deploy)
+    setPropOpen(true)
   }
 
   const requirePackageApp = (deployId, func) => {
@@ -236,6 +244,7 @@ const DeployList = ({
                     >
                       <DeployButton dataProvider={data} powerMap={powerMap}
                                     openPodDialog={handleDialogOpen}
+                                    openPropOpen={handlePropOpen}
                                     navigateToDoc={navigateToDoc}
                                     navigateToInner={navigateToInner}
                                     getBuildPods={getBuildPods}
@@ -292,8 +301,10 @@ const DeployList = ({
                           日志
                         </Button>
                         <Button variant="outlined" color="primary"
-                                style={{display: selectDeploy.appBase && selectDeploy.appBase.isIngress === 0 ? 'none'
-                                    : hiddenEle(selectDeploy.id, 'deployment', 'podExec', powerMap)}}
+                                style={{
+                                  display: selectDeploy.appBase && selectDeploy.appBase.isIngress === 0 ? 'none'
+                                    : hiddenEle(selectDeploy.id, 'deployment', 'podExec', powerMap)
+                                }}
                                 onClick={() => navigateToExec(selectDeploy, pod)}
                                 disabled={selectDeploy.appBase && selectDeploy.appBase.isIngress === 0}>
                           命令
@@ -322,25 +333,29 @@ const DeployList = ({
               </DialogContentText>
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleRequireClose} color="primary">
+              <Button variant="outlined" color="primary"
+                      onClick={handleRequireClose}>
                 取消
               </Button>
-              <Button onClick={() => {
-                if (require.type && require.id && require.func) {
-                  if (require.type === 'publish') {
-                    gotoPublishApp(require.id, require.func)
-                  } else {
-                    gotoPackageApp(require.id, require.func)
-                  }
-                  handleRequireClose()
-                } else {
-                  ShowSnackbar('Get info error', 'error')
-                }
-              }} color="primary" autoFocus>
+              <Button variant="outlined" color="primary" autoFocus
+                      onClick={() => {
+                        if (require.type && require.id && require.func) {
+                          if (require.type === 'publish') {
+                            gotoPublishApp(require.id, require.func)
+                          } else {
+                            gotoPackageApp(require.id, require.func)
+                          }
+                          handleRequireClose()
+                        } else {
+                          ShowSnackbar('Get info error', 'error')
+                        }
+                      }}>
                 确定
               </Button>
             </DialogActions>
           </Dialog>
+          <PropertyView dataProvider={selectDeploy} powerMap={powerMap} inputType="deployment"
+                        propOpen={propOpen} setPropOpen={setPropOpen}/>
         </Box>
       </PerfectScrollbar>
       <TablePagination

@@ -52,6 +52,10 @@ func invalidAppById(id uint64) {
 	delete(appInfoMap, id)
 }
 
+func invalidAppInfoById(id uint64) {
+	delete(appInfoMap, id)
+}
+
 func findAllAppSimple(c *fiber.Ctx) (int, *[]model.Project, error) {
 	var list []model.Project
 	sql := base.Engine.Cols(model.IdInProject, model.AppKeyInProject, model.AppTypeInProject).

@@ -12,6 +12,10 @@ const (
 	DeployStatusPackHear  = 6
 )
 
+var UnknownErrorDeployStatus = DeployStatus{
+	Status: "Unknown",
+}
+
 var ConnectErrorDeployStatus = DeployStatus{
 	Status: "ConnectError",
 }

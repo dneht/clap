@@ -1,0 +1,48 @@
+{
+  "component": "business",
+  "param": {
+    "accessPortals": [
+      {
+        "routers": [
+          {
+            "httpPrefix": [
+              "/"
+            ],
+            "idleTimeout": "600s",
+            "loadBalanceStrategy": "WeightedLeastRequest",
+            "name": "http",
+            "port": 8000,
+            "preDomain": "prefix_domain",
+            "respTimeout": "150s",
+            "retryCount": 0,
+            "targetPort": 8000
+          }
+        ],
+        "type": "Contour"
+      }
+    ],
+    "containers": [
+      {
+        "format": "elarge",
+        "livenessProbe": {
+          "initialDelaySeconds": 60,
+          "periodSeconds": 15,
+          "tcpSocket": {
+            "port": 8000
+          }
+        },
+        "readinessProbe": {
+          "initialDelaySeconds": 30,
+          "periodSeconds": 10,
+          "tcpSocket": {
+            "port": 8000
+          }
+        }
+      }
+    ],
+    "mvnPrepare": "xxx-client",
+    "mvnTarget": "xxx-service",
+    "replicas": 1
+  },
+  "template": 1000
+}

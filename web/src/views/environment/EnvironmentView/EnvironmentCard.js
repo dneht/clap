@@ -1,8 +1,9 @@
-import React from 'react'
+import React, {useState} from 'react'
 import PropTypes from 'prop-types'
 import clsx from 'clsx'
 import {Box, Button, Card, CardContent, Divider, Grid, makeStyles, Typography} from '@material-ui/core'
 import {useNavigate} from 'react-router-dom'
+import PropertyView from 'src/views/property/PropertyView'
 import {setCurrentEnvId, setCurrentEnvName} from 'src/sessions'
 import hiddenEle from 'src/utils/hiddenele'
 
@@ -23,6 +24,7 @@ const useStyles = makeStyles((theme) => ({
 const EnvironmentCard = ({className, dataProvider, powerMap, ...rest}) => {
   const classes = useStyles()
   const navigate = useNavigate()
+  const [propOpen, setPropOpen] = useState(false)
 
   const navigateToSpace = () => {
     setCurrentEnvId(dataProvider.id)
@@ -85,11 +87,12 @@ const EnvironmentCard = ({className, dataProvider, powerMap, ...rest}) => {
               详情
             </Button>
             <Button variant="outlined" color="primary"
-                    style={{display: hiddenEle(dataProvider.id, 'environment', 'editThis', powerMap)}}>
+                    style={{display: hiddenEle(dataProvider.id, 'environment', 'thisEdit', powerMap)}}>
               编辑
             </Button>
             <Button variant="outlined" color="primary"
-                    style={{display: hiddenEle(dataProvider.id, 'environment', 'propView', powerMap)}}>
+                    style={{display: hiddenEle(dataProvider.id, 'environment', 'propView', powerMap)}}
+                    onClick={() => setPropOpen(true)}>
               配置
             </Button>
             <Button variant="outlined" color="primary"
@@ -98,6 +101,8 @@ const EnvironmentCard = ({className, dataProvider, powerMap, ...rest}) => {
             </Button>
           </Grid>
         </Grid>
+        <PropertyView dataProvider={dataProvider} powerMap={powerMap} inputType="environment"
+                      propOpen={propOpen} setPropOpen={setPropOpen}/>
       </Box>
     </Card>
   )

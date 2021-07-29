@@ -8,16 +8,16 @@ import (
 )
 
 type DeployStatus struct {
-	Status string `json:"status"`
+	Status string `json:"status,omitempty"`
 }
 
 type Deployment struct {
-	Main *appsv1.Deployment `json:"main"`
+	Main *appsv1.Deployment `json:"main,omitempty"`
 	CommonExtend
 }
 
 type StatefulSet struct {
-	Main *appsv1.StatefulSet `json:"main"`
+	Main *appsv1.StatefulSet `json:"main,omitempty"`
 	CommonExtend
 }
 

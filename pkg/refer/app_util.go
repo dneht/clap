@@ -2,8 +2,6 @@ package refer
 
 import "cana.io/clap/pkg/model"
 
-const NoneAppType = 0
-
 const (
 	KindConfigMap           = "ConfigMap"
 	KindSecret              = "Secret"
@@ -24,8 +22,13 @@ const (
 	KindPodSecurityPolicy   = "PodSecurityPolicy"
 )
 
-var AppTypeMap = map[int]string {
-	5: "Nginx",
+const (
+	NoneAppType     = 0
+	NoneAppTypeName = "None"
+)
+
+var AppTypeMap = map[int]string{
+	5:  "Nginx",
 	10: "Java",
 	11: "Tomcat",
 	20: "Go",
@@ -41,10 +44,26 @@ func GetAppName(app *model.Project, space *model.EnvironmentSpace) string {
 	}
 }
 
+func GetConfigName(app *model.Project, space *model.EnvironmentSpace, name string) string {
+	return GetAppName(app, space) + "-" + name
+}
+
+func CheckAppTypeName(appTypeName string) int {
+	if "" == appTypeName {
+		return -1
+	}
+	for key, value := range AppTypeMap {
+		if appTypeName == value {
+			return key
+		}
+	}
+	return -1
+}
+
 func ConvertAppType(appType int) string {
 	get, ok := AppTypeMap[appType]
 	if ok {
 		return get
 	}
-	return "None"
+	return NoneAppTypeName
 }

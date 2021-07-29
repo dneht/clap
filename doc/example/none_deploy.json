@@ -1,0 +1,67 @@
+{
+  "component": "platform",
+  "param": {
+    "accessPortals": [
+      {
+        "name": "http",
+        "routers": [
+          {
+            "fullDomain": "full_domain.xxx.com",
+            "httpPrefix": [
+              "/"
+            ],
+            "idleTimeout": "600s",
+            "loadBalanceStrategy": "WeightedLeastRequest",
+            "name": "http",
+            "port": 8000,
+            "respTimeout": "150s",
+            "retryCount": 0,
+            "targetPort": 8000
+          }
+        ],
+        "type": "Contour"
+      }
+    ],
+    "containers": [
+      {
+        "format": "clarge",
+        "livenessProbe": {
+          "initialDelaySeconds": 60,
+          "periodSeconds": 15,
+          "tcpSocket": {
+            "port": 8000
+          }
+        },
+        "readinessProbe": {
+          "initialDelaySeconds": 10,
+          "periodSeconds": 10,
+          "tcpSocket": {
+            "port": 8000
+          }
+        }
+      }
+    ],
+    "replicas": 1,
+    "terminationGracePeriodSeconds": 60,
+    "volumeMounts": [
+      {
+        "hostPath": "/etc/security/limits.conf",
+        "mountPath": "/etc/security/limits.conf",
+        "name": "limits",
+        "readOnly": true,
+        "type": "HostPath"
+      },
+      {
+        "hostPath": "/data",
+        "mountPath": "/data",
+        "name": "data",
+        "type": "HostPath"
+      }
+    ]
+  },
+  "ready": {
+    "url": "image_url",
+    "version": "image_tag"
+  },
+  "template": 1000
+}

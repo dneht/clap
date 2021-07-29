@@ -62,7 +62,7 @@ func CheckMainInput(c *fiber.Ctx) (*MainInput, error) {
 	param := new(MainInput)
 	err := c.BodyParser(param)
 	if nil != err {
-		return nil, ErrorInputShowMessage(c, "main input error")
+		return nil, ErrorInput(c, "main input error")
 	}
 	return param, nil
 }

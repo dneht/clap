@@ -29,19 +29,26 @@ const MainView = () => {
     setSpaceSelect(spaceId)
     setCurrentSpaceId(spaceId)
     http.getList('/api/deploy', {spaceId: spaceId}).then(data => {
-      if (data.results && data.results.length > 0) {
-        http.moreInfo([
-          {key: 'appId', addr: '/api/app', field: 'appBase'},
-          {key: 'spaceId', addr: '/api/space', field: 'spaceBase'}
-        ], data.results).then(results => {
-          data.results = results
-          setDeployList(data)
+      if (data.results) {
+        http.postSimple('/api/pow', {type: 'deployment'},
+          data.results.map(e => e.id)).then(pow => {
+          setPowerMap(pow)
+          http.moreInfo([
+            {key: 'appId', addr: '/api/app', field: 'appBase'},
+            {key: 'spaceId', addr: '/api/space', field: 'spaceBase'}
+          ], data.results).then(results => {
+            data.results = results
+            setDeployList(data)
+          })
+        }).catch(err => {
+          ShowSnackbar('get pow err:' + err, 'error')
         })
       } else {
         setDeployList({total: 0, size: 10, results: []})
       }
     })
   }
+
   const getSpaceList = (envId) => {
     setEnvSelect(envId)
     setCurrentEnvId(envId)
@@ -68,6 +75,7 @@ const MainView = () => {
       }
     })
   }
+
   useEffect(() => {
     let getEnvId = currentEnvId()
     if (!getEnvId) {
@@ -88,15 +96,10 @@ const MainView = () => {
         setEnvSelect(envId)
         setEnvList(data)
         getSpaceList(envId)
-
-        http.getSimple('/api/pow', {type: 'deployment'}).then(pow => {
-          setPowerMap(pow)
-        }).catch(err => {
-          ShowSnackbar('get pow err:' + err, 'error')
-        })
       }
     })
   }, [])
+
   const getDeployPods = (deployId, func) => {
     http.get('/pod/deploy/' + deployId).then(data => func(data))
   }

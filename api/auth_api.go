@@ -45,7 +45,7 @@ func ListRes(c *fiber.Ctx) error {
 	}
 	param, err := util.CheckMainInput(c)
 	if nil != err {
-		return util.ErrorInputErrorMessage(c, err, "main input error")
+		return util.ErrorInputLog(c, err, "main input error")
 	}
 	return util.ResultPageOrList(c, param,
 		func(input *util.MainInput) (int64, error) {
@@ -94,7 +94,7 @@ func ListPow(c *fiber.Ctx) error {
 	}
 	param, err := util.CheckMainInput(c)
 	if nil != err {
-		return util.ErrorInputErrorMessage(c, err, "main input error")
+		return util.ErrorInputLog(c, err, "main input error")
 	}
 	return util.ResultPageOrList(c, param,
 		func(input *util.MainInput) (int64, error) {
@@ -108,6 +108,13 @@ func SimplePow(c *fiber.Ctx) error {
 	get := c.Query("type")
 	if "" == get {
 		return util.ErrorInput(c, "type input error")
+	}
+	param, err := util.CheckMainInput(c)
+	if nil != err {
+		return util.ErrorInputLog(c, err, "main input error")
+	}
+	if len(param.Ids) == 0 {
+		return util.ResultList(c, nil, 0, map[string]interface{}{})
 	}
 	token, err := getInputToken(c)
 	if nil != err {
@@ -123,33 +130,41 @@ func SimplePow(c *fiber.Ctx) error {
 		})
 	}
 
+	idmap := make(map[uint64]bool, len(param.Ids))
+	for _, id := range param.Ids {
+		idmap[id] = true
+	}
 	list := (*auth.ResPower)[CommonPre+get]
 	if nil == list {
 		return util.ErrorInput(c, "type not found")
 	}
 	merge := make(map[string]uint, len(list))
 	for _, one := range list {
-		key := util.GenerateMD5(get, token, strconv.FormatUint(one.LinkId, 10))
-		getPower, ok := merge[key]
+		_, ok := idmap[one.LinkId]
 		if ok {
-			merge[key] = one.Power | getPower
-		} else {
-			merge[key] = one.Power
+			key := util.GenerateMD5(get, token, strconv.FormatUint(one.LinkId, 10))
+			getPower, pok := merge[key]
+			if pok {
+				merge[key] = one.Power | getPower
+			} else {
+				merge[key] = one.Power
+			}
 		}
 	}
 	result := make(map[string]interface{})
 	for key, power := range merge {
-		result[key] = map[string]interface{}{
-			"docView":     power&AllowThisDocumentView > 0,
-			"packThis":    power&AllowThisPackageDeploy > 0,
-			"propView":    power&AllowThisPropertyView > 0,
-			"propPost":    power&AllowThisPropertyUpdate > 0,
-			"propAdd":     power&AllowThisPropertyCreate > 0,
-			"podLog":      power&AllowThisPodLog > 0,
-			"podExec":     power&AllowThisPodExec > 0,
-			"podRestart":  power&AllowThisPodRestart > 0,
-			"podRollback": power&AllowThisPodRollback > 0,
-			"podSpace":    power&AllowThisPodSpace > 0,
+		result[key] = map[string]bool{
+			"thisEdit":     power&AllowThisUpdate > 0,
+			"thisPack":     power&AllowThisPackageDeploy > 0,
+			"thisRollback": power&AllowThisRollbackDeploy > 0,
+			"docView":      power&AllowThisDocumentView > 0,
+			"propView":     power&AllowThisPropertyView > 0,
+			"propEdit":     power&AllowThisPropertyUpdate > 0,
+			"propAdd":      power&AllowThisPropertyCreate > 0,
+			"podLog":       power&AllowThisPodLog > 0,
+			"podExec":      power&AllowThisPodExec > 0,
+			"podRestart":   power&AllowThisPodRestart > 0,
+			"podSpace":     power&AllowThisPodSpace > 0,
 		}
 	}
 	return util.ResultParam(c, nil, true, result)

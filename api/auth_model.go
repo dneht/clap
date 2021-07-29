@@ -27,6 +27,9 @@ import (
 
 func getResourceById(id uint64) (*model.Resource, error) {
 	info, _ := base.Resource(id)
+	if nil == info {
+		return nil, errors.New("res not found")
+	}
 	return info, nil
 }
 
