@@ -37,11 +37,11 @@ func getUserById(id uint64) (*model.UserInfo, error) {
 
 	var info model.UserInfo
 	result, err := base.Engine.ID(id).Get(&info)
+	if nil != err || !result {
+		return nil, errors.New("can not found user info")
+	}
 	if nil == err {
 		userMap[id] = &info
-	}
-	if !result {
-		return nil, errors.New("can not found user info")
 	}
 	return &info, err
 }
@@ -54,12 +54,12 @@ func getUserByToken(token string) (*model.UserInfo, error) {
 
 	var info model.UserInfo
 	result, err := base.Engine.Where(model.AccessTokenInUserInfo+" = ?", token).Get(&info)
-	if nil == err {
-		userMap[id] = &info
-		userTokenMap[token] = info.Id
-	}
-	if !result {
+	if nil != err || !result {
 		return nil, errors.New("can not found user info")
+	}
+	if nil == err {
+		userMap[info.Id] = &info
+		userTokenMap[token] = info.Id
 	}
 	return &info, err
 }
@@ -67,7 +67,7 @@ func getUserByToken(token string) (*model.UserInfo, error) {
 func getUserByName(name string) (*model.UserInfo, error) {
 	var info model.UserInfo
 	result, err := base.Engine.Where(model.UserNameInUserInfo+" = ?", name).Get(&info)
-	if !result {
+	if nil != err || !result {
 		return nil, errors.New("can not found user info")
 	}
 	return &info, err

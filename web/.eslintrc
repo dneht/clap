@@ -35,6 +35,7 @@
     "no-confusing-arrow": "off",
     "no-plusplus": "off",
     "no-restricted-syntax": "off",
+    "no-unneeded-ternary": "off",
     "guard-for-in": "off",
     "prefer-template": "off",
     "dot-notation": "off",

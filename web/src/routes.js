@@ -17,8 +17,6 @@ import DocumentView from 'src/views/document/DocumentView'
 import XtermView from 'src/views/xterm/XtermView'
 import LoginView from 'src/views/login/LoginView'
 import NotFoundView from 'src/views/errors/NotFoundView'
-import http from 'src/requests'
-import {ShowSnackbar} from 'src/utils/globalshow'
 
 const routes = [
   {

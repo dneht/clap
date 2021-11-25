@@ -64,7 +64,7 @@ func UpdateDeploy(c *fiber.Ctx) error {
 func checkDeployInput(c *fiber.Ctx) (*model.Deployment, error) {
 	info := new(model.Deployment)
 	if err := c.BodyParser(info); err != nil {
-		return nil, util.ErrorInputErrorMessage(c, err, "input is error")
+		return nil, util.ErrorInputLog(c, err, "input is error")
 	}
 	return info, nil
 }

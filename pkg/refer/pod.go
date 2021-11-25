@@ -5,20 +5,19 @@ import (
 )
 
 type PodInfo struct {
-	PodName    string           `json:"podName"`
-	Namespace  string           `json:"namespace"`
-	Component  string           `json:"component"`
-	AppId      string           `json:"appId"`
-	AppKey     string           `json:"appKey"`
-	AppName    string           `json:"appName"`
-	AppType    string           `json:"appType"`
-	AppEnv     string           `json:"appEnv"`
-	AppSpace   string           `json:"appSpace"`
-	Containers []ContainerInfo `json:"containers"`
-	Status     v1.PodStatus    `json:"status"`
+	PodName    string           `json:"podName,omitempty"`
+	Namespace  string           `json:"namespace,omitempty"`
+	Component  string           `json:"component,omitempty"`
+	AppId      string           `json:"appId,omitempty"`
+	AppName    string           `json:"appName,omitempty"`
+	AppType    string           `json:"appType,omitempty"`
+	AppEnv     string           `json:"appEnv,omitempty"`
+	AppSpace   string           `json:"appSpace,omitempty"`
+	Containers []ContainerInfo `json:"containers,omitempty"`
+	Status     v1.PodStatus    `json:"status,omitempty"`
 }
 
 type ContainerInfo struct {
-	Name  string `json:"name"`
-	Image string `json:"image"`
+	Name  string `json:"name,omitempty"`
+	Image string `json:"image,omitempty"`
 }

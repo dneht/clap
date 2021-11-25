@@ -14,9 +14,10 @@ func GetEnv(c *fiber.Ctx) error {
 		return util.ErrorInput(c, "env id must be set")
 	}
 	info, err := getEnvById(id)
-	//TODO add auth
 	if nil == err {
-		info.DeployInfo = ""
+		if !ManagerAuth(c) {
+			info.DeployInfo = ""
+		}
 	}
 	return util.ResultParam(c, err, true, info)
 }
@@ -32,7 +33,7 @@ func SimpleEnv(c *fiber.Ctx) error {
 func ListEnv(c *fiber.Ctx) error {
 	param, err := util.CheckMainInput(c)
 	if nil != err {
-		return util.ErrorInputErrorMessage(c, err, "main input error")
+		return util.ErrorInputLog(c, err, "main input error")
 	}
 	return util.ResultPageOrList(c, param,
 		func(input *util.MainInput) (int64, error) {

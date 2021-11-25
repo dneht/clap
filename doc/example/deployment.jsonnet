@@ -1,7 +1,7 @@
 function(app={})
 
 assert "id" in app : "must set app id";
-assert "key" in app : "must set app key";
+assert "uk" in app : "must set app uk";
 assert "name" in app : "must set app name";
 assert "type" in app : "must set app type";
 assert "space" in app : "must set app space";
@@ -20,7 +20,8 @@ local getservicename(data) = if "name" in data then app.name + "-" + data.name e
 local getconfigname(data) = if "name" in data then app.name + "-" + data.name else app.name + "-config";
 local getsecretname(data) = if "name" in data then app.name + "-" + data.name else app.name + "-secret";
 local mergeallenvs(data) = if "generalEnvs" in app then if "env" in data then std.uniq(std.sort(data.env + app.generalEnvs, function(one) one.name), function(one) one.name) else app.generalEnvs else data.env;
-local getfulldomain(data) = if "fullDomain" in data then data.fullDomain else if "preDomain" in data then data.preDomain + "." + app.domain else app.key + "." + app.domain;
+local appdomainsuffix = if "domain" in app then if std.startsWith(app.domain, "-") then app.domain else "." + app.domain else "";
+local getfulldomain(data) = if "fullDomain" in data then data.fullDomain else if "preDomain" in data then data.preDomain + appdomainsuffix else app.name + appdomainsuffix;
 local getallcontour = std.flatMap(function(one) (if "routers" in one then std.filterMap(function(router) ("tcpEnable" in router && router.tcpEnable) || ("httpPrefix" in router && std.length(router.httpPrefix) > 0) || ("httpHeader" in router && std.length(router.httpHeader) > 0) || ("wsPrefix" in router && std.length(router.wsPrefix) > 0) || ("wsHeader" in router && std.length(router.wsHeader) > 0), function(router) {name: getservicename(one), router: router}, one.routers) else []), (if "accessPortals" in app then std.filter(function(access) "type" in access && "Contour" == access.type, app.accessPortals) else []));
 local getallsecret = if "volumeMounts" in app then std.filter(function(vol) "Secret" == vol.type && "data" in vol && std.length(vol.data) > 0, app.volumeMounts) else [];
 local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Config" == vol.type && "data" in vol && std.length(vol.data) > 0, app.volumeMounts) else [];
@@ -92,10 +93,10 @@ local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Con
                         {
                             name: if "name" in one then one.name else app.name,
                             image: if "image" in one then one.image else app.image,
-                            [if "stdin" in one then "stdin"]: one.stdin,
-                            [if "tty" in one then "tty"]: one.tty,
                             [if "env" in one || "generalEnvs" in app then "env"]: mergeallenvs(one),
                             [if "envFrom" in one then "envFrom"]: one.envFrom,
+                            [if "stdin" in one then "stdin"]: one.stdin,
+                            [if "tty" in one then "tty"]: one.tty,
                             [if "ports" in one then "ports"]: one.ports,
                             [if "format" in one && "specs" in app && std.objectHas(app.specs, one.format) then "resources"]: {
                                requests: {
@@ -154,7 +155,7 @@ local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Con
                                                 "key": app.constant.name,
                                                 "operator": "In",
                                                 "values": [
-                                                    app.name
+                                                    app.uk
                                                 ]
                                             },
                                             {
@@ -297,9 +298,9 @@ local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Con
             spec: {
                 virtualhost: {
                     fqdn: getfulldomain(svc.router),
-                    [if ("tls" in svc.router && "secretName" in svc.router.tls && std.length(svc.router.tls.secretName) > 0) || ("tcpEnable" in svc.router && svc.router.tcpEnable) then "tls"]: {
-                        passthrough: !("tls" in svc.router && "secretName" in svc.router.tls && std.length(svc.router.tls.secretName) > 0),
-                        [if "tls" in svc.router && "secretName" in svc.router.tls && std.length(svc.router.tls.secretName) > 0 then "secretName"]: svc.router.tls.secretName,
+                    [if ("tls" in app && "secretName" in app.tls) || ("tls" in svc.router && "secretName" in svc.router.tls && std.length(svc.router.tls.secretName) > 0) || ("tcpEnable" in svc.router && svc.router.tcpEnable) then "tls"]: {
+                        passthrough: if ("tls" in app && "passthrough" in app.tls) then app.tls.passthrough else if ("tls" in app && "secretName" in app.tls) then false else !("tls" in svc.router && "secretName" in svc.router.tls && std.length(svc.router.tls.secretName) > 0),
+                        [if ("tls" in app && "secretName" in app.tls) || ("tls" in svc.router && "secretName" in svc.router.tls && std.length(svc.router.tls.secretName) > 0) then "secretName"]: if ("tls" in app && "secretName" in app.tls) then app.tls.secretName else svc.router.tls.secretName,
                     },
                     [if "corsPolicy" in svc.router && std.length(svc.router.corsPolicy) > 0 then "corsPolicy"]: {
                         [if "allowCredentials" in svc.router.corsPolicy.allowCredentials && svc.router.corsPolicy.allowCredentials then "allowCredentials"]: svc.router.corsPolicy.allowCredentials,

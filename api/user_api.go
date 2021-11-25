@@ -20,6 +20,7 @@ import (
 	"cana.io/clap/pkg/auth"
 	"cana.io/clap/pkg/base"
 	"cana.io/clap/pkg/model"
+	"cana.io/clap/pkg/refer"
 	"cana.io/clap/util"
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
@@ -31,11 +32,6 @@ const LoginApi = "/login"
 const UserApiPre = "/api/user"
 const RoleApiPre = "/api/role"
 
-type LoginUserInput struct {
-	UserName string `json:"userName"`
-	Password string `json:"password"`
-}
-
 func generateToken() string {
 	return auth.MakeSMD5Hash([]byte(strconv.FormatUint(util.UniqueId(), 10)))
 }
@@ -45,7 +41,7 @@ func generatePasswd(passwd string) string {
 }
 
 func LoginUser(c *fiber.Ctx) error {
-	login := new(LoginUserInput)
+	login := new(refer.LoginUserInput)
 	err := c.BodyParser(login)
 	if nil != err || "" == login.UserName || "" == login.Password {
 		return util.ErrorInput(c, "input error")
@@ -61,10 +57,9 @@ func LoginUser(c *fiber.Ctx) error {
 	if !auth.CheckSMD5Hash(info.Password, login.Password) {
 		return util.ErrorInput(c, "password incorrect")
 	}
-
+	cleanUser(info)
 	newToken := generateToken()
 	_, err = updateUserTokenById(c, base.Engine.NewSession(), info.Id, newToken)
-	delete(authInfoMap, info.AccessToken)
 	return util.ResultParam(c, err, true, newToken)
 }
 
@@ -80,7 +75,7 @@ func GetUser(c *fiber.Ctx) error {
 func ListUser(c *fiber.Ctx) error {
 	param, err := util.CheckMainInput(c)
 	if nil != err {
-		return util.ErrorInputErrorMessage(c, err, "main input error")
+		return util.ErrorInputLog(c, err, "main input error")
 	}
 	return util.ResultPageOrList(c, param,
 		func(input *util.MainInput) (int64, error) {
@@ -93,7 +88,7 @@ func ListUser(c *fiber.Ctx) error {
 func checkUserInput(c *fiber.Ctx) (*model.UserInfo, error) {
 	info := new(model.UserInfo)
 	if err := c.BodyParser(info); err != nil {
-		return nil, util.ErrorInputErrorMessage(c, err, "input is error")
+		return nil, util.ErrorInputLog(c, err, "input is error")
 	}
 	return info, nil
 }
@@ -127,7 +122,7 @@ func CreateUser(c *fiber.Ctx) error {
 		role := &model.RoleInfo{
 			Id:         info.Id,
 			RoleName:   "user:" + info.UserName,
-			RoleFrom:   0,
+			RoleFrom:   1,
 			RoleRemark: "用户同名角色",
 		}
 		result, err = insertRole(c, session, role)
@@ -153,6 +148,7 @@ func ChangeUser(c *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorInput(c, "user body check error")
 	}
+	cleanUser(info)
 	_, err = base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
 		if info.IsDisable != 0 || info.Password != "" {
 			isDisable := 0
@@ -184,6 +180,13 @@ func ChangeUser(c *fiber.Ctx) error {
 	return c.SendString("ok")
 }
 
+func cleanUser(user *model.UserInfo) {
+	if nil != user {
+		invalidUserById(user.Id)
+		delete(authInfoMap, user.AccessToken)
+	}
+}
+
 func GetRole(c *fiber.Ctx) error {
 	id, err := util.CheckIdInput(c, "id")
 	if nil != err {
@@ -196,7 +199,7 @@ func GetRole(c *fiber.Ctx) error {
 func ListRole(c *fiber.Ctx) error {
 	param, err := util.CheckMainInput(c)
 	if nil != err {
-		return util.ErrorInputErrorMessage(c, err, "main input error")
+		return util.ErrorInputLog(c, err, "main input error")
 	}
 	return util.ResultPageOrList(c, param,
 		func(input *util.MainInput) (int64, error) {
@@ -217,7 +220,7 @@ func SimpleRole(c *fiber.Ctx) error {
 func checkRoleInput(c *fiber.Ctx) (*model.RoleInfo, error) {
 	info := new(model.RoleInfo)
 	if err := c.BodyParser(info); err != nil {
-		return nil, util.ErrorInputErrorMessage(c, err, "input is error")
+		return nil, util.ErrorInputLog(c, err, "input is error")
 	}
 	if "" == info.RoleName {
 		return nil, util.ErrorInput(c, "input is error")

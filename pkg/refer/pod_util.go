@@ -7,9 +7,7 @@ import (
 
 const (
 	LabelAppId        = "clap.cana.io/app-id"
-	LabelAppKey       = "clap.cana.io/app-key"
 	LabelAppType      = "clap.cana.io/app-type"
-	LabelAppBranch    = "clap.cana.io/app-branch"
 	LabelAppName      = "app.kubernetes.io/name"
 	LabelAppEnv       = "app.kubernetes.io/part-env"
 	LabelAppSpace     = "app.kubernetes.io/part-of"
@@ -36,7 +34,6 @@ func BuildOneFromPod(pod *v1.Pod) *PodInfo {
 		Namespace:  pod.Namespace,
 		Component:  pod.Labels[LabelAppComponent],
 		AppId:      pod.Labels[LabelAppId],
-		AppKey:     pod.Labels[LabelAppKey],
 		AppName:    pod.Labels[LabelAppName],
 		AppType:    pod.Labels[LabelAppType],
 		AppEnv:     pod.Labels[LabelAppEnv],

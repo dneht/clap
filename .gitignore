@@ -30,6 +30,9 @@ conf/*.properties
 generate.sh
 generate.go
 
+clap-server.yaml
+clap-domain.yaml
+
 *.iml
 .metadata
 pubspec.lock

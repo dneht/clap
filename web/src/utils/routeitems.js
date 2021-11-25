@@ -22,7 +22,6 @@ iconMap.set('/app/accounts', UserIcon)
 iconMap.set('/app/roles', RoleIcon)
 iconMap.set('/app/tools', ToolIcon)
 
-const userResource = currentUserRes()
 const handleResource = function (data) {
   const routeMap = new Map()
   const routeData = []
@@ -51,12 +50,16 @@ const handleResource = function (data) {
 }
 
 const routeItems = () => {
-  return userResource ? new Promise((resolve) => {
-    resolve(handleResource(userResource))
-  }) : http.initRes((data) => {
-    return handleResource(data)
-  }).catch((err) => {
-    ShowSnackbar('cannot get res: ' + err, 'error')
+  return new Promise((resolve) => {
+    if (currentUserRes()) {
+      resolve(handleResource(currentUserRes()))
+    } else {
+      http.initRes().then(getUserRes => {
+        resolve(handleResource(getUserRes))
+      }).catch((err) => {
+        ShowSnackbar('cannot get res: ' + err, 'error')
+      })
+    }
   })
 }
 export default routeItems

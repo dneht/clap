@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/go-jsonnet"
 	"strconv"
+	"strings"
 )
 
 const RenderApiPre = "/api/render"
@@ -68,6 +69,20 @@ func ExecRender(c *fiber.Ctx) error {
 			return err
 		}
 		return c.SendString(jsonStr)
+	} else if "property" == selectType {
+		propMap := generateNeedProps(appBase.Id, envBase.Id, spaceBase.Id, deployId)
+		if nil == propMap || len(*propMap) == 0 {
+			return c.SendString("")
+		}
+		var sb strings.Builder
+		sb.Grow(len(*propMap) * 32)
+		for key, value := range *propMap {
+			sb.WriteString(key)
+			sb.WriteString("=")
+			sb.WriteString(value)
+			sb.WriteRune('\n')
+		}
+		return c.SendString(sb.String())
 	}
 
 	return errors.New("select type is not support")
@@ -100,9 +115,14 @@ func buildTemplate(envBase *model.Environment, spaceBase *model.EnvironmentSpace
 	if nil != err {
 		return nil, "", err
 	}
+	err = generateRenderProps(appBase.Id, envBase.Id, spaceBase.Id, deployBase.Id, appInfo)
+	if nil != err {
+		return nil, "", err
+	}
+
 	fillMap := make(map[string]interface{}, 40)
 	fillMap["id"] = appBase.Id
-	fillMap["key"] = appBase.AppKey
+	fillMap["uk"] = appBase.AppName
 	fillMap["name"] = refer.GetAppName(appBase, spaceBase)
 	fillMap["type"] = refer.ConvertAppType(appBase.AppType)
 	fillMap["kind"] = templateBase.TemplateKind

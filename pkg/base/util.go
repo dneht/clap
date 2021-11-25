@@ -103,9 +103,24 @@ func parseMapPre(pre string, kv map[string]string) map[string]DocumentProp {
 						get.Token = parseString(value, "")
 					}
 					break
-				case "api_url":
-					if "" == get.ApiUrl {
-						get.ApiUrl = parseString(value, "")
+				case "api_base":
+					if "" == get.ApiBase {
+						get.ApiBase = parseString(value, "")
+					}
+					break
+				case "api_from":
+					if "" == get.ApiFrom {
+						get.ApiFrom = parseString(value, "")
+					}
+					break
+				case "api_clazz":
+					if "" == get.ApiClazz {
+						get.ApiClazz = parseString(value, "")
+					}
+					break
+				case "api_method":
+					if "" == get.ApiMethod {
+						get.ApiMethod = parseString(value, "")
 					}
 					break
 				}

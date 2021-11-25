@@ -1,59 +1,60 @@
 package refer
 
 type SyncInfo struct {
-	Accept []SyncAcceptInfo `json:"accept"`
-	Issue  []SyncIssueInfo  `json:"issue"`
+	Accept []SyncAcceptInfo `json:"accept,omitempty"`
+	Issue  []SyncIssueInfo  `json:"issue,omitempty"`
 }
 
 type SyncAcceptInfo struct {
-	Env    uint64 `json:"env"`
-	Secret uint64 `json:"secret"`
+	Env    uint64 `json:"env,omitempty"`
+	Secret uint64 `json:"secret,omitempty"`
 }
 
 type SyncIssueInfo struct {
-	Env uint64 `json:"env"`
-	Url string `json:"url"`
+	Env uint64 `json:"env,omitempty"`
+	Url string `json:"url,omitempty"`
 }
 
 type DeployInfo struct {
-	Host    string  `json:"host"`
-	K8SInfo K8SConf `json:"k8s"`
-	S3Info  S3Conf  `json:"s3"`
-	GitInfo GitConf `json:"git"`
-	RegInfo RegConf `json:"reg"`
+	Host    string  `json:"host,omitempty"`
+	K8SInfo K8SConf `json:"k8s,omitempty"`
+	S3Info  S3Conf  `json:"s3,omitempty"`
+	GitInfo GitConf `json:"git,omitempty"`
+	RegInfo RegConf `json:"reg,omitempty"`
 }
 
 type FormatInfo struct {
 	// From is FormatPlainInfo
-	From map[string]string `json:"from"`
+	From map[string]string `json:"from,omitempty"`
 	// Script is FormatPlainInfo
-	Script map[string]string `json:"script"`
+	Script map[string]string `json:"script,omitempty"`
 	// Agent is FormatAgentInfo list
-	Agent []map[string]string `json:"agent"`
+	Agent []map[string]string `json:"agent,omitempty"`
 	// Spec is FormatSpecInfo map, this key is reference to AppInfo.Format
-	Spec map[string]map[string]string `json:"spec"`
+	Spec map[string]map[string]string `json:"spec,omitempty"`
 }
 
 type FormatPlainInfo struct {
-	Static string `json:"static"`
-	Nginx  string `json:"nginx"`
-	Java   string `json:"java"`
-	Tomcat string `json:"tomcat"`
-	Go     string `json:"go"`
-	Python string `json:"python"`
-	Node   string `json:"node"`
+	Static string `json:"static,omitempty"`
+	Nginx  string `json:"nginx,omitempty"`
+	Java   string `json:"java,omitempty"`
+	Gradle string `json:"gradle,omitempty"`
+	Tomcat string `json:"tomcat,omitempty"`
+	Go     string `json:"go,omitempty"`
+	Python string `json:"python,omitempty"`
+	Node   string `json:"node,omitempty"`
 }
 
 type FormatAgentInfo struct {
-	Type  string `json:"type"`
-	Path  string `json:"path"`
-	Param string `json:"param"`
+	Type  string `json:"type,omitempty"`
+	Path  string `json:"path,omitempty"`
+	Param string `json:"param,omitempty"`
 }
 
 type FormatSpecInfo struct {
-	JvmFlags      string `json:"jvmFlags"`
-	RequestCpu    string `json:"requestCpu"`
-	RequestMemory string `json:"requestMemory"`
-	LimitCpu      string `json:"limitCpu"`
-	LimitMemory   string `json:"limitMemory"`
+	JvmFlags      string `json:"jvmFlags,omitempty"`
+	RequestCpu    string `json:"requestCpu,omitempty"`
+	RequestMemory string `json:"requestMemory,omitempty"`
+	LimitCpu      string `json:"limitCpu,omitempty"`
+	LimitMemory   string `json:"limitMemory,omitempty"`
 }

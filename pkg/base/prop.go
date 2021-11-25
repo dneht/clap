@@ -43,14 +43,14 @@ type Property struct {
 }
 
 type ServiceProp struct {
-	Port       string                  `json:"port"`
-	Debug      bool                    `json:"debug"`
+	Port  string `json:"port"`
+	Debug bool   `json:"debug"`
 	//Cros       middleware.CORSConfig   `json:"cros"`
 	//Csrf       middleware.CSRFConfig   `json:"csrf"`
 	//Secure     middleware.SecureConfig `json:"secure"`
-	GzipLevel  int                     `json:"gzip_level"`
-	StaticPath string                  `json:"static_path"`
-	Password   PasswordProp            `json:"password"`
+	GzipLevel  int          `json:"gzip_level"`
+	StaticPath string       `json:"static_path"`
+	Password   PasswordProp `json:"password"`
 }
 
 type MessageProp struct {
@@ -63,9 +63,12 @@ type MessageDingDingProp struct {
 }
 
 type DocumentProp struct {
-	Enable bool   `json:"enable"`
-	Token  string `json:"token"`
-	ApiUrl string `json:"api_url"`
+	Enable    bool   `json:"enable"`
+	Token     string `json:"token"`
+	ApiBase   string `json:"api_base"`
+	ApiFrom   string `json:"api_from"`
+	ApiClazz  string `json:"api_clazz"`
+	ApiMethod string `json:"api_method"`
 }
 
 type PasswordProp struct {
@@ -136,10 +139,23 @@ func DatabaseConf() *Database {
 }
 
 func BuildProperty() {
-	propList := dangListFullProp()
+	propList := dangListFullBoot()
 	propMap := make(map[string]string, len(*propList))
 	for _, prop := range *propList {
 		propMap[strings.TrimSpace(prop.Prop)] = strings.TrimSpace(prop.Value)
+	}
+	buildImage := propMap["package.build_job_image"]
+	nowVersion := os.Getenv("CLAP_VERSION")
+	if "" != buildImage && "" != nowVersion {
+		idx := strings.Index(buildImage, ":")
+		if idx > 0 {
+			buildImage = buildImage[0:idx] + ":" + nowVersion
+		} else {
+			buildImage = buildImage + ":" + nowVersion
+		}
+	}
+	if "" == nowVersion {
+		nowVersion = "1.0.0"
 	}
 
 	nowProp = &Property{
@@ -193,11 +209,11 @@ func BuildProperty() {
 		},
 		Document: parseDocument(propMap),
 		Package: PackageProp{
-			BuildJobImage:      parseString(propMap["package.build_job_image"], "dneht/clap-build:1.0.0"),
+			BuildJobImage:      parseString(buildImage, "dneht/clap-build:"+nowVersion),
 			ImagePullPolicy:    parseString(propMap["package.image_pull_policy"], "Always"),
 			ImagePullSecret:    parseString(propMap["package.image_pull_secret"], ""),
 			MavenSkipTests:     parseBool(propMap["package.maven_skip_tests"], true),
-			BackoffLimit:       int32(parseInt(propMap["package.backoff_limit"], 2)),
+			BackoffLimit:       int32(parseInt(propMap["package.backoff_limit"], 0)),
 			CleanAfterFinished: int32(parseInt(propMap["package.clean_after_finished"], 3*24*60*60)),
 		},
 	}

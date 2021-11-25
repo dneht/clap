@@ -48,6 +48,7 @@ const useStyles = makeStyles((theme) => ({
 const DocumentCard = ({
                         className,
                         dataProvider,
+                        docProps,
                         doDocumentApiRequest,
                         spaceName,
                         paramList,
@@ -61,7 +62,7 @@ const DocumentCard = ({
                         ...rest
                       }) => {
   const classes = useStyles()
-  const [tenant, setTenant] = useState('board')
+  const [tenant, setTenant] = useState(docProps.api_from)
   const [group, setGroup] = useState(spaceName)
   const [token, setToken] = useState('')
   const [startRequest, setStartRequest] = useState(false)

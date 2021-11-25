@@ -18,7 +18,8 @@ import {
   Typography
 } from '@material-ui/core'
 import {convertAppType} from 'src/utils/convertvalue'
-import hiddenEle from '../../../utils/hiddenele'
+import hiddenEle from 'src/utils/hiddenele'
+import PropertyView from '../../property/PropertyView'
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -33,6 +34,8 @@ const ProjectList = ({className, dataProvider, powerMap, ...rest}) => {
   const [selectedListIds, setSelectedListIds] = useState([])
   const [limit, setLimit] = useState(50)
   const [page, setPage] = useState(0)
+  const [propOpen, setPropOpen] = useState(false)
+  const [projectData, setProjectData] = useState({})
 
   const dataResults = dataProvider.results
   const handleSelectAll = (event) => {
@@ -100,10 +103,7 @@ const ProjectList = ({className, dataProvider, powerMap, ...rest}) => {
                   项目id
                 </TableCell>
                 <TableCell>
-                  唯一名
-                </TableCell>
-                <TableCell>
-                  全名
+                  项目名
                 </TableCell>
                 <TableCell>
                   类型
@@ -141,9 +141,6 @@ const ProjectList = ({className, dataProvider, powerMap, ...rest}) => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    {data.appKey}
-                  </TableCell>
-                  <TableCell>
                     {data.appName}
                   </TableCell>
                   <TableCell>
@@ -158,11 +155,15 @@ const ProjectList = ({className, dataProvider, powerMap, ...rest}) => {
                         详情
                       </Button>
                       <Button variant="outlined" color="primary"
-                              style={{display: hiddenEle(dataProvider.id, 'project', 'editThis', powerMap)}}>
+                              style={{display: hiddenEle(data.id, 'project', 'thisEdit', powerMap)}}>
                         编辑
                       </Button>
                       <Button variant="outlined" color="primary"
-                              style={{display: hiddenEle(dataProvider.id, 'project', 'propView', powerMap)}}>
+                              style={{display: hiddenEle(data.id, 'project', 'propView', powerMap)}}
+                              onClick={() => {
+                                setPropOpen(true)
+                                setProjectData(data)
+                              }}>
                         配置
                       </Button>
                     </Grid>
@@ -171,6 +172,8 @@ const ProjectList = ({className, dataProvider, powerMap, ...rest}) => {
               ))}
             </TableBody>
           </Table>
+          <PropertyView dataProvider={projectData} powerMap={powerMap} inputType="project"
+                        propOpen={propOpen} setPropOpen={setPropOpen}/>
         </Box>
       </PerfectScrollbar>
       <TablePagination

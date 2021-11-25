@@ -52,9 +52,13 @@ func invalidAppById(id uint64) {
 	delete(appInfoMap, id)
 }
 
+func invalidAppInfoById(id uint64) {
+	delete(appInfoMap, id)
+}
+
 func findAllAppSimple(c *fiber.Ctx) (int, *[]model.Project, error) {
 	var list []model.Project
-	sql := base.Engine.Cols(model.IdInProject, model.AppKeyInProject, model.AppTypeInProject).
+	sql := base.Engine.Cols(model.IdInProject, model.AppNameInProject, model.AppTypeInProject).
 		Where("is_disable = 0")
 	err := SelectAuth(c, model.ProjectTable, sql)
 	if nil != err {
@@ -89,7 +93,7 @@ func updateAppById(c *fiber.Ctx, session *xorm.Session, info *model.Project) (in
 	if nil == info || info.Id <= 0 {
 		return -1, errors.New("input model error, id is empty")
 	}
-	return session.Omit(model.IdInProject, model.AppKeyInProject, model.AppNameInProject).Update(info)
+	return session.Omit(model.IdInProject, model.AppNameInProject).Update(info)
 }
 
 func insertApp(c *fiber.Ctx, session *xorm.Session, info *model.Project) (int64, error) {

@@ -16,6 +16,7 @@ import Page from 'src/components/Page'
 import {ShowSnackbar} from 'src/utils/globalshow'
 import AccountList from './AccountList'
 import RoleSelect from './RoleSelect'
+import passwdHash from 'src/utils/passwdhash'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -51,10 +52,10 @@ const MainView = () => {
 
   const handleCreate = () => {
     if (name && nickname) {
-      http.post('/api/user', {
+      http.put('/api/user', {
         userName: name,
         nickname: nickname,
-        password: newPasswd,
+        password: passwdHash(newPasswd),
         roleList: JSON.stringify(selectRole)
       }).then(res => {
         http.getList('/api/user').then(data => setUserList(data))
@@ -69,7 +70,7 @@ const MainView = () => {
   }
 
   const updateUser = (id, info) => {
-    return http.put('/api/user/' + id, info).then(res => {
+    return http.post('/api/user/' + id, info).then(res => {
       ShowSnackbar('用户更新成功', 'info')
     }).catch(err => {
       ShowSnackbar('用户更新失败: ' + err, 'error')

@@ -3,9 +3,10 @@ package util
 import (
 	"github.com/gofiber/fiber/v2"
 	"log"
-	"net/http"
 	"reflect"
 )
+
+var fiberError = reflect.TypeOf(fiber.Error{})
 
 func ResultEmpty(c *fiber.Ctx) error {
 	return c.SendString("")
@@ -185,58 +186,58 @@ func pageEmpty(c *fiber.Ctx) error {
 	return c.JSON(EmptyPage)
 }
 
-func ErrorInternal(c *fiber.Ctx, e error) error {
-	log.Printf("[error] internal error: %v\n", e)
-	if reflect.TypeOf(e) == reflect.TypeOf(fiber.ErrBadRequest) {
-		return e
-	} else {
-		return c.Status(http.StatusInternalServerError).JSON(map[string]string{
-			"message": "Error",
-		})
-	}
-}
-
 func ErrorInput(c *fiber.Ctx, message string) error {
-	return c.Status(http.StatusBadRequest).JSON(map[string]string{
-		"message": message,
-	})
+	return &fiber.Error{
+		Code:    fiber.StatusBadRequest,
+		Message: message,
+	}
 }
 
 func ErrorInputOrDirect(c *fiber.Ctx, e error, message string) error {
-	if reflect.TypeOf(e) == reflect.TypeOf(fiber.ErrBadRequest) {
+	if reflect.TypeOf(e) == fiberError {
 		return e
 	} else {
-		return c.Status(http.StatusBadRequest).JSON(map[string]string{
-			"message": message,
-		})
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: message,
+		}
 	}
 }
 
-func ErrorInputShowMessage(c *fiber.Ctx, message string) error {
-	return c.Status(http.StatusBadRequest).JSON(map[string]string{
-		"message": message,
-	})
+func ErrorInputLog(c *fiber.Ctx, e error, message string) error {
+	log.Printf("[error] input error: %v, %v\n", message, e)
+	return &fiber.Error{
+		Code:    fiber.StatusBadRequest,
+		Message: message,
+	}
 }
 
-func ErrorInputErrorMessage(c *fiber.Ctx, e error, message string) error {
-	log.Printf("[error] input error: %v, %v\n", message, e)
-	return c.Status(http.StatusBadRequest).JSON(map[string]string{
-		"message": message,
-	})
+func ErrorInternal(c *fiber.Ctx, e error) error {
+	log.Printf("[error] internal error: %v\n", e)
+	if reflect.TypeOf(e) == fiberError {
+		return e
+	} else {
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "Error",
+		}
+	}
 }
 
 func ErrorWithMessage(c *fiber.Ctx, e error, message string) error {
 	log.Printf("[error] result error: %v, %v\n", message, e)
-	return c.Status(http.StatusInternalServerError).JSON(map[string]string{
-		"message": message,
-	})
+	return &fiber.Error{
+		Code:    fiber.StatusInternalServerError,
+		Message: message,
+	}
 }
 
 func ErrorWithCodeMessage(c *fiber.Ctx, e error, code int, message string) error {
 	log.Printf("[error] result error with code: %d, %v, %v\n", code, message, e)
-	return c.Status(code).JSON(map[string]string{
-		"message": message,
-	})
+	return &fiber.Error{
+		Code:    code,
+		Message: message,
+	}
 }
 
 var EmptyMap = make(map[string]string)

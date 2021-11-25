@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react'
 import {Box, Container, FormControl, makeStyles, TextField} from '@material-ui/core'
 import Page from 'src/components/Page'
-import DocumentCard from 'src/views/document/DocumentView/DocumentCard'
 import http from 'src/requests'
+import DocumentCard from 'src/views/document/DocumentView/DocumentCard'
 import {currentBaseProp} from 'src/sessions'
 import {ShowSnackbar} from 'src/utils/globalshow'
 import {Autocomplete} from '@material-ui/lab'
@@ -32,22 +32,13 @@ const MainView = () => {
   const docKey = params.key
   const spaceName = params.space
   const baseProps = currentBaseProp()
-  let docApiUrl = ''
-  let docApiToken = ''
-  if (baseProps && baseProps.document && docKey in baseProps.document) {
-    const docProps = baseProps.document[docKey]
-    if ('api_url' in docProps) {
-      docApiUrl = docProps.api_url
-    }
-    if ('token' in docProps) {
-      docApiToken = docProps.token
-    }
-  }
+  const docProps = (baseProps && baseProps.document && docKey in baseProps.document) ? baseProps.document[docKey] : {}
+  const docApiBase = docProps.api_base
 
   const doDocumentApiRequest = (reqUrl, param, tenant, group, token, func, err) => {
-    if (appId && spaceName && docApiUrl) {
+    if (appId && spaceName && docApiBase) {
       const time = new Date().getTime()
-      http.post(docApiUrl + reqUrl, {
+      http.post(docApiBase + reqUrl, {
         param: param,
         tenant: tenant,
         timestamp: time,
@@ -71,7 +62,6 @@ const MainView = () => {
     }
     for (const idx in inputList) {
       const inputOne = inputList[idx]
-      console.log(inputOne)
       if (inputOne && 'fieldName' in inputOne) {
         if (addSize > 0) {
           inputOne.fieldName = '\t'.repeat(addSize) + inputOne.fieldName
@@ -104,10 +94,14 @@ const MainView = () => {
   }
 
   const getDocDetail = (invokeName, invokeLength) => {
-    if (appId && spaceName && docApiUrl) {
-      http.get(docApiUrl + '/info/method_detail',
+    if (appId && spaceName && docApiBase) {
+      const time = String(new Date().getTime())
+      http.get(docApiBase + docProps.api_method,
         {system: appId, group: spaceName, invokeName: invokeName, invokeLength: invokeLength},
-        {Authorization: docApiToken}).then(data => {
+        {
+          'X-Clap-Time': String(new Date().getTime()),
+          'X-Clap-Sign': String(sha256(`system=${appId}&group=${spaceName}&invokeName=${invokeName}&invokeLength=${invokeLength}${time}${docProps.token}`))
+        }).then(data => {
         if (data) {
           setDocDetail(data)
           initDocDetail(data)
@@ -140,10 +134,14 @@ const MainView = () => {
   }
 
   useEffect(() => {
-    if (appId && spaceName && docApiUrl) {
-      http.get(docApiUrl + '/info/clazz_list',
+    if (appId && spaceName && docApiBase) {
+      const time = String(new Date().getTime())
+      http.get(docApiBase + docProps.api_clazz,
         {system: appId, group: spaceName},
-        {Authorization: docApiToken}).then(data => {
+        {
+          'X-Clap-Time': time,
+          'X-Clap-Sign': String(sha256(`system=${appId}&group=${spaceName}${time}${docProps.token}`))
+        }).then(data => {
         if (data) {
           setDocList(data)
         } else {
@@ -180,7 +178,8 @@ const MainView = () => {
           />
         </FormControl>
         <Box mt={3}>
-          <DocumentCard dataProvider={docDetail} doDocumentApiRequest={doDocumentApiRequest} spaceName={spaceName}
+          <DocumentCard dataProvider={docDetail} docProps={docProps}
+                        doDocumentApiRequest={doDocumentApiRequest} spaceName={spaceName}
                         paramList={paramList} paramMockData={paramMockData}
                         returnList={returnList} returnMockData={returnMockData}
                         thisRequest={thisRequest} setThisRequest={setThisRequest}

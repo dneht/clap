@@ -148,9 +148,6 @@ const CurrentCard = ({className, dataProvider, ...rest}) => {
                     {data.namespace}
                   </TableCell>
                   <TableCell>
-                    {data.appKey}
-                  </TableCell>
-                  <TableCell>
                     {data.appEnv}
                   </TableCell>
                   <TableCell>

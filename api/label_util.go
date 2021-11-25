@@ -37,7 +37,6 @@ func selectJobLabelList(jobName string) *[]string {
 
 func buildAppLabelString(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project, component string) string {
 	return refer.LabelAppId + "=" + strconv.FormatUint(appBase.Id, 10) + "," +
-		refer.LabelAppKey + "=" + appBase.AppKey + "," +
 		refer.LabelAppType + "=" + refer.ConvertAppType(appBase.AppType) + "," +
 		refer.LabelAppName + "=" + appBase.AppName + "," +
 		refer.LabelAppComponent + "=" + component + "," +
@@ -49,7 +48,6 @@ func buildAppLabelString(envBase *model.Environment, spaceBase *model.Environmen
 func configAppLabelMap(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project, templateName string) map[string]string {
 	return map[string]string{
 		refer.LabelAppId:        strconv.FormatUint(appBase.Id, 10),
-		refer.LabelAppKey:       appBase.AppKey,
 		refer.LabelAppType:      refer.ConvertAppType(appBase.AppType),
 		refer.LabelAppName:      appBase.AppName,
 		refer.LabelAppComponent: templateName,

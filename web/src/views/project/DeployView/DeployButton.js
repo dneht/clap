@@ -1,9 +1,9 @@
 import React from 'react'
-import {Button, ButtonGroup} from '@material-ui/core'
+import {Button} from '@material-ui/core'
 import {convertAppType} from 'src/utils/convertvalue'
 import {ShowSnackbar} from 'src/utils/globalshow'
 import {currentBaseProp, currentEnvName} from 'src/sessions'
-import hiddenEle from '../../../utils/hiddenele'
+import hiddenEle from 'src/utils/hiddenele'
 
 class DeployButton extends React.Component {
   constructor(props) {
@@ -30,6 +30,7 @@ class DeployButton extends React.Component {
     }
     this.appType = props.dataProvider.appBase.appType
     this.openPodDialog = props.openPodDialog
+    this.openPropOpen = props.openPropOpen
     this.getBuildPods = props.getBuildPods
     this.gotoPackageApp = props.gotoPackageApp
     this.gotoPublishApp = props.gotoPublishApp
@@ -95,14 +96,14 @@ class DeployButton extends React.Component {
       return (
         <div>
           <Button variant="outlined" color="primary"
-                  style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
-                  onClick={this.doPublishApp}>
-            发布
-          </Button>
-          <Button variant="outlined" color="primary"
                   style={{display: hiddenEle(this.deployId, 'deployment', 'podLog', this.powerMap)}}
                   onClick={() => this.openPodDialog(this.dataProvider)}>
             查看
+          </Button>
+          <Button variant="outlined" color="primary"
+                  style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
+                  onClick={this.doPublishApp}>
+            发布
           </Button>
         </div>
       )
@@ -111,12 +112,17 @@ class DeployButton extends React.Component {
         return (
           <div>
             <Button variant="outlined" color="primary"
-                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}
+                    onClick={() => this.openPropOpen(this.dataProvider)}>
+              配置
+            </Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
                     onClick={this.logPackageApp}>
               打包中
             </Button>
             <Button variant="outlined" color="primary"
-                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
                     onClick={this.reloadPackageStatus}>
               刷新状态
             </Button>
@@ -126,13 +132,19 @@ class DeployButton extends React.Component {
         return (
           <div>
             <Button variant="outlined" color="primary"
-                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
-                    onClick={this.doPublishApp}>
-              立即发布
+                    style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}
+                    onClick={() => this.openPropOpen(this.dataProvider)}>
+              配置
             </Button>
             <Button variant="outlined" color="primary"
-              style={{display: hiddenEle(this.deployId, 'deployment', 'docView', this.powerMap)}}>
-              配置
+                    style={{display: hiddenEle(this.deployId, 'deployment', 'podLog', this.powerMap)}}
+                    onClick={() => this.openPodDialog(this.dataProvider)}>
+              查看
+            </Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
+                    onClick={this.doPublishApp}>
+              立即发布
             </Button>
           </div>
         )
@@ -140,12 +152,22 @@ class DeployButton extends React.Component {
         return (
           <div>
             <Button variant="outlined" color="primary"
-                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}
+                    onClick={() => this.openPropOpen(this.dataProvider)}>
+              配置
+            </Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: hiddenEle(this.deployId, 'deployment', 'podLog', this.powerMap)}}
+                    onClick={() => this.openPodDialog(this.dataProvider)}>
+              查看
+            </Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
                     onClick={this.logPackageApp}>
               打包失败
             </Button>
             <Button variant="outlined" color="primary"
-                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
                     onClick={this.doPackageApp}>
               重新打包
             </Button>
@@ -156,10 +178,9 @@ class DeployButton extends React.Component {
           return (
             <div>
               <Button variant="outlined" color="primary"
-                      style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
-                      onClick={this.doPackageApp}
-                      disabled={this.disablePack}>
-                打包
+                      style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}
+                      onClick={() => this.openPropOpen(this.dataProvider)}>
+                配置
               </Button>
               <Button variant="outlined" color="primary"
                       style={{display: hiddenEle(this.deployId, 'deployment', 'podLog', this.powerMap)}}
@@ -167,8 +188,10 @@ class DeployButton extends React.Component {
                 查看
               </Button>
               <Button variant="outlined" color="primary"
-                      style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}>
-                配置
+                      style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
+                      onClick={this.doPackageApp}
+                      disabled={this.disablePack}>
+                打包
               </Button>
               <Button variant="outlined" color="primary"
                       style={{display: hiddenEle(this.deployId, 'deployment', 'docView', this.powerMap)}}
@@ -181,10 +204,9 @@ class DeployButton extends React.Component {
           return (
             <div>
               <Button variant="outlined" color="primary"
-                      style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
-                      onClick={this.doPackageApp}
-                      disabled={this.disablePack}>
-                打包
+                      style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}
+                      onClick={() => this.openPropOpen(this.dataProvider)}>
+                配置
               </Button>
               <Button variant="outlined" color="primary"
                       style={{display: hiddenEle(this.deployId, 'deployment', 'podLog', this.powerMap)}}
@@ -192,8 +214,10 @@ class DeployButton extends React.Component {
                 查看
               </Button>
               <Button variant="outlined" color="primary"
-                      style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}>
-                配置
+                      style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
+                      onClick={this.doPackageApp}
+                      disabled={this.disablePack}>
+                打包
               </Button>
             </div>
           )
@@ -202,19 +226,20 @@ class DeployButton extends React.Component {
         return (
           <div>
             <Button variant="outlined" color="primary"
-                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}
+                    onClick={() => this.openPropOpen(this.dataProvider)}>
+              配置
+            </Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
                     onClick={this.doPackageApp}
                     disabled={this.disablePack}>
               打包
             </Button>
             <Button variant="outlined" color="primary"
-                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'packThis', this.powerMap)}}
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
                     onClick={this.doPublishApp}>
               发布
-            </Button>
-            <Button variant="outlined" color="primary"
-                    style={{display: hiddenEle(this.deployId, 'deployment', 'propView', this.powerMap)}}>
-              配置
             </Button>
           </div>
         )

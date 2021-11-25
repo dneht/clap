@@ -40,95 +40,95 @@ type CommonParamInfo struct {
 }
 
 type ImagePullSecretsInfo struct {
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 }
 
 type HostAliasesInfo struct {
-	Ip        string   `json:"ip"`
-	Hostnames []string `json:"hostnames"`
+	Ip        string   `json:"ip,omitempty"`
+	Hostnames []string `json:"hostnames,omitempty"`
 }
 
 type ContainerSpecInfo struct {
 	Name               string                            `json:"name,omitempty"`
 	Image              string                            `json:"image,omitempty"`
-	Format             string                            `json:"format"`
-	Command            []string                          `json:"command"`
-	Args               []string                          `json:"args"`
+	Format             string                            `json:"format,omitempty"`
+	Command            []string                          `json:"command,omitempty"`
+	Args               []string                          `json:"args,omitempty"`
 	Env                []ContainerEnvInfo                `json:"env,omitempty"`
 	EnvFrom            []map[string]ContainerEnvFormInfo `json:"envFrom,omitempty"`
-	Ports              []ContainerPortInfo               `json:"ports"`
+	Ports              []ContainerPortInfo               `json:"ports,omitempty"`
 	SecurityContext    SecurityContextInfo               `json:"securityContext,omitempty"`
 	LifecyclePostStart ContainerHandleInfo               `json:"lifecyclePostStart,omitempty"`
 	LifecyclePreStop   ContainerHandleInfo               `json:"lifecyclePreStop,omitempty"`
 	StartupProbe       ContainerProbeInfo                `json:"startupProbe,omitempty"`
 	ReadinessProbe     ContainerProbeInfo                `json:"readinessProbe,omitempty"`
 	LivenessProbe      ContainerProbeInfo                `json:"livenessProbe,omitempty"`
-	VolumeNames        []string                          `json:"volumeNames"`
+	VolumeNames        []string                          `json:"volumeNames,omitempty"`
 	FormatSpecInfo
 }
 
 type ContainerHandleInfo struct {
-	Exec      map[string]interface{} `json:"exec"`
-	HttpGet   map[string]interface{} `json:"httpGet"`
-	TcpSocket map[string]interface{} `json:"tcpSocket"`
+	Exec      map[string]interface{} `json:"exec,omitempty"`
+	HttpGet   map[string]interface{} `json:"httpGet,omitempty"`
+	TcpSocket map[string]interface{} `json:"tcpSocket,omitempty"`
 }
 
 type ContainerProbeInfo struct {
 	ContainerHandleInfo
-	InitialDelaySeconds int `json:"initialDelaySeconds"`
-	TimeoutSeconds      int `json:"timeoutSeconds"`
-	PeriodSeconds       int `json:"periodSeconds"`
-	SuccessThreshold    int `json:"successThreshold"`
-	FailureThreshold    int `json:"failureThreshold"`
+	InitialDelaySeconds int `json:"initialDelaySeconds,omitempty"`
+	TimeoutSeconds      int `json:"timeoutSeconds,omitempty"`
+	PeriodSeconds       int `json:"periodSeconds,omitempty"`
+	SuccessThreshold    int `json:"successThreshold,omitempty"`
+	FailureThreshold    int `json:"failureThreshold,omitempty"`
 }
 
 // fieldRef or secretKeyRef or configMapKeyRef
 type ContainerEnvInfo struct {
-	Name      string                            `json:"name"`
-	Value     string                            `json:"value"`
-	ValueFrom map[string]ContainerEnvKeyRefInfo `json:"valueFrom"`
+	Name      string                            `json:"name,omitempty"`
+	Value     string                            `json:"value,omitempty"`
+	ValueFrom map[string]ContainerEnvKeyRefInfo `json:"valueFrom,omitempty"`
 }
 
 // configMapRef
 type ContainerEnvFormInfo struct {
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 }
 
 type ContainerEnvKeyRefInfo struct {
-	Name string `json:"name"`
-	Key  string `json:"key"`
+	Name string `json:"name,omitempty"`
+	Key  string `json:"key,omitempty"`
 }
 
 type ContainerPortInfo struct {
-	ContainerPort string `json:"containerPort"`
-	HostPort      string `json:"hostPort"`
+	ContainerPort string `json:"containerPort,omitempty"`
+	HostPort      string `json:"hostPort,omitempty"`
 }
 
 type SecurityContextInfo struct {
-	FsGroup      int            `json:"fsGroup"`
-	RunAsUser    int            `json:"runAsUser"`
-	RunAsGroup   int            `json:"runAsGroup"`
-	Capabilities CapabilityInfo `json:"capabilities"`
+	FsGroup      int            `json:"fsGroup,omitempty"`
+	RunAsUser    int            `json:"runAsUser,omitempty"`
+	RunAsGroup   int            `json:"runAsGroup,omitempty"`
+	Capabilities CapabilityInfo `json:"capabilities,omitempty"`
 }
 
 type CapabilityInfo struct {
-	Add  []string `json:"add"`
-	Drop []string `json:"drop"`
+	Add  []string `json:"add,omitempty"`
+	Drop []string `json:"drop,omitempty"`
 }
 
 type ConfigDataInfo struct {
-	Name        string            `json:"name"`
-	Data        map[string]string `json:"data"`
-	Items       []MountItemInfo   `json:"items"`
-	MountPath   string            `json:"mountPath"`
-	DefaultMode int               `json:"defaultMode"`
-	ReadOnly    bool              `json:"readOnly"`
+	Name        string            `json:"name,omitempty"`
+	Data        map[string]string `json:"data,omitempty"`
+	Items       []MountItemInfo   `json:"items,omitempty"`
+	MountPath   string            `json:"mountPath,omitempty"`
+	DefaultMode int               `json:"defaultMode,omitempty"`
+	ReadOnly    bool              `json:"readOnly,omitempty"`
 }
 
 type MountItemInfo struct {
-	Key  string `json:"key"`
-	Path string `json:"path"`
-	Mode int    `json:"mode"`
+	Key  string `json:"key,omitempty"`
+	Path string `json:"path,omitempty"`
+	Mode int    `json:"mode,omitempty"`
 }
 
 /**
@@ -136,22 +136,22 @@ Type like Secret, Config, HostPath, VolumeClaim, VolumeClaimTemplate
 Data, Items, DefaultMode is only for Secret or Config type
 */
 type VolumeMountInfo struct {
-	Name          string            `json:"name"`
-	Type          string            `json:"type"`
-	Data          map[string]string `json:"data"`
-	Items         []MountItemInfo   `json:"items"`
-	MountPath     string            `json:"mountPath"`
-	DefaultMode   int               `json:"defaultMode"`
-	ReadOnly      bool              `json:"readOnly"`
-	HostPath      string            `json:"hostPath"`
-	ClaimName     string            `json:"claimName"`
-	ClaimTemplate ClaimTemplateInfo `json:"claimTemplate"`
+	Name          string            `json:"name,omitempty"`
+	Type          string            `json:"type,omitempty"`
+	Data          map[string]string `json:"data,omitempty"`
+	Items         []MountItemInfo   `json:"items,omitempty"`
+	MountPath     string            `json:"mountPath,omitempty"`
+	DefaultMode   int               `json:"defaultMode,omitempty"`
+	ReadOnly      bool              `json:"readOnly,omitempty"`
+	HostPath      string            `json:"hostPath,omitempty"`
+	ClaimName     string            `json:"claimName,omitempty"`
+	ClaimTemplate ClaimTemplateInfo `json:"claimTemplate,omitempty"`
 }
 
 type ClaimTemplateInfo struct {
-	AccessModes      []string `json:"accessModes"`
-	StorageClassName string   `json:"storageClassName"`
-	RequestStorage   string   `json:"requestStorage"`
+	AccessModes      []string `json:"accessModes,omitempty"`
+	StorageClassName string   `json:"storageClassName,omitempty"`
+	RequestStorage   string   `json:"requestStorage,omitempty"`
 }
 
 /**
@@ -163,7 +163,7 @@ type AccessPortalInfo struct {
 	ClusterIP             string              `json:"clusterIP,omitempty"`
 	SessionAffinity       string              `json:"sessionAffinity,omitempty"`
 	ExternalTrafficPolicy string              `json:"externalTrafficPolicy,omitempty"`
-	Routers               []ServiceRouterInfo `json:"routers"`
+	Routers               []ServiceRouterInfo `json:"routers,omitempty"`
 }
 
 type ServiceDataInfo struct {
@@ -172,14 +172,14 @@ type ServiceDataInfo struct {
 	ClusterIP             string            `json:"clusterIP,omitempty"`
 	SessionAffinity       string            `json:"sessionAffinity,omitempty"`
 	ExternalTrafficPolicy string            `json:"externalTrafficPolicy,omitempty"`
-	Ports                 []ServicePortInfo `json:"ports"`
+	Ports                 []ServicePortInfo `json:"ports,omitempty"`
 }
 
 type ServicePortInfo struct {
 	Name       string `json:"name,omitempty"`
 	Protocol   string `json:"protocol,omitempty"`
-	Port       int32  `json:"port"`
-	TargetPort int32  `json:"targetPort"`
+	Port       int32  `json:"port,omitempty"`
+	TargetPort int32  `json:"targetPort,omitempty"`
 	NodePort   int32  `json:"nodePort,omitempty"`
 }
 
@@ -200,77 +200,4 @@ type ServiceRouterInfo struct {
 	LoadBalanceStrategy string                 `json:"loadBalanceStrategy,omitempty"`
 	CorsPolicy          ContourCorsInfo        `json:"corsPolicy,omitempty"`
 	HealthCheckPolicy   ContourHealthCheckInfo `json:"healthCheckPolicy,omitempty"`
-}
-
-type ContourDataInfo struct {
-	Fqdn       string                `json:"fqdn,omitempty"`
-	Tls        ContourTlsInfo        `json:"tls,omitempty"`
-	CorsPolicy ContourCorsInfo       `json:"corsPolicy,omitempty"`
-	Includes   []ContourIncludeInfo  `json:"includes,omitempty"`
-	Routers    []ContourRouterInfo   `json:"routes,omitempty"`
-	Tcpproxy   []ContourTcpproxyInfo `json:"tcpproxy,omitempty"`
-}
-
-type ContourTlsInfo struct {
-	SecretName  string `json:"secretName,omitempty"`
-	Passthrough bool   `json:"passthrough,omitempty"`
-}
-
-type ContourIncludeInfo struct {
-	Name       string               `json:"name"`
-	Namespace  string               `json:"namespace"`
-	Conditions ContourConditionInfo `json:"conditions,omitempty"`
-}
-
-/**
-LoadBalanceStrategy: RoundRobin, WeightedLeastRequest, Cookie
-*/
-type ContourRouterInfo struct {
-	Conditions          ContourConditionInfo   `json:"conditions"`
-	Services            []ContourServiceInfo   `json:"services"`
-	InnerService        ContourServiceInfo     `json:"innerService"`
-	RespTimeout         string                 `json:"respTimeout,omitempty"`
-	IdleTimeout         string                 `json:"idleTimeout,omitempty"`
-	RetryCount          uint64                 `json:"retryCount,omitempty"`
-	RetryPerTryTimeout  string                 `json:"retryPerTryTimeout,omitempty"`
-	EnableWebsockets    bool                   `json:"enableWebsockets,omitempty"`
-	LoadBalanceStrategy string                 `json:"loadBalanceStrategy,omitempty"`
-	HealthCheckPolicy   ContourHealthCheckInfo `json:"healthCheckPolicy,omitempty"`
-}
-
-type ContourTcpproxyInfo struct {
-	Services []ContourServiceInfo `json:"services"`
-}
-
-type ContourConditionInfo struct {
-	Prefix []string            `json:"prefix"`
-	Header []ContourHeaderInfo `json:"header"`
-}
-
-type ContourHeaderInfo struct {
-	Name     string `json:"name"`
-	Contains string `json:"contains"`
-}
-
-type ContourServiceInfo struct {
-	Name   string `json:"name"`
-	Port   int32  `json:"port"`
-	Weight uint32 `json:"weight"`
-}
-
-type ContourCorsInfo struct {
-	AllowCredentials bool     `json:"allowCredentials,omitempty"`
-	AllowOrigin      []string `json:"allowOrigin,omitempty"`
-	AllowMethods     []string `json:"allowMethods,omitempty"`
-	AllowHeaders     []string `json:"allowHeaders,omitempty"`
-	ExposeHeaders    []string `json:"exposeHeaders,omitempty"`
-	MaxAge           string   `json:"maxAge,omitempty"`
-}
-
-type ContourHealthCheckInfo struct {
-	Path                    string `json:"path,omitempty"`
-	IntervalSeconds         uint64 `json:"intervalSeconds,omitempty"`
-	TimeoutSeconds          uint64 `json:"timeoutSeconds,omitempty"`
-	UnhealthyThresholdCount uint64 `json:"unhealthyThresholdCount,omitempty"`
-	HealthyThresholdCount   uint64 `json:"healthyThresholdCount,omitempty"`
 }

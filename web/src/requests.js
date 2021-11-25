@@ -43,29 +43,29 @@ const buildHeader = (header = {}) => {
 }
 
 const handleError = (err, reject) => {
-  const has = err.response.data && err.response.data.message
-  let msg = has ? err.response.data.message : 'Unknown error'
+  const {data} = err.response
+  let msg = data ? data : 'Unknown error'
   if (err.response) {
     switch (err.response.status) {
       case 400:
-        if (!has) {
+        if (!data) {
           msg = 'Bad request'
         }
         break
       case 401:
-        if (!has) {
+        if (!data) {
           msg = 'Unauthorized'
         }
         delCurrentToken()
         window.location.href = '/login'
         break
       case 403:
-        if (!has) {
+        if (!data) {
           msg = 'No permission'
         }
         break
       case 404:
-        if (!has) {
+        if (!data) {
           msg = 'Not found'
         }
         break
@@ -87,11 +87,11 @@ const handleError = (err, reject) => {
 const http = {
   apiUrl: apiUrl,
   wsUrl: wsUrl,
-  initRes: (func, header = {}) => {
+  initRes: (header = {}) => {
     return new Promise((resolve, reject) => {
       axios.get('/api/static', {headers: buildHeader(header)}).then(result => {
         setCurrentUserRes(result.data)
-        resolve(func(result.data))
+        resolve(result.data)
       }).catch(err => {
         handleError(err, reject)
       })
@@ -128,6 +128,20 @@ const http = {
   getSimple: (pre, query = {}, header = {}) => {
     return new Promise((resolve, reject) => {
       axios.get(buildQuery(pre + '/simple', query), {headers: buildHeader(header)}).then(result => {
+        resolve(result.data)
+      }).catch(err => {
+        handleError(err, reject)
+      })
+    })
+  },
+  postSimple: (pre, query = {}, ids = [], header = {}) => {
+    if (ids.length === 0) {
+      return new Promise((resolve) => {
+        resolve([])
+      })
+    }
+    return new Promise((resolve, reject) => {
+      axios.post(buildQuery(pre + '/simple', query), {ids: ids}, {headers: buildHeader(header)}).then(result => {
         resolve(result.data)
       }).catch(err => {
         handleError(err, reject)
@@ -227,7 +241,7 @@ const http = {
         resolve(results)
       }
     })
-  },
+  }
 }
 
 export default http

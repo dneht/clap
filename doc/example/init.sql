@@ -8,7 +8,7 @@ drop table if exists bootstrap;
 create table bootstrap
 (
     id         bigint unsigned not null auto_increment,
-    env        varchar(128) not null comment '环境',
+    env        varchar(64)  not null comment '环境',
     prop       varchar(128) not null comment '属性名',
     value      varchar(512) not null comment '属性值',
     is_disable boolean               default false comment '是否已被禁用',
@@ -65,10 +65,9 @@ drop table if exists project;
 create table project
 (
     id          bigint unsigned not null auto_increment,
-    app_key     varchar(32)  not null comment '项目key',
     app_name    varchar(64)  not null comment '项目名',
     app_desc    varchar(256) not null comment '项目描述',
-    app_type    int          not null comment '项目类型，5nginx、10java、11tomcat、20go、60python、90node',
+    app_type    int          not null comment '项目类型',
     app_info    json comment '附加信息，包含项目打包，运行等信息',
     source_info json comment '加密信息，包含资源、密钥信息等，secret应该存放在不同的地方',
     inject_info json comment '注入信息，包含运行时注入信息、如收集日志、链路追踪等',
@@ -76,7 +75,6 @@ create table project
     is_disable  boolean               default false comment '是否已被禁用',
     created_at  timestamp    not null default current_timestamp comment '添加时间',
     updated_at  timestamp    not null default current_timestamp on update current_timestamp comment '更新时间',
-    unique uk_app_key (app_key),
     unique uk_app_name (app_name),
     primary key (id)
 ) engine = innodb
@@ -110,7 +108,7 @@ create table deployment
     branch_name   varchar(64) comment '代码分支',
     deploy_name   varchar(64) not null comment '部署名',
     deploy_status tinyint              default 0 comment '部署状态，修改需要加锁。0默认、1打包中、2打包完成、3打包失败、6已发布',
-    deploy_tag    varchar(24) comment '记录当前或者上次一打包使用的tag',
+    deploy_tag    varchar(24) comment '记录最近一次打包使用的tag',
     app_info      json comment '创建部署时覆盖原始的项目信息',
     is_package    boolean              default true comment '是否能打包，默认能',
     is_disable    boolean              default false comment '是否已被禁用',
@@ -126,32 +124,17 @@ create table deployment
   default charset = utf8mb4 comment = '发布信息';
 
 
-drop table if exists deployment_plan;
-create table deployment_plan
-(
-    id            bigint unsigned not null auto_increment,
-    env_id        bigint unsigned not null comment '环境',
-    user_id       bigint unsigned not null comment '创建者',
-    deploy_id     bigint unsigned not null comment '部署id',
-    deploy_status tinyint            default 0 comment '部署状态，0未知、1成功、2等待、9失败',
-    is_disable    boolean            default false comment '是否已被禁用',
-    created_at    timestamp not null default current_timestamp comment '添加时间',
-    index         idx_user_id (user_id),
-    primary key (id, deploy_id)
-) engine = innodb
-  default charset = utf8mb4 comment = '发布计划';
-
-
 drop table if exists deployment_log;
 create table deployment_log
 (
     id            bigint unsigned not null auto_increment,
-    app_id        bigint unsigned not null comment '项目',
-    env_id        bigint unsigned not null comment '环境',
-    space_id      bigint unsigned not null comment '环境空间',
-    deploy_id     bigint unsigned not null comment '部署',
+    user_id       bigint unsigned not null comment '用户id',
+    app_id        bigint unsigned not null comment '项目id',
+    env_id        bigint unsigned not null comment '环境id',
+    space_id      bigint unsigned not null comment '空间id',
+    deploy_id     bigint unsigned not null comment '部署id',
     plan_id       bigint unsigned comment '关联的发布计划id，可以为空',
-    prop_id       bigint unsigned comment '关联的配置快照id，可以为空',
+    prop_ids      json comment '关联的配置快照id列表，可以为空',
     branch_name   varchar(64) comment '代码分支',
     deploy_tag    varchar(24) comment '打包使用的tag',
     snapshot_info json comment '部署时的信息快照，合并后的信息',
@@ -169,14 +152,13 @@ create table property_file
     res_id       bigint unsigned not null comment '资源id',
     link_id      bigint unsigned not null comment '关联id',
     file_name    varchar(64)  not null comment '文件名，不包含文件路径',
-    file_path    varchar(128) not null comment '文件路径，不包含文件名',
-    link_id      bigint unsigned default 0 comment '关联id',
-    prop_readme  varchar(256) not null comment '配置文件说明',
-    prop_content text         not null comment '配置文件文本',
+    file_readme  varchar(256) not null comment '配置文件说明',
+    file_content text         not null comment '配置文件文本',
+    file_hash    varchar(64)  not null comment '根据file_content计算的hash',
     is_disable   boolean               default false comment '是否已被禁用',
     created_at   timestamp    not null default current_timestamp comment '添加时间',
     updated_at   timestamp    not null default current_timestamp on update current_timestamp comment '更新时间',
-    index        idx_link_id (link_id),
+    unique uk_link_res_id (link_id, res_id, file_name),
     primary key (id)
 ) engine = innodb
   default charset = utf8mb4 comment = '配置文件';
@@ -186,14 +168,14 @@ drop table if exists property_snap;
 create table property_snap
 (
     id           bigint unsigned not null auto_increment,
+    user_id      bigint unsigned not null comment '用户id',
     res_id       bigint unsigned not null comment '资源id',
     link_id      bigint unsigned not null comment '关联id',
-    file_name    varchar(64)  not null comment '文件名，不包含文件路径',
-    file_path    varchar(128) not null comment '文件路径，不包含文件名',
-    link_id      bigint unsigned default 0 comment '关联id',
-    prop_content text         not null comment '配置文件文本',
-    created_at   timestamp    not null default current_timestamp comment '添加时间',
-    index        idx_link_id (link_id),
+    prop_id      bigint unsigned not null comment '配置id',
+    file_name    varchar(64) not null comment '文件名，不包含文件路径',
+    file_content text        not null comment '配置文件文本',
+    created_at   timestamp   not null default current_timestamp comment '添加时间',
+    index        idx_link_res_id (link_id, res_id, file_name),
     primary key (id)
 ) engine = innodb
   default charset = utf8mb4 comment = '配置快照';

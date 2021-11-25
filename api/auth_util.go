@@ -25,11 +25,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"log"
+	"strconv"
 	"strings"
 	"xorm.io/xorm"
 )
 
 const (
+	UserHeader                = "X-Clap-User-Id"
 	TokenHeader               = "X-Clap-Access-Token"
 	MenuPre                   = "menu:"
 	CommonPre                 = "base:"
@@ -44,15 +46,15 @@ const (
 	AllowThisAndSubGrant      = 1 << 9
 	AllowThisDocumentView     = 1 << 12
 	AllowThisPackageDeploy    = 1 << 13
-	AllowThisPropertyView     = 1 << 16
-	AllowThisPropertyCreate   = 1 << 17
-	AllowThisPropertyUpdate   = 1 << 18
-	AllowThisDeployPlanCreate = 1 << 20
-	AllowThisPodLog           = 1 << 22
-	AllowThisPodExec          = 1 << 23
-	AllowThisPodRestart       = 1 << 24
-	AllowThisPodRollback      = 1 << 25
-	AllowThisPodSpace         = 1 << 28
+	AllowThisRollbackDeploy   = 1 << 14
+	AllowThisPropertyView     = 1 << 18
+	AllowThisPropertyCreate   = 1 << 19
+	AllowThisPropertyUpdate   = 1 << 20
+	AllowThisDeployPlanCreate = 1 << 22
+	AllowThisPodLog           = 1 << 24
+	AllowThisPodExec          = 1 << 25
+	AllowThisPodRestart       = 1 << 26
+	AllowThisPodSpace         = 1 << 29
 )
 
 func CheckAuth(c *fiber.Ctx) error {
@@ -206,6 +208,9 @@ func getUserResInfo(ids []uint64) *map[string]interface{} {
 
 	for _, id := range ids {
 		_, oneRes := base.Resource(id)
+		if nil == oneRes {
+			continue
+		}
 		for key, value := range *oneRes {
 			resInfo[key] = value
 		}
@@ -218,13 +223,16 @@ func getAuthFromHeader(c *fiber.Ctx) (*refer.AuthInfo, error) {
 	if "" == token {
 		return nil, fiber.ErrUnauthorized
 	}
-	return getAuthFromToken(token)
+	return getAuthFromToken(c, token)
 }
 
-func getAuthFromToken(token string) (*refer.AuthInfo, error) {
+func getAuthFromToken(c *fiber.Ctx, token string) (*refer.AuthInfo, error) {
 	auth, ok := authInfoMap[token]
 	if !ok {
 		return nil, fiber.ErrForbidden
+	}
+	if nil != c {
+		c.Request().Header.Set(UserHeader, strconv.FormatUint(auth.UserId, 10))
 	}
 	return auth, nil
 }
@@ -367,23 +375,47 @@ func DeploymentAuth(c *fiber.Ctx, id uint64, allow uint) error {
 	if nil != err {
 		return err
 	}
-	auth, err := getAuthFromToken(token)
+	auth, err := getAuthFromToken(c, token)
 	if nil != err {
 		return err
 	}
-	return checkInnerAuth(auth, id, allow)
+	return checkInnerAuth(auth, model.DeploymentTable, id, allow)
+}
+
+func ResourceAuth(c *fiber.Ctx, res string, id uint64, allow uint) error {
+	token, err := getInputToken(c)
+	if nil != err {
+		return err
+	}
+	auth, err := getAuthFromToken(c, token)
+	if nil != err {
+		return err
+	}
+	return checkInnerAuth(auth, res, id, allow)
 }
 
 func WebsocketAuth(token string, id uint64, allow uint) error {
-	auth, err := getAuthFromToken(token)
+	auth, err := getAuthFromToken(nil, token)
 	if nil != err {
 		return err
 	}
-	return checkInnerAuth(auth, id, allow)
+	return checkInnerAuth(auth, model.DeploymentTable, id, allow)
 }
 
-func checkInnerAuth(auth *refer.AuthInfo, id uint64, allow uint) error {
-	if auth.IsSuper {
+func contextUserId(c *fiber.Ctx) uint64 {
+	userStr := c.Get(UserHeader)
+	if "" == userStr {
+		return 0
+	}
+	userId, err := strconv.ParseUint(userStr, 10, 64)
+	if nil != err {
+		return 0
+	}
+	return userId
+}
+
+func checkInnerAuth(auth *refer.AuthInfo, res string, id uint64, allow uint) error {
+	if auth.IsManage {
 		return nil
 	}
 	if nil == auth.ResPower {
@@ -393,7 +425,7 @@ func checkInnerAuth(auth *refer.AuthInfo, id uint64, allow uint) error {
 		return fiber.ErrForbidden
 	}
 
-	list, ok := (*auth.ResPower)[CommonPre+model.DeploymentTable]
+	list, ok := (*auth.ResPower)[CommonPre+res]
 	if ok {
 		for _, one := range list {
 			if one.LinkId == id && one.Power&allow > 0 {
