@@ -38,7 +38,7 @@ func findAllTemplateSimple() (int, *[]model.Environment, error) {
 
 func countTemplateWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.Template
-	sql := base.Engine.Cols(model.IdInTemplate)
+	sql := base.Engine.Cols()
 	err := SelectAuth(c, model.TemplateTable, sql)
 	if nil != err {
 		return 0, err
@@ -48,7 +48,7 @@ func countTemplateWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 
 func findTemplateWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Template, error) {
 	var list []model.Template
-	sql := base.Engine.AllCols()
+	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
 	err := SelectAuth(c, model.TemplateTable, sql)
 	if nil != err {
 		return 0, nil, err
@@ -57,7 +57,7 @@ func findTemplateWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Te
 	return len(list), &list, err
 }
 
-func updateTemplateById(c *fiber.Ctx, session *xorm.Session, info *model.Template) (int64, error) {
+func updateTemplateById(session *xorm.Session, info *model.Template) (int64, error) {
 	if nil == info || info.Id <= 0 {
 		return -1, errors.New("input model error, id is empty")
 	}
@@ -65,6 +65,6 @@ func updateTemplateById(c *fiber.Ctx, session *xorm.Session, info *model.Templat
 	return session.Omit(model.IdInTemplate).Update(info)
 }
 
-func insertTemplate(c *fiber.Ctx, session *xorm.Session, info *model.Template) (int64, error) {
+func insertTemplate(session *xorm.Session, info *model.Template) (int64, error) {
 	return session.InsertOne(info)
 }

@@ -28,7 +28,7 @@ func findAllEnvSimple(c *fiber.Ctx) (int, *[]model.Environment, error) {
 
 func countEnvWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.Environment
-	sql := base.Engine.Cols(model.IdInEnvironment)
+	sql := base.Engine.Cols()
 	err := SelectAuth(c, model.EnvironmentTable, sql)
 	if nil != err {
 		return 0, err
@@ -38,7 +38,8 @@ func countEnvWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 
 func findEnvWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Environment, error) {
 	var list []model.Environment
-	sql := base.Engine.Omit(model.SyncInfoInEnvironment, model.DeployInfoInEnvironment, model.FormatInfoInEnvironment)
+	sql := base.Engine.Omit(model.SyncInfoInEnvironment, model.DeployInfoInEnvironment, model.FormatInfoInEnvironment,
+		model.CreatedAt, model.UpdatedAt)
 	err := SelectAuth(c, model.EnvironmentTable, sql)
 	if nil != err {
 		return 0, nil, err
@@ -102,7 +103,7 @@ func findAllSpaceSimple(c *fiber.Ctx, envId uint64) (int, *[]model.EnvironmentSp
 
 func countSpaceWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.EnvironmentSpace
-	sql := base.Engine.Cols(model.IdInEnvironmentSpace)
+	sql := base.Engine.Cols()
 	err := SelectAuth(c, model.EnvironmentSpaceTable, sql)
 	if nil != err {
 		return 0, err
@@ -112,7 +113,7 @@ func countSpaceWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 
 func findSpaceWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.EnvironmentSpace, error) {
 	var list []model.EnvironmentSpace
-	sql := base.Engine.Omit(model.SpaceInfoInEnvironmentSpace)
+	sql := base.Engine.Omit(model.SpaceInfoInEnvironmentSpace, model.CreatedAt, model.UpdatedAt)
 	err := SelectAuth(c, model.EnvironmentSpaceTable, sql)
 	if nil != err {
 		return 0, nil, err

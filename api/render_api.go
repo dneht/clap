@@ -140,8 +140,8 @@ func buildTemplate(envBase *model.Environment, spaceBase *model.EnvironmentSpace
 	for key, appValue := range appInfo.Param {
 		fillMap[key] = appValue
 	}
-	fillMap["labels"] = configAppLabelMap(envBase, spaceBase, appBase, appInfo.Component)
-	fillMap["selector"] = selectAppLabelMap(envBase, spaceBase, appBase, appInfo.Component)
+	fillMap["labels"] = util.ConfigAppLabelMap(envBase, spaceBase, appBase, appInfo.Component)
+	fillMap["selector"] = util.SelectAppLabelMap(envBase, spaceBase, appBase, appInfo.Component)
 	fillMap["constant"] = map[string]string{
 		"type":      refer.LabelAppType,
 		"name":      refer.LabelAppName,

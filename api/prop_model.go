@@ -19,10 +19,6 @@ package api
 import (
 	"cana.io/clap/pkg/base"
 	"cana.io/clap/pkg/model"
-	"cana.io/clap/pkg/refer"
-	"errors"
-	"github.com/gofiber/fiber/v2"
-	"strings"
 	"xorm.io/xorm"
 )
 
@@ -34,7 +30,7 @@ func getPropsById(id uint64) (*model.PropertyFile, bool, error) {
 
 func getPropsByLink(id, res uint64) (*[]model.PropertyFile, error) {
 	var list []model.PropertyFile
-	err := base.Engine.Omit(model.CreatedAtInPropertyFile, model.UpdatedAtInPropertyFile).
+	err := base.Engine.Omit(model.CreatedAt, model.UpdatedAt).
 		Where(model.ResIdInPropertyFile+" = ?", res).
 		Where(model.LinkIdInPropertyFile+" = ?", id).
 		Where(model.IsDisableInPropertyFile + " = 0").Find(&list)
@@ -52,17 +48,17 @@ func getPropsByLinkWithName(id uint64, name string) *[]model.PropertyFile {
 	return nil
 }
 
-func insertProp(c *fiber.Ctx, session *xorm.Session, info *model.PropertyFile) (int64, error) {
-	return session.Omit(model.IdInPropertyFile, model.CreatedAtInUserInfo, model.UpdatedAtInUserInfo).
+func insertProp(session *xorm.Session, info *model.PropertyFile) (int64, error) {
+	return session.Omit(model.IdInPropertyFile, model.CreatedAt, model.UpdatedAt).
 		InsertOne(info)
 }
 
-func updatePropById(c *fiber.Ctx, session *xorm.Session, id uint64, info *model.PropertyFile) (int64, error) {
+func updatePropById(session *xorm.Session, id uint64, info *model.PropertyFile) (int64, error) {
 	return session.Cols(model.FileReadmeInPropertyFile, model.FileContentInPropertyFile, model.FileHashInPropertyFile).
 		Update(info, model.PropertyFile{Id: id})
 }
 
-func updatePropStatusById(c *fiber.Ctx, session *xorm.Session, id uint64, disable int) (int64, error) {
+func updatePropStatusById(session *xorm.Session, id uint64, disable int) (int64, error) {
 	res, err := session.Cols(model.IsDisableInPropertyFile).
 		Exec("update "+model.PropertyFileTable+" set "+model.IsDisableInPropertyFile+" = ? "+
 			"where "+model.IdInPropertyFile+" = ?", disable, id)
@@ -72,121 +68,24 @@ func updatePropStatusById(c *fiber.Ctx, session *xorm.Session, id uint64, disabl
 	return res.RowsAffected()
 }
 
-func findPropByIds(c *fiber.Ctx, ids []uint64) (*model.PropertySnap, error) {
+func findPropByIds(ids []uint64) (*model.PropertySnap, error) {
 	var info model.PropertySnap
-	err := base.Engine.Omit(model.CreatedAtInPropertySnap).
+	err := base.Engine.Omit(model.CreatedAt).
 		In(model.IdInPropertySnap, ids).
 		Find(&info)
 	return &info, err
 }
 
-func getLatestPropSnap(c *fiber.Ctx, res, prop uint64) (*model.PropertySnap, error) {
+func getLatestPropSnap(res, prop uint64) (*model.PropertySnap, error) {
 	var info model.PropertySnap
-	err := base.Engine.Omit(model.CreatedAtInPropertySnap).
+	err := base.Engine.Omit(model.CreatedAt).
 		Where(model.ResIdInPropertySnap+"?", res).Where(model.PropIdInPropertySnap+"?", prop).
 		Desc(model.IdInPropertySnap).Limit(1).
 		Find(&info)
 	return &info, err
 }
 
-func insertPropSnap(c *fiber.Ctx, session *xorm.Session, info *model.PropertySnap) (int64, error) {
-	return session.Omit(model.IdInPropertySnap, model.CreatedAtInPropertySnap).
+func insertPropSnap(session *xorm.Session, info *model.PropertySnap) (int64, error) {
+	return session.Omit(model.IdInPropertySnap, model.CreatedAt).
 		InsertOne(info)
-}
-
-func generateNeedProps(appId, envId, spaceId, deployId uint64) *map[string]string {
-	allList := make([]model.PropertyFile, 0, 8)
-	existNames := make(map[string]bool)
-	deployList := getPropsByLinkWithName(deployId, model.DeploymentTable)
-	if nil != deployList && len(*deployList) > 0 {
-		allList = append(allList, *deployList...)
-		for _, deployOne := range *deployList {
-			name := strings.TrimSpace(deployOne.FileName)
-			if "" != name {
-				existNames[name] = true
-			}
-		}
-	}
-
-	spaceList := getPropsByLinkWithName(spaceId, model.EnvironmentSpaceTable)
-	if nil != spaceList && len(*spaceList) > 0 {
-		allList = append(allList, *appendNeedProps(&existNames, spaceList)...)
-	}
-	envList := getPropsByLinkWithName(envId, model.EnvironmentTable)
-	if nil != envList && len(*envList) > 0 {
-		allList = append(allList, *appendNeedProps(&existNames, envList)...)
-	}
-	appList := getPropsByLinkWithName(appId, model.ProjectTable)
-	if nil != appList && len(*appList) > 0 {
-		allList = append(allList, *appendNeedProps(&existNames, appList)...)
-	}
-	if len(allList) == 0 {
-		return nil
-	}
-
-	allData := mergePropByName(&allList)
-	if nil == allData || len(allData) == 0 {
-		allData = make(map[string]string, 0)
-		return &allData
-	}
-	return &allData
-}
-
-func appendNeedProps(names *map[string]bool, props *[]model.PropertyFile) *[]model.PropertyFile {
-	list := make([]model.PropertyFile, 0, len(*props))
-	for _, prop := range *props {
-		name := strings.TrimSpace(prop.FileName)
-		_, ok := (*names)[name]
-		if ok {
-			list = append(list, prop)
-		}
-	}
-	return &list
-}
-
-func generateRenderProps(appId, envId, spaceId, deployId uint64, appInfo *refer.AppInfo) error {
-	if nil == appInfo || nil == appInfo.Param {
-		return errors.New("get app info and param error")
-	}
-	var volumeGet []interface{}
-	volumeName := refer.PropGenerateName
-	volumeMounts, ok := appInfo.Param[refer.KeyVolumeMounts]
-	if ok {
-		volumeGet, ok = volumeMounts.([]interface{})
-		if ok {
-			for _, volumeOne := range volumeGet {
-				volumeThis, cok := volumeOne.(refer.VolumeMountInfo)
-				if cok && volumeThis.Name == volumeName {
-					return nil
-				}
-			}
-		} else {
-			return errors.New("convert exist volumes error")
-		}
-	}
-
-	allData := generateNeedProps(appId, envId, spaceId, deployId)
-	if nil == allData || len(*allData) == 0 {
-		return nil
-	}
-
-	mountPath := refer.PropMountPath
-	if nil != appInfo.Factor && "" != appInfo.Factor.ConfigMouthPath {
-		mountPath = appInfo.Factor.ConfigMouthPath
-	}
-	volumeList := []interface{}{
-		refer.VolumeMountInfo{
-			Name:      volumeName,
-			Type:      "Config",
-			Data:      *allData,
-			MountPath: mountPath,
-			ReadOnly:  true,
-		},
-	}
-
-	if nil != volumeGet {
-		volumeList = append(volumeList, volumeGet...)
-	}
-	appInfo.Param[refer.KeyVolumeMounts] = volumeList
-	return nil
 }

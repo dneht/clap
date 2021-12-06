@@ -19,9 +19,9 @@ package util
 import (
 	"bytes"
 	"cana.io/clap/pkg/base"
+	"cana.io/clap/pkg/log"
 	"crypto/tls"
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 )
@@ -34,7 +34,7 @@ func DingDingMessage(ding map[string]interface{}) {
 
 	dingJson, err := json.Marshal(ding)
 	if nil != err {
-		log.Printf("[dingding] message to json error: %v, %v\n", ding, err)
+		log.Warnf("dingding to json error: %v, %v\n", ding, err)
 		return
 	}
 
@@ -47,7 +47,7 @@ func DingDingMessage(ding map[string]interface{}) {
 	resp, err := client.Post(dingProp.ApiUrl,
 		"application/json", bytes.NewBuffer(dingJson))
 	if nil != err {
-		log.Printf("[dingding] message send error: %v, %v\n", resp, err)
+		log.Warnf("dingding send error: %v, %v\n", resp, err)
 		return
 	}
 	defer resp.Body.Close()

@@ -3,7 +3,7 @@
     port: 8008,
     debug: false,
     namespace: 'clap-system',
-    timezone: 'Local',
+    timezone: '',
     container: {
         cros: {
             allow_origins: '*',

@@ -2,11 +2,11 @@ package xterm
 
 import (
 	"cana.io/clap/pkg/base"
+	"cana.io/clap/pkg/log"
 	"cana.io/clap/util"
 	"context"
 	"errors"
 	"github.com/gofiber/websocket/v2"
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -150,7 +150,7 @@ func ping(t *TerminalSession, done chan struct{}) {
 		case <-ticker.C:
 			// 保持与客户端连接不断开
 			if err := t.ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeWait)); err != nil {
-				log.Println(err)
+				log.Warnf("ws write ping message failed: %v", err)
 				return
 			}
 			// 保持与 kubernetes 连接不断开

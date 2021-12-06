@@ -21,6 +21,7 @@ import (
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/pkg/refer"
 	"cana.io/clap/util"
+	"errors"
 	"github.com/gofiber/fiber/v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -74,11 +75,11 @@ func CreateProp(c *fiber.Ctx) error {
 	info.FileHash = getPropHashByContent(info.FileContent)
 
 	_, err = base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
-		_, err = insertProp(c, session, info)
+		_, err = insertProp(session, info)
 		if nil != err {
 			return 0, util.ErrorInternal(c, err)
 		}
-		_, err = insertPropSnap(c, session, &model.PropertySnap{
+		_, err = insertPropSnap(session, &model.PropertySnap{
 			UserId:      contextUserId(c),
 			ResId:       info.ResId,
 			LinkId:      info.LinkId,
@@ -136,12 +137,12 @@ func UpdateProp(c *fiber.Ctx) error {
 
 	userId := contextUserId(c)
 	_, err = base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
-		_, err = updatePropById(c, session, id, info)
+		_, err = updatePropById(session, id, info)
 		if nil != err {
 			return 0, util.ErrorInternal(c, err)
 		}
 		if "" != get.FileContent {
-			_, err = insertPropSnap(c, session, &model.PropertySnap{
+			_, err = insertPropSnap(session, &model.PropertySnap{
 				UserId:      userId,
 				ResId:       get.ResId,
 				LinkId:      get.LinkId,
@@ -227,4 +228,101 @@ func checkNeedUpdateKube(info *model.PropertyFile) (bool, string, *model.Environ
 			envBase, spaceBase, appBase, deployBase, nil
 	}
 	return false, "", nil, nil, nil, nil, nil
+}
+
+func generateNeedProps(appId, envId, spaceId, deployId uint64) *map[string]string {
+	allList := make([]model.PropertyFile, 0, 8)
+	existNames := make(map[string]bool)
+	deployList := getPropsByLinkWithName(deployId, model.DeploymentTable)
+	if nil != deployList && len(*deployList) > 0 {
+		allList = append(allList, *deployList...)
+		for _, deployOne := range *deployList {
+			name := strings.TrimSpace(deployOne.FileName)
+			if "" != name {
+				existNames[name] = true
+			}
+		}
+	}
+
+	spaceList := getPropsByLinkWithName(spaceId, model.EnvironmentSpaceTable)
+	if nil != spaceList && len(*spaceList) > 0 {
+		allList = append(allList, *appendNeedProps(&existNames, spaceList)...)
+	}
+	envList := getPropsByLinkWithName(envId, model.EnvironmentTable)
+	if nil != envList && len(*envList) > 0 {
+		allList = append(allList, *appendNeedProps(&existNames, envList)...)
+	}
+	appList := getPropsByLinkWithName(appId, model.ProjectTable)
+	if nil != appList && len(*appList) > 0 {
+		allList = append(allList, *appendNeedProps(&existNames, appList)...)
+	}
+	if len(allList) == 0 {
+		return nil
+	}
+
+	allData := mergePropByName(&allList)
+	if nil == allData || len(allData) == 0 {
+		allData = make(map[string]string, 0)
+		return &allData
+	}
+	return &allData
+}
+
+func appendNeedProps(names *map[string]bool, props *[]model.PropertyFile) *[]model.PropertyFile {
+	list := make([]model.PropertyFile, 0, len(*props))
+	for _, prop := range *props {
+		name := strings.TrimSpace(prop.FileName)
+		_, ok := (*names)[name]
+		if ok {
+			list = append(list, prop)
+		}
+	}
+	return &list
+}
+
+func generateRenderProps(appId, envId, spaceId, deployId uint64, appInfo *refer.AppInfo) error {
+	if nil == appInfo || nil == appInfo.Param {
+		return errors.New("get app info and param error")
+	}
+	var volumeGet []interface{}
+	volumeName := refer.PropGenerateName
+	volumeMounts, ok := appInfo.Param[refer.KeyVolumeMounts]
+	if ok {
+		volumeGet, ok = volumeMounts.([]interface{})
+		if ok {
+			for _, volumeOne := range volumeGet {
+				volumeThis, cok := volumeOne.(refer.VolumeMountInfo)
+				if cok && volumeThis.Name == volumeName {
+					return nil
+				}
+			}
+		} else {
+			return errors.New("convert exist volumes error")
+		}
+	}
+
+	allData := generateNeedProps(appId, envId, spaceId, deployId)
+	if nil == allData || len(*allData) == 0 {
+		return nil
+	}
+
+	mountPath := refer.PropMountPath
+	if nil != appInfo.Factor && "" != appInfo.Factor.ConfigMouthPath {
+		mountPath = appInfo.Factor.ConfigMouthPath
+	}
+	volumeList := []interface{}{
+		refer.VolumeMountInfo{
+			Name:      volumeName,
+			Type:      "Config",
+			Data:      *allData,
+			MountPath: mountPath,
+			ReadOnly:  true,
+		},
+	}
+
+	if nil != volumeGet {
+		volumeList = append(volumeList, volumeGet...)
+	}
+	appInfo.Param[refer.KeyVolumeMounts] = volumeList
+	return nil
 }

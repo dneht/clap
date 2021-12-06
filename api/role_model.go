@@ -50,7 +50,7 @@ func invalidRoleById(id uint64) {
 
 func countRoleWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.RoleInfo
-	sql := base.Engine.Omit(model.CreatedAtInRoleInfo, model.UpdatedAtInRoleInfo)
+	sql := base.Engine.Cols()
 	err := SelectAuth(c, model.RoleInfoTable, sql)
 	if nil != err {
 		return 0, err
@@ -63,7 +63,7 @@ func countRoleWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 
 func findRoleWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.RoleInfo, error) {
 	var list []model.RoleInfo
-	sql := base.Engine.Omit(model.CreatedAtInRoleInfo, model.UpdatedAtInRoleInfo)
+	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
 	err := SelectAuth(c, model.RoleInfoTable, sql)
 	if nil != err {
 		return 0, nil, err
@@ -94,10 +94,10 @@ func findRoleSimpleByIds(c *fiber.Ctx, ids []uint64) (*[]model.RoleInfo, error) 
 
 func insertRole(c *fiber.Ctx, session *xorm.Session, info *model.RoleInfo) (int64, error) {
 	if info.Id > 0 {
-		return session.Omit(model.CreatedAtInRoleInfo, model.UpdatedAtInRoleInfo).
+		return session.Omit(model.CreatedAt, model.UpdatedAt).
 			InsertOne(info)
 	} else {
-		return session.Omit(model.IdInRoleInfo, model.CreatedAtInRoleInfo, model.UpdatedAtInRoleInfo).
+		return session.Omit(model.IdInRoleInfo, model.CreatedAt, model.UpdatedAt).
 			InsertOne(info)
 	}
 }

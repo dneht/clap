@@ -318,6 +318,7 @@ local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Con
                             {
                                 "name": svc.name,
                                 "port": svc.router.port,
+                                [if "protocol" in svc.router then "protocol"]: svc.router.protocol,
                             }
                         ],
                         conditions: std.flatMap(function(one) [one],

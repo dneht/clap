@@ -1,11 +1,25 @@
 package refer
 
 type SpaceInfo struct {
+	API  SpaceAPIInfo  `json:"api,omitempty"`
 	Conf SpaceConfInfo `json:"conf,omitempty"`
 	Code SpaceCodeInfo `json:"code,omitempty"`
 	Repo SpaceRepoInfo `json:"repo,omitempty"`
 	// Param is SpaceParamInfo
 	Param map[string]interface{} `json:"param,omitempty"`
+}
+
+type SpaceRealInfo struct {
+	API   SpaceAPIInfo   `json:"api,omitempty"`
+	Conf  SpaceConfInfo  `json:"conf,omitempty"`
+	Code  SpaceCodeInfo  `json:"code,omitempty"`
+	Repo  SpaceRepoInfo  `json:"repo,omitempty"`
+	Param SpaceParamInfo `json:"param,omitempty"`
+}
+
+type SpaceAPIInfo struct {
+	Gateway string `json:"gateway,omitempty"`
+	Group   string `json:"group"`
 }
 
 type ConfInfo struct {
@@ -41,5 +55,10 @@ type SpaceRepoInfo struct {
 
 type SpaceParamInfo struct {
 	CommonParamInfo
-	Domain string `json:"domain,omitempty"`
+	Domain string            `json:"domain,omitempty"`
+	TLS    SpaceParamTLSInfo `json:"tls,omitempty"`
+}
+
+type SpaceParamTLSInfo struct {
+	SecretName string `json:"secretName,omitempty"`
 }

@@ -59,7 +59,7 @@ func invalidAppInfoById(id uint64) {
 func findAllAppSimple(c *fiber.Ctx) (int, *[]model.Project, error) {
 	var list []model.Project
 	sql := base.Engine.Cols(model.IdInProject, model.AppNameInProject, model.AppTypeInProject).
-		Where("is_disable = 0")
+		Where(model.IsDisableInProject + " = 0")
 	err := SelectAuth(c, model.ProjectTable, sql)
 	if nil != err {
 		return 0, nil, err
@@ -70,7 +70,7 @@ func findAllAppSimple(c *fiber.Ctx) (int, *[]model.Project, error) {
 
 func countAppWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.Project
-	sql := base.Engine.Cols(model.IdInProject)
+	sql := base.Engine.Cols()
 	err := SelectAuth(c, model.ProjectTable, sql)
 	if nil != err {
 		return 0, err
@@ -80,7 +80,8 @@ func countAppWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 
 func findAppWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Project, error) {
 	var list []model.Project
-	sql := base.Engine.Omit(model.AppDescInProject, model.AppInfoInProject, model.SourceInfoInProject, model.InjectInfoInProject)
+	sql := base.Engine.Omit(model.AppDescInProject, model.AppInfoInProject, model.SourceInfoInProject, model.InjectInfoInProject,
+		model.CreatedAt, model.UpdatedAt)
 	err := SelectAuth(c, model.ProjectTable, sql)
 	if nil != err {
 		return 0, nil, err

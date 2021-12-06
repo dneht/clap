@@ -58,7 +58,7 @@ func invalidDeployInfoById(id uint64) {
 
 func countDeployWithPage(c *fiber.Ctx, input *util.MainInput, planId uint64) (int64, error) {
 	var info model.Deployment
-	sql := base.Engine.Cols(model.IdInDeployment).Where(model.PlanIdInDeployment + " = ?", planId)
+	sql := base.Engine.Cols().Where(model.PlanIdInDeployment + " = ?", planId)
 	err := SelectAuth(c, model.DeploymentTable, sql)
 	if nil != err {
 		return 0, err
@@ -68,7 +68,7 @@ func countDeployWithPage(c *fiber.Ctx, input *util.MainInput, planId uint64) (in
 
 func findDeployWithPage(c *fiber.Ctx, input *util.MainInput, planId uint64) (int, *[]model.Deployment, error) {
 	var list []model.Deployment
-	sql := base.Engine.Omit(model.AppInfoInDeployment).Where(model.PlanIdInDeployment + " = ?", planId)
+	sql := base.Engine.Omit(model.AppInfoInDeployment, model.CreatedAt, model.UpdatedAt).Where(model.PlanIdInDeployment + " = ?", planId)
 	err := SelectAuth(c, model.DeploymentTable, sql)
 	if nil != err {
 		return 0, nil, err

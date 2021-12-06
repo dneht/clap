@@ -25,7 +25,7 @@ type CommonParamInfo struct {
 	DnsPolicy                     string                 `json:"dnsPolicy,omitempty"`
 	RestartPolicy                 string                 `json:"restartPolicy,omitempty"`
 	TerminationGracePeriodSeconds uint                   `json:"terminationGracePeriodSeconds,omitempty"`
-	RevisionHistoryLimit          string                 `json:"revisionHistoryLimit,omitempty"`
+	RevisionHistoryLimit          uint                   `json:"revisionHistoryLimit,omitempty"`
 	MinReadySeconds               uint                   `json:"minReadySeconds,omitempty"`
 	SecurityContext               SecurityContextInfo    `json:"securityContext,omitempty"`
 	ImagePullSecrets              []ImagePullSecretsInfo `json:"imagePullSecrets,omitempty"`

@@ -35,13 +35,13 @@ func getResourceById(id uint64) (*model.Resource, error) {
 
 func countResourceWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.Resource
-	sql := base.Engine.Omit(model.CreatedAtInResource, model.UpdatedAtInResource)
+	sql := base.Engine.Cols()
 	return input.Apply(sql).Count(&info)
 }
 
 func findResourceWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Resource, error) {
 	var list []model.Resource
-	sql := base.Engine.Omit(model.CreatedAtInResource, model.UpdatedAtInResource)
+	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
 	err := input.Apply(sql).Find(&list)
 	return len(list), &list, err
 }
@@ -65,20 +65,20 @@ func getPermissionById(id uint64) (*model.Permission, error) {
 
 func countPermissionWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.Permission
-	sql := base.Engine.Omit(model.CreatedAtInPermission, model.UpdatedAtInPermission)
+	sql := base.Engine.Cols()
 	return input.Apply(sql).Count(&info)
 }
 
 func findPermissionWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Permission, error) {
 	var list []model.Permission
-	sql := base.Engine.Omit(model.CreatedAtInPermission, model.UpdatedAtInPermission)
+	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
 	err := input.Apply(sql).Find(&list)
 	return len(list), &list, err
 }
 
 func findPermissionByRole(c *fiber.Ctx, role []uint64) (*[]model.Permission, error) {
 	var list []model.Permission
-	err := base.Engine.Omit(model.CreatedAtInPermission, model.UpdatedAtInPermission).
+	err := base.Engine.Omit(model.CreatedAt, model.UpdatedAt).
 		In(model.RoleIdInPermission, role).Find(&list)
 	return &list, err
 }

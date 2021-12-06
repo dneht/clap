@@ -3,9 +3,9 @@ package main
 import (
 	"cana.io/clap/api"
 	"cana.io/clap/pkg/base"
+	"cana.io/clap/pkg/log"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
-	"log"
 )
 
 func main() {
@@ -93,5 +93,6 @@ func main() {
 	// type=exec, attach, inner
 	app.Get("/select/:type/:pod", websocket.New(api.ExecSelect))
 
-	log.Print(app.Listen(":" + conf.Service.Port))
+	api.InitTask()
+	log.Panic(app.Listen(":" + conf.Service.Port))
 }

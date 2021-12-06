@@ -14,4 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package aliyun
+package refer
+
+type UpdateDomainSecret struct {
+	EnvId      uint64 `json:"envId"`
+	Domain     string `json:"domain"`
+	MainDomain string `json:"mainDomain"`
+	Namespace  string `json:"namespace"`
+	SecretName string `json:"secretName"`
+}
+
+type UpdateDomainResult struct {
+	Secrets *[]UpdateDomainSecret      `json:"secrets"`
+	Results *map[string]AcmeTaskResult `json:"results"`
+}

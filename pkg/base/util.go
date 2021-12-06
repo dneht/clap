@@ -76,13 +76,13 @@ func parseListElse(value string, def []string) []string {
 	return list
 }
 
-func parseDocument(kv map[string]string) map[string]DocumentProp {
-	return parseMapPre("document", kv)
+func parseDocument(kv *map[string]string) map[string]DocumentProp {
+	return parseDocumentPre("document", kv)
 }
 
-func parseMapPre(pre string, kv map[string]string) map[string]DocumentProp {
-	props := make(map[string]DocumentProp, 4)
-	for key, value := range kv {
+func parseDocumentPre(pre string, kv *map[string]string) map[string]DocumentProp {
+	props := make(map[string]DocumentProp, 8)
+	for key, value := range *kv {
 		key = strings.TrimSpace(key)
 		if strings.HasPrefix(key, pre) {
 			split := strings.Split(key, ".")
@@ -121,6 +121,36 @@ func parseMapPre(pre string, kv map[string]string) map[string]DocumentProp {
 				case "api_method":
 					if "" == get.ApiMethod {
 						get.ApiMethod = parseString(value, "")
+					}
+					break
+				}
+				props[fst] = get
+			}
+		}
+	}
+	return props
+}
+
+func parseWebsite(kv *map[string]string) map[string]WebsiteProp {
+	return parseWebsitePre("website", kv)
+}
+
+func parseWebsitePre(pre string, kv *map[string]string) map[string]WebsiteProp {
+	props := make(map[string]WebsiteProp, 2)
+	for key, value := range *kv {
+		key = strings.TrimSpace(key)
+		if strings.HasPrefix(key, pre) {
+			split := strings.Split(key, ".")
+			if len(split) >= 4 {
+				fst := split[1] + "_" + split[2]
+				get, ok := props[fst]
+				if !ok {
+					get = WebsiteProp{}
+				}
+				switch split[3] {
+				case "enable":
+					if !get.Enable {
+						get.Enable = parseBool(value, false)
 					}
 					break
 				}

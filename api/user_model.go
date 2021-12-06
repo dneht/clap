@@ -83,7 +83,7 @@ func invalidUserById(id uint64) {
 
 func countUserWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.UserInfo
-	sql := base.Engine.Omit(model.CreatedAtInUserInfo, model.UpdatedAtInUserInfo)
+	sql := base.Engine.Cols()
 	err := SelectAuth(c, model.UserInfoTable, sql)
 	if nil != err {
 		return 0, err
@@ -96,7 +96,7 @@ func countUserWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 
 func findUserWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.UserInfo, error) {
 	var list []model.UserInfo
-	sql := base.Engine.Omit(model.CreatedAtInUserInfo, model.UpdatedAtInUserInfo)
+	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
 	err := SelectAuth(c, model.UserInfoTable, sql)
 	if nil != err {
 		return 0, nil, err
@@ -109,7 +109,7 @@ func findUserWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.UserIn
 }
 
 func insertUser(c *fiber.Ctx, session *xorm.Session, info *model.UserInfo) (int64, error) {
-	return session.Omit(model.IdInUserInfo, model.CreatedAtInUserInfo, model.UpdatedAtInUserInfo).
+	return session.Omit(model.IdInUserInfo, model.CreatedAt, model.UpdatedAt).
 		InsertOne(info)
 }
 

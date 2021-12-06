@@ -17,9 +17,9 @@ limitations under the License.
 package base
 
 import (
+	"cana.io/clap/pkg/log"
 	"cana.io/clap/pkg/model"
 	"encoding/json"
-	"log"
 )
 
 func ResInit() {
@@ -33,7 +33,7 @@ func ResInit() {
 			var info map[string]interface{}
 			err := json.Unmarshal([]byte(resInfo), &info)
 			if nil != err {
-				log.Printf("get res error: %v", err)
+				log.Warnf("get res error: %v", err)
 			} else {
 				resInfoMap[one.Id] = &info
 			}
@@ -64,7 +64,7 @@ func ResourceName(name string) (*model.Resource, *map[string]interface{}) {
 
 func dangListFullRes() *[]model.Resource {
 	var list []model.Resource
-	err := Engine.Omit(model.CreatedAtInResource, model.UpdatedAtInResource).
+	err := Engine.Omit(model.CreatedAt, model.UpdatedAt).
 		OrderBy(model.ResOrderInResource).Find(&list)
 	if nil != err {
 		panic(err)

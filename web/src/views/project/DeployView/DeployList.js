@@ -28,6 +28,7 @@ import navigateToTerm from 'src/utils/gototerm'
 import {ShowSnackbar} from 'src/utils/globalshow'
 import {convertAppType} from 'src/utils/convertvalue'
 import hiddenEle from 'src/utils/hiddenele'
+import timeToLocal from 'src/utils/timetolocal'
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -288,7 +289,7 @@ const DeployList = ({
                       {pod.status.phase}
                     </TableCell>
                     <TableCell>
-                      {pod.status.startTime}
+                      {timeToLocal(pod.status.startTime)}
                     </TableCell>
                     <TableCell>
                       <Grid

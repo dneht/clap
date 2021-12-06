@@ -1,8 +1,8 @@
 package util
 
 import (
+	"cana.io/clap/pkg/log"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"reflect"
 )
 
@@ -205,7 +205,7 @@ func ErrorInputOrDirect(c *fiber.Ctx, e error, message string) error {
 }
 
 func ErrorInputLog(c *fiber.Ctx, e error, message string) error {
-	log.Printf("[error] input error: %v, %v\n", message, e)
+	log.Warnf("input error: %v, %v\n", message, e)
 	return &fiber.Error{
 		Code:    fiber.StatusBadRequest,
 		Message: message,
@@ -213,7 +213,7 @@ func ErrorInputLog(c *fiber.Ctx, e error, message string) error {
 }
 
 func ErrorInternal(c *fiber.Ctx, e error) error {
-	log.Printf("[error] internal error: %v\n", e)
+	log.Warnf("[error] internal error: %v\n", e)
 	if reflect.TypeOf(e) == fiberError {
 		return e
 	} else {
@@ -225,7 +225,7 @@ func ErrorInternal(c *fiber.Ctx, e error) error {
 }
 
 func ErrorWithMessage(c *fiber.Ctx, e error, message string) error {
-	log.Printf("[error] result error: %v, %v\n", message, e)
+	log.Warnf("result error: %v, %v\n", message, e)
 	return &fiber.Error{
 		Code:    fiber.StatusInternalServerError,
 		Message: message,
@@ -233,7 +233,7 @@ func ErrorWithMessage(c *fiber.Ctx, e error, message string) error {
 }
 
 func ErrorWithCodeMessage(c *fiber.Ctx, e error, code int, message string) error {
-	log.Printf("[error] result error with code: %d, %v, %v\n", code, message, e)
+	log.Warnf("result error with code: %d, %v, %v\n", code, message, e)
 	return &fiber.Error{
 		Code:    code,
 		Message: message,

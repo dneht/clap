@@ -17,9 +17,11 @@ limitations under the License.
 package base
 
 import (
+	"cana.io/clap/pkg/log"
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/pkg/refer"
 	"flag"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -32,7 +34,7 @@ var seqFlag = flag.Uint64("seq", 1, "Sequence")
 var envFlag = flag.String("env", "dev", "Environment")
 var confFlag = flag.String("conf", "", "Config file path")
 var namespaceFlag = flag.String("namespace", "clap-system", "The namespace where the app & job is located")
-var timezoneFlag = flag.String("timezone", "Local", "App timezone, please use go format")
+var timezoneFlag = flag.String("timezone", "", "App timezone, please use go format")
 
 var k8sMap = make(map[uint64]*kubernetes.Clientset)
 var k8sConfMap = make(map[uint64]*rest.Config)
@@ -46,6 +48,7 @@ var resNameMap = make(map[string]uint64)
 var resInfoMap = make(map[uint64]*map[string]interface{})
 
 func Init() {
+	log.Init(zapcore.DebugLevel)
 	flag.Parse()
 	DbInit()
 	WebInit()

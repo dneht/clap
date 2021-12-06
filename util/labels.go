@@ -1,4 +1,4 @@
-package api
+package util
 
 import (
 	"cana.io/clap/pkg/model"
@@ -6,36 +6,36 @@ import (
 	"strconv"
 )
 
-func selectAppLabelList(envBase *model.Environment, appBase *model.Project) *[]string {
+func SelectAppLabelList(envBase *model.Environment, appBase *model.Project) *[]string {
 	return &[]string{refer.LabelAppEnv + "=" + envBase.Env,
 		refer.LabelAppName + "=" + appBase.AppName,
 		refer.LabelAppType + "=" + refer.ConvertAppType(appBase.AppType)}
 }
 
-func selectDeployLabelList(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project) *[]string {
+func SelectDeployLabelList(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project) *[]string {
 	return &[]string{refer.LabelAppEnv + "=" + envBase.Env,
 		refer.LabelAppSpace + "=" + spaceBase.SpaceName,
 		refer.LabelAppName + "=" + appBase.AppName,
 		refer.LabelAppType + "=" + refer.ConvertAppType(appBase.AppType)}
 }
 
-func selectJobLabelMap(jobName string) map[string]string {
+func SelectJobLabelMap(appType, jobName string) map[string]string {
 	return map[string]string{
-		refer.LabelAppType:      "build",
+		refer.LabelAppType:      appType,
 		refer.LabelAppName:      jobName,
 		refer.LabelAppComponent: "deployment",
 		refer.LabelAppManaged:   "Clap",
 	}
 }
 
-func selectJobLabelList(jobName string) *[]string {
+func SelectJobLabelList(jobName string) *[]string {
 	return &[]string{refer.LabelAppType + "=build",
 		refer.LabelAppName + "=" + jobName,
 		refer.LabelAppComponent + "=deployment",
 		refer.LabelAppManaged + "=Clap"}
 }
 
-func buildAppLabelString(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project, component string) string {
+func BuildAppLabelString(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project, component string) string {
 	return refer.LabelAppId + "=" + strconv.FormatUint(appBase.Id, 10) + "," +
 		refer.LabelAppType + "=" + refer.ConvertAppType(appBase.AppType) + "," +
 		refer.LabelAppName + "=" + appBase.AppName + "," +
@@ -45,7 +45,7 @@ func buildAppLabelString(envBase *model.Environment, spaceBase *model.Environmen
 		refer.LabelAppManaged + "=Clap"
 }
 
-func configAppLabelMap(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project, templateName string) map[string]string {
+func ConfigAppLabelMap(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project, templateName string) map[string]string {
 	return map[string]string{
 		refer.LabelAppId:        strconv.FormatUint(appBase.Id, 10),
 		refer.LabelAppType:      refer.ConvertAppType(appBase.AppType),
@@ -57,7 +57,7 @@ func configAppLabelMap(envBase *model.Environment, spaceBase *model.EnvironmentS
 	}
 }
 
-func selectAppLabelMap(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project, templateName string) map[string]string {
+func SelectAppLabelMap(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project, templateName string) map[string]string {
 	return map[string]string{
 		refer.LabelAppType:      refer.ConvertAppType(appBase.AppType),
 		refer.LabelAppName:      appBase.AppName,

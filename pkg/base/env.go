@@ -109,7 +109,7 @@ func K8D(envId uint64) (dynamic.Interface, *rest.Config, error) {
 
 func dangListFullEnv() *[]model.Environment {
 	var list []model.Environment
-	err := Engine.Omit(model.CreatedAtInEnvironment, model.UpdatedAtInEnvironment).
+	err := Engine.Omit(model.CreatedAt, model.UpdatedAt).
 		Where(model.IsDisableInEnvironment + "=0").Find(&list)
 	if nil != err {
 		panic(err)

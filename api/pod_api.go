@@ -2,6 +2,7 @@ package api
 
 import (
 	"cana.io/clap/pkg/base"
+	"cana.io/clap/pkg/log"
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/pkg/refer"
 	"cana.io/clap/pkg/xterm"
@@ -10,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 	v1 "k8s.io/api/core/v1"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -48,7 +48,7 @@ func ListDeployPod(c *fiber.Ctx) error {
 	if nil != err {
 		return util.ErrorInternal(c, err)
 	}
-	return listPodByType(c, deployBase.EnvId, selectDeployLabelList(envBase, spaceBase, appBase))
+	return listPodByType(c, deployBase.EnvId, util.SelectDeployLabelList(envBase, spaceBase, appBase))
 }
 
 func RestartDeployPod(c *fiber.Ctx) error {
@@ -89,7 +89,7 @@ func ExecSelect(ws *websocket.Conn) {
 		}
 	})
 	if nil != err {
-		log.Println("[error] select exec: ", err)
+		log.Warnf("elect exec pod failed: ", err)
 	}
 }
 
@@ -224,9 +224,9 @@ func execOtherSelect(ws *websocket.Conn, resourceType string) (*xterm.ExecInput,
 	namespace := spaceBase.SpaceKeep
 	var podList *v1.PodList
 	if deploy {
-		podList, err = listPodByLabel(envBase.Id, namespace, selectDeployLabelList(envBase, spaceBase, appBase))
+		podList, err = listPodByLabel(envBase.Id, namespace, util.SelectDeployLabelList(envBase, spaceBase, appBase))
 	} else {
-		podList, err = listPodByLabel(envBase.Id, namespace, selectAppLabelList(envBase, appBase))
+		podList, err = listPodByLabel(envBase.Id, namespace, util.SelectAppLabelList(envBase, appBase))
 	}
 	if nil != err {
 		return nil, err

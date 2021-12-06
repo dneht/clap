@@ -1,6 +1,7 @@
 package xterm
 
 import (
+	"cana.io/clap/pkg/log"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -80,7 +80,7 @@ func (t TerminalSession) Read(p []byte) (int, error) {
 	}
 	_, m, err := t.ws.ReadMessage()
 	if nil != err {
-		log.Println(err)
+		log.Warnf("ws read message failed", err)
 		// Send terminated signal to process to avoid resource leak
 		t.Toast("error", err.Error())
 		return copy(p, endOfTransmission), err
@@ -88,7 +88,7 @@ func (t TerminalSession) Read(p []byte) (int, error) {
 
 	var msg TerminalMessage
 	if err := json.Unmarshal(m, &msg); nil != err {
-		log.Println(err)
+		log.Warnf("ws decode message failed", err)
 		t.Toast("error", err.Error())
 		return copy(p, endOfTransmission), err
 	}
@@ -126,11 +126,11 @@ func (t TerminalSession) Write(p []byte) (int, error) {
 		Data:      data,
 	})
 	if nil != err {
-		log.Println(err)
+		log.Warnf("ws encode message failed", err)
 		return 0, err
 	}
 	if err = t.ws.WriteMessage(websocket.TextMessage, msg); nil != err {
-		log.Println(err)
+		log.Warnf("ws write message failed", err)
 		return 0, err
 	}
 	return len(p), nil

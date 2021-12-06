@@ -16,7 +16,10 @@ limitations under the License.
 
 package refer
 
-type CertParam struct {
-	Base string `json:"base,omitempty"`
-
-}
+const (
+	//0等待中、1执行中、3重试中
+	TaskStatusWaiting   = 0
+	TaskStatusExecuting = 1
+	TaskStatusRetrying  = 3
+	TaskStatusCompleted = 9
+)

@@ -18,13 +18,13 @@ package api
 
 import (
 	"cana.io/clap/pkg/base"
+	"cana.io/clap/pkg/log"
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/pkg/refer"
 	"cana.io/clap/util"
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
-	"log"
 	"strconv"
 	"strings"
 	"xorm.io/xorm"
@@ -92,12 +92,12 @@ func getInputToken(c *fiber.Ctx) (string, error) {
 func getAllAuthInfo(c *fiber.Ctx, token string) error {
 	user, err := getUserByToken(token)
 	if nil != err {
-		log.Print(err)
+		log.Infof("find user failed: %v", err)
 		return fiber.ErrUnauthorized
 	}
 	roleIds, err := getUserRoleIds(user)
 	if nil != err {
-		log.Print(err)
+		log.Infof("find user roles: %v", err)
 		return fiber.ErrUnauthorized
 	}
 	if len(roleIds) == 0 {
@@ -127,7 +127,7 @@ func getAllAuthInfo(c *fiber.Ctx, token string) error {
 	authPower := make(map[string][]refer.AuthPower)
 	powerInfos, err := findPermissionByRole(c, roleIds)
 	if nil != err {
-		log.Print(err)
+		log.Infof("find user powers: %v", err)
 		return fiber.ErrUnauthorized
 	}
 	if nil == powerInfos {
@@ -295,7 +295,7 @@ func requestAuth(c *fiber.Ctx, pow *map[string][]refer.AuthPower, path, pre stri
 		if pre == CommonPre {
 			id, err := util.CheckIdInput(c, "id")
 			if nil != err {
-				log.Print(err)
+				log.Warnf("check id failed: %v", err)
 				return fiber.ErrForbidden
 			}
 			for _, one := range list {

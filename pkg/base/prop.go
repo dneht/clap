@@ -35,10 +35,12 @@ type Database struct {
 type Property struct {
 	Env       string                  `json:"env"`
 	Namespace string                  `json:"namespace"`
+	Callback  string                  `json:"callback"`
 	Timezone  string                  `json:"timezone"`
 	Service   ServiceProp             `json:"service"`
 	Message   MessageProp             `json:"message"`
 	Document  map[string]DocumentProp `json:"document"`
+	Website   map[string]WebsiteProp  `json:"website"`
 	Package   PackageProp             `json:"package"`
 }
 
@@ -47,7 +49,6 @@ type ServiceProp struct {
 	Debug bool   `json:"debug"`
 	//Cros       middleware.CORSConfig   `json:"cros"`
 	//Csrf       middleware.CSRFConfig   `json:"csrf"`
-	//Secure     middleware.SecureConfig `json:"secure"`
 	GzipLevel  int          `json:"gzip_level"`
 	StaticPath string       `json:"static_path"`
 	Password   PasswordProp `json:"password"`
@@ -71,6 +72,10 @@ type DocumentProp struct {
 	ApiMethod string `json:"api_method"`
 }
 
+type WebsiteProp struct {
+	Enable bool `json:"enable"`
+}
+
 type PasswordProp struct {
 	Type string `json:"type"`
 }
@@ -82,6 +87,24 @@ type PackageProp struct {
 	MavenSkipTests     bool   `json:"maven_skip_tests"`
 	BackoffLimit       int32  `json:"backoff_limit"`
 	CleanAfterFinished int32  `json:"clean_after_finished"`
+}
+
+type VolumeMountInfo struct {
+	EnvId     uint64 `json:"envId,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	MountName string `json:"mountName,omitempty"`
+	MountType string `json:"mountType,omitempty"`
+	MountPath string `json:"mountPath,omitempty"`
+	HostPath  string `json:"hostPath,omitempty"`
+	ClaimName string `json:"claimName,omitempty"`
+}
+
+type DomainNamespaceInfo struct {
+	Domain     string `json:"domain,omitempty"`
+	EnvId      uint64 `json:"envId,omitempty"`
+	Namespace  string `json:"namespace,omitempty"`
+	SecretName string `json:"secretName,omitempty"`
+	Cron       string `json:"cron,omitempty"`
 }
 
 func DatabaseConf() *Database {
@@ -161,6 +184,7 @@ func BuildProperty() {
 	nowProp = &Property{
 		Env:       *envFlag,
 		Namespace: *namespaceFlag,
+		Callback:  parseString(propMap["system.callback_url"], ""),
 		Timezone:  *timezoneFlag,
 		Service: ServiceProp{
 			Port:  parseString(propMap["service.port"], "8008"),
@@ -207,7 +231,8 @@ func BuildProperty() {
 				ApiUrl: parseString(propMap["message.dingding.api_url"], ""),
 			},
 		},
-		Document: parseDocument(propMap),
+		Document: parseDocument(&propMap),
+		Website:  parseWebsite(&propMap),
 		Package: PackageProp{
 			BuildJobImage:      parseString(buildImage, "dneht/clap-build:"+nowVersion),
 			ImagePullPolicy:    parseString(propMap["package.image_pull_policy"], "Always"),
