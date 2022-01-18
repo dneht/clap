@@ -164,6 +164,7 @@ func SimplePow(c *fiber.Ctx) error {
 			"podLog":       power&AllowThisPodLog > 0,
 			"podExec":      power&AllowThisPodExec > 0,
 			"podRestart":   power&AllowThisPodRestart > 0,
+			"podDownload":  power&AllowThisPodDownload > 0,
 			"podSpace":     power&AllowThisPodSpace > 0,
 		}
 	}

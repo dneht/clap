@@ -78,28 +78,35 @@ func startTask(task *model.Timetable) error {
 }
 
 func finishTask(task *model.Timetable, failed error, result interface{}) {
-	status := 0
-	if nil != failed {
-		status = 1
-	}
-	taskResult := "{}"
 	if nil != result {
+		status := 0
+		if nil != failed {
+			status = 1
+		}
+		taskResult := "{}"
 		resultBytes, err := json.Marshal(result)
 		if nil == err {
 			taskResult = string(resultBytes)
 		}
-	}
-	_, err := base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
-		_, _ = insertTimetableResult(session, &model.TimetableResult{
-			TaskId:     task.Id,
-			LastStatus: status,
-			LastResult: taskResult,
-			CreatedAt:  time.Now(),
+		_, err = base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
+			_, _ = insertTimetableResult(session, &model.TimetableResult{
+				TaskId:     task.Id,
+				LastStatus: status,
+				LastResult: taskResult,
+				CreatedAt:  time.Now(),
+			})
+			return updateTimetableById(session, task.Id, refer.TaskStatusWaiting)
 		})
-		return updateTimetableById(session, task.Id, refer.TaskStatusWaiting)
-	})
-	if nil != err {
-		log.Errorf("finish task failed: %v", err)
+		if nil != err {
+			log.Errorf("finish task with result failed: %v", err)
+		}
+	} else {
+		_, err := base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
+			return updateTimetableById(session, task.Id, refer.TaskStatusWaiting)
+		})
+		if nil != err {
+			log.Errorf("finish task without result failed: %v", err)
+		}
 	}
 }
 
@@ -124,31 +131,32 @@ func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
 				log.Warnf("decode task latest result failed: %v, continue execute", err)
 			}
 			if nil != domainResult.Secrets && nil != domainResult.Results && len(*domainResult.Secrets) > 0 && len(*domainResult.Results) > 0 {
-				secretMap := make(map[string]bool, len(*secrets))
-				domainMap := make(map[string]bool, len(*domains))
-				for _, secret := range *secrets {
-					secretMap[secret.SecretName] = true
-				}
+				secretMap := make(map[string]bool, len(*domainResult.Secrets))
+				domainMap := make(map[string]bool, len(*domainResult.Results))
 				for _, secret := range *domainResult.Secrets {
-					_, ok := secretMap[secret.SecretName]
+					secretMap[strconv.FormatUint(secret.EnvId, 10)+secret.Namespace+secret.SecretName] = true
+				}
+				for _, secret := range *secrets {
+					_, ok := secretMap[strconv.FormatUint(secret.EnvId, 10)+secret.Namespace+secret.SecretName]
 					if !ok {
-						log.Infof("secret is change: %v -> %v", secrets, domainResult.Secrets)
+						log.Infof("secret is change: %v -> %v", domainResult.Secrets, secrets)
 						needExec = true
+						break
 					}
 				}
 				if !needExec {
-					for main := range *domains {
+					for main := range *domainResult.Results {
 						domainMap[main] = true
 					}
-					for main := range *domainResult.Results {
+					for main := range *domains {
 						_, ok := domainMap[main]
 						if !ok {
-							log.Infof("domain is change: %v -> %v", domains, domainResult.Results)
+							log.Infof("domain is change: %v -> %v", domainResult.Results, domains)
 							needExec = true
+							break
 						}
 					}
 				}
-				needExec = false
 			} else {
 				needExec = true
 			}
@@ -199,8 +207,10 @@ func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
 			Secrets: secrets,
 			Results: results,
 		}
+		return &domainResult, nil
+	} else {
+		return nil, nil
 	}
-	return &domainResult, nil
 }
 
 func allNeedAcmeDomains() (*[]refer.UpdateDomainSecret, *map[string][]string) {

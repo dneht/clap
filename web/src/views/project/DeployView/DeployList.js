@@ -45,6 +45,7 @@ const DeployList = ({
                       getDeployProps,
                       getDeployPods,
                       getBuildPods,
+                      downloadPod,
                       restartPod,
                       gotoPackageApp,
                       gotoPublishApp,
@@ -309,6 +310,11 @@ const DeployList = ({
                                 onClick={() => navigateToExec(selectDeploy, pod)}
                                 disabled={selectDeploy.appBase && selectDeploy.appBase.isIngress === 0}>
                           命令
+                        </Button>
+                        <Button variant="outlined" color="primary"
+                                style={{display: hiddenEle(selectDeploy.id, 'deployment', 'podDownload', powerMap)}}
+                                onClick={() => downloadPod(selectDeploy, pod)}>
+                          下载
                         </Button>
                         <Button variant="outlined" color="primary"
                                 style={{display: hiddenEle(selectDeploy.id, 'deployment', 'podRestart', powerMap)}}

@@ -52,31 +52,59 @@ func ListDeployPod(c *fiber.Ctx) error {
 }
 
 func RestartDeployPod(c *fiber.Ctx) error {
+	podName, spaceBase, _, deployBase, err := getBaseByPodInput(c, AllowThisPodRestart)
+	if nil != err {
+		return util.ErrorInput(c, err.Error())
+	}
+	return restartPodByName(deployBase.EnvId, spaceBase.SpaceKeep, podName)
+}
+
+func DownloadDeployPod(c *fiber.Ctx) error {
+	podName, spaceBase, _, deployBase, err := getBaseByPodInput(c, AllowThisPodDownload)
+	if nil != err {
+		return util.ErrorInput(c, err.Error())
+	}
+	containerName := c.Query("container")
+	if "" == containerName {
+		return util.ErrorInput(c, "target not found")
+	}
+	filename := c.Query("file")
+	if "" == filename || !strings.HasPrefix(filename, "/") || !strings.HasSuffix(filename, ".log") {
+		return util.ErrorInput(c, "file name incorrect")
+	}
+	reader, err := downloadPodByName(deployBase.EnvId, spaceBase.SpaceKeep, podName, containerName, filename)
+	if nil != err {
+		return util.ErrorInternal(c, err)
+	}
+	return c.SendStream(reader)
+}
+
+func getBaseByPodInput(c *fiber.Ctx, auth uint) (string, *model.EnvironmentSpace, *model.Project, *model.Deployment, error) {
 	deployId, err := util.CheckIdInput(c, "id")
 	if nil != err {
-		return util.ErrorInput(c, "env id must be set")
+		return "", nil, nil, nil, errors.New("env id must be set")
 	}
-	err = DeploymentAuth(c, deployId, AllowThisPodRestart)
+	err = DeploymentAuth(c, deployId, auth)
 	if nil != err {
-		return err
+		return "", nil, nil, nil, err
 	}
 	spaceId, err := util.CheckIdQuery(c, "sid")
 	if nil != err {
-		return util.ErrorInput(c, "env id must be set")
+		return "", nil, nil, nil, errors.New("space id must be set")
 	}
 	appId, err := util.CheckIdQuery(c, "aid")
 	if nil != err {
-		return util.ErrorInput(c, "env id must be set")
+		return "", nil, nil, nil, errors.New("app id must be set")
 	}
 	podName := c.Query("pod")
 	_, spaceBase, appBase, deployBase, err := getMoreModels(deployId)
 	if nil != err {
-		return util.ErrorInternal(c, err)
+		return "", nil, nil, nil, err
 	}
 	if spaceBase.Id != spaceId || appBase.Id != appId || strings.Index(podName, appBase.AppName) < 0 {
-		return util.ErrorInput(c, "input check error")
+		return "", nil, nil, nil, errors.New("input check error")
 	}
-	return restartPodByName(deployBase.EnvId, spaceBase.SpaceKeep, podName)
+	return podName, spaceBase, appBase, deployBase, nil
 }
 
 func ExecSelect(ws *websocket.Conn) {

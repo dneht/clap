@@ -22,9 +22,19 @@ import (
 	"cana.io/clap/pkg/log"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 )
+
+func DingDingDeployMessage(env, space, app, desc string) {
+	DingDingMessage(map[string]interface{}{
+		"msgtype": "text",
+		"text": map[string]string{
+			"content": fmt.Sprintf("正在[%s]环境的[%s]空间发布[%s|%s]项目", env, space, app, desc),
+		},
+	})
+}
 
 func DingDingMessage(ding map[string]interface{}) {
 	dingProp := base.Now().Message.DingDing

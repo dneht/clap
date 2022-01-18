@@ -94,7 +94,7 @@ const MainView = () => {
   }
 
   const getDocDetail = (invokeName, invokeLength) => {
-    if (appId && spaceName && docApiBase) {
+    if (appId && spaceName && docApiBase && docProps) {
       const time = String(new Date().getTime())
       http.get(docApiBase + docProps.api_method,
         {system: appId, group: spaceName, invokeName: invokeName, invokeLength: invokeLength},

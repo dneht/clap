@@ -1,5 +1,5 @@
 {
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
   "env": {
     "es6": true,
     "browser": true
@@ -41,6 +41,8 @@
     "dot-notation": "off",
     "quote-props": "off",
     "func-names": "off",
+    "function-paren-newline": "off",
+    "function-call-argument-newline": "off",
     "semi": "off",
     "semi-spacing": "off",
     "arrow-parens": "off",
@@ -52,6 +54,7 @@
     "object-curly-newline": "off",
     "object-curly-spacing": "off",
     "prefer-promise-reject-errors": "off",
+    "template-curly-spacing": "off",
     "import/order": "off",
     "import/no-unresolved": "off",
     "import/prefer-default-export": "off",
@@ -75,6 +78,8 @@
     "react/jsx-props-no-spreading": "off",
     "react/require-default-props": "off",
     "react/destructuring-assignment": "off",
+    "react/function-component-definition": "off",
+    "react/no-unused-class-component-methods": "off",
     "react-hooks/exhaustive-deps": "off"
   }
 }

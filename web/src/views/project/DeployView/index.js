@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react'
 import {Box, Container, makeStyles} from '@material-ui/core'
+import {saveAs} from 'file-saver'
 import Page from 'src/components/Page'
 import DeployList from './DeployList'
 import http from 'src/requests'
@@ -112,9 +113,25 @@ const MainView = () => {
   const gotoPublishApp = (deployId, func) => {
     http.get('/deploy/deploy/' + deployId).then(data => func(data))
   }
+  const downloadPod = (data, podData) => {
+    http.get('/pod/download/' + data.id,
+      {
+        'sid': data.spaceBase.id,
+        'aid': data.appBase.id,
+        'pod': podData.podName,
+        'container': podData.containers[0].name,
+        'file': '/logs/debug.log'
+      }).then(data => {
+      saveAs(new File([data], 'debug.log.tar', {type: 'application/tar'}))
+    })
+  }
   const restartPod = (data, podData) => {
     http.get('/pod/restart/' + data.id,
-      {'sid': data.spaceBase.id, 'aid': data.appBase.id, 'pod': podData.podName}).then(data => {
+      {
+        'sid': data.spaceBase.id,
+        'aid': data.appBase.id,
+        'pod': podData.podName
+      }).then(data => {
       ShowSnackbar('重启成功', 'info')
       window.location.reload()
     })
@@ -130,7 +147,8 @@ const MainView = () => {
                  spaceProvider={spaceList} spaceSelect={spaceSelect} getSpaceList={getSpaceList}/>
         <Box mt={3}>
           <DeployList dataProvider={deployList} powerMap={powerMap}
-                      getDeployPods={getDeployPods} getBuildPods={getBuildPods} restartPod={restartPod}
+                      getDeployPods={getDeployPods} getBuildPods={getBuildPods} downloadPod={downloadPod}
+                      restartPod={restartPod}
                       gotoPackageApp={gotoPackageApp} gotoPublishApp={gotoPublishApp}/>
         </Box>
       </Container>

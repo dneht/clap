@@ -17,7 +17,7 @@ assert std.length(app.accessPortals) > 0 : "must set one access portal";
 local namespace = app.namespace;
 local component = app.component;
 local firstcontainer = app.containers[0];
-local getservicename(data) = if "name" in data then app.name + "-" + data.name else app.name;
+local getservicename(data) = if "name" in data then data.name else app.name;
 local getconfigname(data) = if "name" in data then app.name + "-" + data.name else app.name + "-config";
 local getsecretname(data) = if "name" in data then app.name + "-" + data.name else app.name + "-secret";
 local defaultservicename = if "serviceName" in app then app.serviceName else getservicename(app.accessPortals[0]);

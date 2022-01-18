@@ -1,7 +1,7 @@
 import {
   Accordion,
   AccordionDetails,
-  AccordionSummary, Box,
+  AccordionSummary,
   makeStyles,
   Table,
   TableBody,
@@ -9,7 +9,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Toolbar,
   Typography
 } from '@material-ui/core'

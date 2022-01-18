@@ -19,7 +19,7 @@ import {
 } from '@material-ui/core'
 import {convertAppType} from 'src/utils/convertvalue'
 import hiddenEle from 'src/utils/hiddenele'
-import PropertyView from '../../property/PropertyView'
+import PropertyView from 'src/views/property/PropertyView'
 
 const useStyles = makeStyles((theme) => ({
   root: {},

@@ -86,6 +86,7 @@ func main() {
 	app.Get("/pod/space/:id", api.ListSpacePod)
 	app.Get("/pod/deploy/:id", api.ListDeployPod)
 	app.Get("/pod/restart/:id", api.RestartDeployPod)
+	app.Get("/pod/download/:id", api.DownloadDeployPod)
 	// type=check, build, deploy
 	app.Get("/deploy/:type/:deploy", api.ExecDeploy)
 	// type=jsonnet, property

@@ -5,7 +5,7 @@ import Page from 'src/components/Page'
 import http from 'src/requests'
 import {currentEnvId, currentEnvName} from 'src/sessions'
 import EnvironmentSpaceCard from './EnvironmentSpaceCard'
-import {ShowSnackbar} from '../../../utils/globalshow'
+import {ShowSnackbar} from 'src/utils/globalshow'
 
 const useStyles = makeStyles((theme) => ({
   root: {

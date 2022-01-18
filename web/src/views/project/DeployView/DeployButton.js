@@ -59,13 +59,13 @@ class DeployButton extends React.Component {
 
   reloadPackageStatus() {
     this.getBuildPods(this.deployId, (data) => {
-      if (!data.pods || data.pods.length === 0) {
-        ShowSnackbar('创建中，请稍后...', 'info')
+      if (data.status && data.status.succeeded && data.status.succeeded > 0) {
+        this.setState({
+          buttonStatus: 2
+        })
       } else {
-        if (data.status.succeeded && data.status.succeeded > 0) {
-          this.setState({
-            buttonStatus: 2
-          })
+        if (!data.pods || data.pods.length === 0) {
+          ShowSnackbar('创建中，请稍后...', 'info')
         } else {
           ShowSnackbar('点击左边按钮即可查看日志', 'info')
         }

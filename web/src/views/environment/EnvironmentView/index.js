@@ -4,7 +4,7 @@ import {Pagination} from '@material-ui/lab'
 import Page from 'src/components/Page'
 import EnvironmentCard from './EnvironmentCard'
 import http from 'src/requests'
-import {ShowSnackbar} from '../../../utils/globalshow'
+import {ShowSnackbar} from 'src/utils/globalshow'
 
 const useStyles = makeStyles((theme) => ({
   root: {

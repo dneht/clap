@@ -2,6 +2,7 @@ package api
 
 import (
 	"cana.io/clap/pkg/base"
+	"cana.io/clap/pkg/log"
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/pkg/refer"
 	"cana.io/clap/util"
@@ -110,9 +111,11 @@ func ExecDeploy(c *fiber.Ctx) error {
 			if nil != err {
 				return err
 			}
+			limit := base.Now().Package.BackoffLimit
 			if status.Succeeded > 0 {
 				err = updateDeployStatus(c, deployId, refer.DeployStatusBuildEnd, "")
-			} else if status.Failed > 0 {
+			} else if status.Failed > limit {
+				log.Infof("build job failed: %v, %v, %v", deployId, limit, status)
 				err = updateDeployStatus(c, deployId, refer.DeployStatusBuildFail, "")
 			}
 			return util.ResultParamMapTwo(c, err, "pods", pods, "status", status)
@@ -124,6 +127,7 @@ func ExecDeploy(c *fiber.Ctx) error {
 			err = updateDeployStatus(c, deployId, refer.DeployStatusBuilding, tag)
 			return util.ResultParamMapTwo(c, err, "tag", tag, "status", status)
 		} else if "deploy" == selectType {
+			deleteBuildJob(deployId)
 			status, err := createTemplateApp(deployId)
 			if nil != err {
 				return err

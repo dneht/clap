@@ -2,15 +2,16 @@ package api
 
 import (
 	"cana.io/clap/pkg/base"
+	"cana.io/clap/pkg/log"
 	"cana.io/clap/pkg/model"
 	"cana.io/clap/pkg/refer"
 	"cana.io/clap/util"
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	k8serror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"strings"
@@ -37,7 +38,11 @@ func checkBuildJob(deployId uint64) (*batchv1.JobStatus, *[]*refer.PodInfo, erro
 	conf := base.Now()
 	job, err := k8s.BatchV1().Jobs(conf.Namespace).Get(context.TODO(), jobNamePre+timeTag, metav1.GetOptions{})
 	if nil != err {
-		return nil, nil, err
+		if k8serror.IsNotFound(err) {
+			return &batchv1.JobStatus{Succeeded: 1}, &[]*refer.PodInfo{}, nil
+		} else {
+			return nil, nil, err
+		}
 	}
 	podList, err := listPodByLabel(envId, conf.Namespace, util.SelectJobLabelList(jobNamePre+timeTag))
 	var pods []*refer.PodInfo
@@ -142,6 +147,29 @@ func createBuildJob(deployId uint64) (string, *batchv1.JobStatus, error) {
 	return timeTag, &job.Status, err
 }
 
+func deleteBuildJob(deployId uint64) {
+	deployBase, err := getDeployById(deployId)
+	if nil != err {
+		log.Infof("get deploy detail %v failed: %v", deployId, err)
+		return
+	}
+	timeTag := deployBase.DeployTag
+	if "" == timeTag {
+		return
+	}
+	conf := base.Now()
+	k8s, _, err := base.K8S(deployBase.EnvId)
+	if nil != err {
+		return
+	}
+	foreground := metav1.DeletePropagationForeground
+	err = k8s.BatchV1().Jobs(conf.Namespace).Delete(context.TODO(), jobNamePre+timeTag,
+		metav1.DeleteOptions{PropagationPolicy: &foreground})
+	if nil != err {
+		log.Infof("delete build job %v failed: %v", jobNamePre+timeTag, err)
+	}
+}
+
 func createPlatformApp(deployId uint64) (refer.DeployStatus, error) {
 	envBase, spaceBase, appBase, deployBase, err := getMoreModels(deployId)
 	if nil != err {
@@ -196,13 +224,7 @@ func createTemplateApp(deployId uint64) (refer.DeployStatus, error) {
 	namespace := spaceBase.SpaceKeep
 	appDeployName := refer.GetAppName(appBase, spaceBase)
 
-	util.DingDingMessage(map[string]interface{}{
-		"msgtype": "text",
-		"text": map[string]string{
-			"content": fmt.Sprintf("正在[%s]环境的[%s]空间发布[%s|%s]项目",
-				envBase.Env, spaceBase.SpaceName, appBase.AppName, appBase.AppDesc),
-		},
-	})
+	util.DingDingDeployMessage(envBase.Env, spaceBase.SpaceName, appBase.AppName, appBase.AppDesc)
 	if appKind == refer.KindDeploy {
 		return handleDeployment(envBase.Id, namespace, jsonStr, appDeployName)
 	} else if appKind == refer.KindStateful {

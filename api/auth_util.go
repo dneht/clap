@@ -54,6 +54,7 @@ const (
 	AllowThisPodLog           = 1 << 24
 	AllowThisPodExec          = 1 << 25
 	AllowThisPodRestart       = 1 << 26
+	AllowThisPodDownload      = 1 << 27
 	AllowThisPodSpace         = 1 << 29
 )
 
