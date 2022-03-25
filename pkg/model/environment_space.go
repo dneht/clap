@@ -30,6 +30,6 @@ type EnvironmentSpace struct {
 	IsView    int       `xorm:"default 0 comment('是否仅查看，会展示全部pod') TINYINT(1)" json:"isView"`
 	IsControl int       `xorm:"default 0 comment('是否独占命名空间，独占则deploy后的name不会带上space') TINYINT(1)" json:"isControl"`
 	IsDisable int       `xorm:"default 0 comment('是否已被禁用') TINYINT(1)" json:"isDisable"`
-	CreatedAt time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') TIMESTAMP" json:"createdAt"`
-	UpdatedAt time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('更新时间') TIMESTAMP" json:"updatedAt"`
+	CreatedAt time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`
+	UpdatedAt time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"updatedAt"`
 }

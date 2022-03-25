@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
 var matchAllCamel = regexp.MustCompile("([a-z0-9])([A-Z])")
@@ -57,4 +58,10 @@ func GenerateMD5(list ...string) string {
 		hash.Write([]byte(one))
 	}
 	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func StringClone(s string) string {
+	b := make([]byte, len(s))
+	copy(b, s)
+	return *(*string)(unsafe.Pointer(&b))
 }

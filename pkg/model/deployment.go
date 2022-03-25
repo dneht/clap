@@ -18,6 +18,7 @@ const (
 	DeployTagInDeployment    = "deploy_tag"
 	AppInfoInDeployment      = "app_info"
 	IsPackageInDeployment    = "is_package"
+	IsBranchInDeployment     = "is_branch"
 	IsDisableInDeployment    = "is_disable"
 	CreatedAtInDeployment    = "created_at"
 	UpdatedAtInDeployment    = "updated_at"
@@ -35,7 +36,8 @@ type Deployment struct {
 	DeployTag    string    `xorm:"comment('记录当前或者上次一打包使用的tag') VARCHAR(24)" json:"deployTag"`
 	AppInfo      string    `xorm:"comment('创建部署时覆盖原始的项目信息') JSON" json:"appInfo"`
 	IsPackage    int       `xorm:"default 1 comment('是否能打包，默认能') TINYINT(1)" json:"isPackage"`
-	IsDisable    int       `xorm:"default 0 comment('是否已被禁用') TINYINT(1)" json:"isDisable"`
-	CreatedAt    time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') TIMESTAMP" json:"createdAt"`
-	UpdatedAt    time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('更新时间') TIMESTAMP" json:"updatedAt"`
+	IsBranch     int       `xorm:"default 0 comment('是否能修改分支，默认不能') TINYINT(3)" json:"isBranch"`
+	IsDisable    int       `xorm:"default 0 comment('是否已被禁用') TINYINT(3)" json:"isDisable"`
+	CreatedAt    time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`
+	UpdatedAt    time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"updatedAt"`
 }

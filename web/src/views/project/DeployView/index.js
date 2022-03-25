@@ -107,11 +107,18 @@ const MainView = () => {
   const getBuildPods = (deployId, func) => {
     http.get('/deploy/check/' + deployId).then(data => func(data))
   }
-  const gotoPackageApp = (deployId, func) => {
-    http.get('/deploy/build/' + deployId).then(data => func(data))
+  const gotoPackageApp = (deployId, branchName, func) => {
+    if (branchName) {
+      http.get('/deploy/build/' + deployId, {branch: branchName}).then(data => func(data))
+    } else {
+      http.get('/deploy/build/' + deployId).then(data => func(data))
+    }
   }
   const gotoPublishApp = (deployId, func) => {
     http.get('/deploy/deploy/' + deployId).then(data => func(data))
+  }
+  const gotoCancelApp = (deployId, func) => {
+    http.get('/deploy/cancel/' + deployId).then(data => func(data))
   }
   const downloadPod = (data, podData) => {
     http.get('/pod/download/' + data.id,
@@ -147,9 +154,10 @@ const MainView = () => {
                  spaceProvider={spaceList} spaceSelect={spaceSelect} getSpaceList={getSpaceList}/>
         <Box mt={3}>
           <DeployList dataProvider={deployList} powerMap={powerMap}
-                      getDeployPods={getDeployPods} getBuildPods={getBuildPods} downloadPod={downloadPod}
+                      getDeployPods={getDeployPods} getBuildPods={getBuildPods}
+                      downloadPod={downloadPod}
                       restartPod={restartPod}
-                      gotoPackageApp={gotoPackageApp} gotoPublishApp={gotoPublishApp}/>
+                      gotoPackageApp={gotoPackageApp} gotoPublishApp={gotoPublishApp} gotoCancelApp={gotoCancelApp}/>
         </Box>
       </Container>
     </Page>

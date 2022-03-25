@@ -31,7 +31,7 @@ import (
 )
 
 func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
-	secrets, domains := allNeedAcmeDomains()
+	secrets, exists, domains := allNeedAcmeDomains()
 	log.Infof("this time secrets is: %v, domains is: %v", secrets, domains)
 	if nil == secrets || nil == domains || len(*secrets) == 0 || len(*domains) == 0 {
 		log.Infof("no domains found to execute: %v, %v", secrets, domains)
@@ -126,24 +126,48 @@ func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
 				}
 			}
 		}
-		domainResult = refer.UpdateDomainResult{
+		if nil != exists && len(*exists) > 0 {
+			for _, secret := range *exists {
+				if "" != secret.SecretName && len(secret.SecretData) > 0 {
+					cli, _, err := base.K8S(secret.EnvId)
+					if nil != err {
+						log.Warnf("can not client cluster: %v, %v", secret, err)
+						continue
+					}
+					err = createOrUpdateSecret(cli, secret.Namespace, secret.SecretName, &corev1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: secret.SecretName,
+						},
+						Data: map[string][]byte{
+							corev1.TLSCertKey:       []byte(secret.SecretData[corev1.TLSCertKey]),
+							corev1.TLSPrivateKeyKey: []byte(secret.SecretData[corev1.TLSPrivateKeyKey]),
+						},
+						Type: corev1.SecretTypeTLS,
+					})
+					if nil != err {
+						log.Warnf("create or update secret failed: %v, %v", secret, err)
+					}
+				}
+			}
+		}
+		return &refer.UpdateDomainResult{
 			Secrets: secrets,
 			Results: results,
-		}
-		return &domainResult, nil
+		}, nil
 	} else {
 		return nil, nil
 	}
 }
 
-func allNeedAcmeDomains() (*[]refer.UpdateDomainSecret, *map[string][]string) {
+func allNeedAcmeDomains() (*[]refer.UpdateDomainSecret, *[]refer.ExistDomainSecret, *map[string][]string) {
 	spaces, err := findAllSpaceForTask()
 	if nil != err {
 		log.Warnf("get space for task failed: %v", err)
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	updates := make([]refer.UpdateDomainSecret, 0, 32)
+	exists := make([]refer.ExistDomainSecret, 0, 16)
 	domains := make(map[string][]string)
 	updateDup := make(map[string]bool)
 	domainDup := make(map[string]bool)
@@ -157,47 +181,56 @@ func allNeedAcmeDomains() (*[]refer.UpdateDomainSecret, *map[string][]string) {
 		}
 		param := info.Param
 		if "" != param.Domain && "" != param.TLS.SecretName {
-			domain := strings.ToLower(strings.TrimSpace(param.Domain))
-			split := strings.Split(domain, ".")
-			if len(split) <= 1 {
-				continue
-			}
-
-			var main string
-			if len(split) == 2 {
-				main = domain
-			} else {
-				main = strings.Join(split[len(split)-2:], ".")
-				if strings.HasPrefix(domain, "-") {
-					domain = strings.Join(split[1:], ".")
-				}
-			}
-
-			var ok bool
-			updateKey := strconv.FormatUint(space.EnvId, 10) + space.SpaceKeep + param.TLS.SecretName
-			_, ok = updateDup[updateKey]
-			if !ok {
-				updateDup[updateKey] = true
-				updates = append(updates, refer.UpdateDomainSecret{
+			if len(param.TLS.SecretData) > 0 && "" != param.TLS.SecretData[corev1.TLSCertKey] && "" != param.TLS.SecretData[corev1.TLSPrivateKeyKey] {
+				exists = append(exists, refer.ExistDomainSecret{
 					EnvId:      space.EnvId,
-					Domain:     domain,
-					MainDomain: main,
 					Namespace:  space.SpaceKeep,
 					SecretName: param.TLS.SecretName,
+					SecretData: param.TLS.SecretData,
 				})
-			}
-			var list []string
-			_, ok = domainDup[domain]
-			if !ok {
-				nextDomain := "*." + domain
-				domainDup[domain] = true
-				wildcardDup[nextDomain] = true
-				list, ok = domains[main]
-				if !ok {
-					list = make([]string, 0, 4)
+			} else {
+				domain := strings.ToLower(strings.TrimSpace(param.Domain))
+				split := strings.Split(domain, ".")
+				if len(split) <= 1 {
+					continue
 				}
-				list = append(list, domain, nextDomain)
-				domains[main] = list
+
+				var main string
+				if len(split) == 2 {
+					main = domain
+				} else {
+					main = strings.Join(split[len(split)-2:], ".")
+					if strings.HasPrefix(domain, "-") {
+						domain = strings.Join(split[1:], ".")
+					}
+				}
+
+				var ok bool
+				updateKey := strconv.FormatUint(space.EnvId, 10) + space.SpaceKeep + param.TLS.SecretName
+				_, ok = updateDup[updateKey]
+				if !ok {
+					updateDup[updateKey] = true
+					updates = append(updates, refer.UpdateDomainSecret{
+						EnvId:      space.EnvId,
+						Domain:     domain,
+						MainDomain: main,
+						Namespace:  space.SpaceKeep,
+						SecretName: param.TLS.SecretName,
+					})
+				}
+				var list []string
+				_, ok = domainDup[domain]
+				if !ok {
+					nextDomain := "*." + domain
+					domainDup[domain] = true
+					wildcardDup[nextDomain] = true
+					list, ok = domains[main]
+					if !ok {
+						list = make([]string, 0, 4)
+					}
+					list = append(list, domain, nextDomain)
+					domains[main] = list
+				}
 			}
 		}
 	}
@@ -223,5 +256,5 @@ func allNeedAcmeDomains() (*[]refer.UpdateDomainSecret, *map[string][]string) {
 			domains[main] = nList
 		}
 	}
-	return &updates, &domains
+	return &updates, &exists, &domains
 }

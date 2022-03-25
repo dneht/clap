@@ -26,6 +26,6 @@ type RoleInfo struct {
 	IsManage   int       `xorm:"default 0 comment('是否是管理角色') TINYINT(1)" json:"isManage"`
 	IsSuper    int       `xorm:"default 0 comment('是否是超级管理角色') TINYINT(1)" json:"isSuper"`
 	IsDisable  int       `xorm:"default 0 comment('是否已被禁用') TINYINT(1)" json:"isDisable"`
-	CreatedAt  time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') TIMESTAMP" json:"createdAt"`
-	UpdatedAt  time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('更新时间') TIMESTAMP" json:"updatedAt"`
+	CreatedAt  time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`
+	UpdatedAt  time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"updatedAt"`
 }

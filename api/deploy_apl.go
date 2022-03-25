@@ -49,7 +49,7 @@ func CreateDeploy(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	result, err := insertDeploy(c, base.Engine.NewSession(), info)
+	result, err := insertDeploy(base.Engine.NewSession(), info)
 	return util.ResultParamWithMessage(c, err, result > 0, "create app error", info.Id)
 }
 
@@ -58,7 +58,7 @@ func UpdateDeploy(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	result, err := updateDeployById(c, base.Engine.NewSession(), info)
+	result, err := updateDeployById(base.Engine.NewSession(), info)
 	return util.ResultParamWithMessage(c, err, result > 0, "create app error", info.Id)
 }
 
@@ -70,19 +70,39 @@ func checkDeployInput(c *fiber.Ctx) (*model.Deployment, error) {
 	return info, nil
 }
 
-func updateDeployStatus(c *fiber.Ctx, id uint64, status int, tag string) error {
+func updateDeployStatus(id uint64, status int, tag string) error {
 	if id <= 0 || status == 0 {
 		return errors.New("input id or status is empty")
 	}
 	_, err := base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
-		return updateDeployStatusById(c, session, id, status, tag)
+		return updateDeployStatusById(session, id, status, tag)
 	})
 	if nil != err {
 		return err
 	}
-	deployMap[id].DeployStatus = status
-	if "" != tag {
-		deployMap[id].DeployTag = tag
+	get, ok := deployMap[id]
+	if ok {
+		get.DeployStatus = status
+		if "" != tag {
+			get.DeployTag = util.StringClone(tag)
+		}
+	}
+	return nil
+}
+
+func updateDeployBranch(id uint64, branch string) error {
+	if id <= 0 || "" == branch {
+		return errors.New("input id or status is empty")
+	}
+	_, err := base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
+		return updateDeployBranchById(session, id, branch)
+	})
+	if nil != err {
+		return err
+	}
+	get, ok := deployMap[id]
+	if ok {
+		get.BranchName = util.StringClone(branch)
 	}
 	return nil
 }
@@ -96,7 +116,7 @@ func ExecDeploy(c *fiber.Ctx) error {
 	if nil != err {
 		return err
 	}
-	appBase, _, err := getBaseModels(deployId)
+	appBase, deployBase, err := getBaseModels(deployId)
 	if nil != err {
 		return err
 	}
@@ -113,26 +133,41 @@ func ExecDeploy(c *fiber.Ctx) error {
 			}
 			limit := base.Now().Package.BackoffLimit
 			if status.Succeeded > 0 {
-				err = updateDeployStatus(c, deployId, refer.DeployStatusBuildEnd, "")
+				err = updateDeployStatus(deployId, refer.DeployStatusBuildEnd, "")
 			} else if status.Failed > limit {
 				log.Infof("build job failed: %v, %v, %v", deployId, limit, status)
-				err = updateDeployStatus(c, deployId, refer.DeployStatusBuildFail, "")
+				err = updateDeployStatus(deployId, refer.DeployStatusBuildFail, "")
 			}
 			return util.ResultParamMapTwo(c, err, "pods", pods, "status", status)
 		} else if "build" == selectType {
-			tag, status, err := createBuildJob(deployId)
+			if deployBase.IsPackage == 0 {
+				return errors.New("this deploy can not package")
+			}
+			branchName := ""
+			if deployBase.IsBranch != 0 {
+				branchName = c.Query("branch")
+			}
+			tag, status, err := createBuildJob(deployId, branchName)
 			if nil != err {
 				return err
 			}
-			err = updateDeployStatus(c, deployId, refer.DeployStatusBuilding, tag)
+			err = updateDeployStatus(deployId, refer.DeployStatusBuilding, tag)
 			return util.ResultParamMapTwo(c, err, "tag", tag, "status", status)
+		} else if "cancel" == selectType {
+			deleteBuildJob(deployId)
+			deployGet, ok := deployMap[deployId]
+			if ok {
+				deployGet.DeployStatus = refer.DeployStatusPackHear
+			}
+			err = updateDeployStatus(deployId, refer.DeployStatusPackHear, "")
+			return util.ResultParamEmpty(c, err)
 		} else if "deploy" == selectType {
 			deleteBuildJob(deployId)
 			status, err := createTemplateApp(deployId)
 			if nil != err {
 				return err
 			}
-			err = updateDeployStatus(c, deployId, refer.DeployStatusPackHear, "")
+			err = updateDeployStatus(deployId, refer.DeployStatusPackHear, "")
 			return util.ResultParamMapOne(c, err, "status", status)
 		}
 		return errors.New("select type is not support")

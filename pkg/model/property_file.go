@@ -28,6 +28,6 @@ type PropertyFile struct {
 	FileContent string    `xorm:"not null comment('配置文件文本') TEXT" json:"fileContent"`
 	FileHash    string    `xorm:"not null comment('根据file_content计算的hash') VARCHAR(64)" json:"fileHash"`
 	IsDisable   int       `xorm:"default 0 comment('是否已被禁用') TINYINT(1)" json:"isDisable"`
-	CreatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') TIMESTAMP" json:"createdAt"`
-	UpdatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('更新时间') TIMESTAMP" json:"updatedAt"`
+	CreatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`
+	UpdatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"updatedAt"`
 }

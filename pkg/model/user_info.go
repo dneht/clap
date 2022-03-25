@@ -30,6 +30,6 @@ type UserInfo struct {
 	AccessToken string    `xorm:"not null comment('访问token') VARCHAR(128)" json:"accessToken"`
 	RoleList    string    `xorm:"comment('用户加入的角色') JSON" json:"roleList"`
 	IsDisable   int       `xorm:"default 0 comment('是否已被禁用') TINYINT(1)" json:"isDisable"`
-	CreatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') TIMESTAMP" json:"createdAt"`
-	UpdatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('更新时间') TIMESTAMP" json:"updatedAt"`
+	CreatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`
+	UpdatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"updatedAt"`
 }

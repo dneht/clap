@@ -60,5 +60,6 @@ type SpaceParamInfo struct {
 }
 
 type SpaceParamTLSInfo struct {
-	SecretName string `json:"secretName,omitempty"`
+	SecretName string            `json:"secretName,omitempty"`
+	SecretData map[string]string `json:"secretData,omitempty"`
 }

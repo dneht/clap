@@ -19,6 +19,7 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  TextField,
   Typography
 } from '@material-ui/core'
 import DeployButton from './DeployButton'
@@ -49,6 +50,7 @@ const DeployList = ({
                       restartPod,
                       gotoPackageApp,
                       gotoPublishApp,
+                      gotoCancelApp,
                       ...rest
                     }) => {
   const classes = useStyles()
@@ -59,8 +61,9 @@ const DeployList = ({
   const [podDialog, setPodDialog] = useState(false)
   const [podList, setPodList] = useState([])
   const [selectDeploy, setSelectDeploy] = useState({})
+  const [branchName, setBranchName] = useState('')
   const [propOpen, setPropOpen] = useState(false)
-  const [require, setRequire] = useState({open: false, keyword: ''})
+  const [require, setRequire] = useState({open: false, more: false, keyword: ''})
 
   const navigateToAttach = (data, podData) => {
     podData.envId = data.spaceBase.envId
@@ -141,16 +144,29 @@ const DeployList = ({
     setPropOpen(true)
   }
 
-  const requirePackageApp = (deployId, func) => {
-    setRequire({open: true, keyword: '打包', type: 'package', id: deployId, func: func})
+  const requirePackageApp = (deployId, canBranch, func) => {
+    setRequire({open: true, more: canBranch, keyword: '打包', type: 'Package', id: deployId, func: func})
   }
 
   const requirePublishApp = (deployId, func) => {
-    setRequire({open: true, keyword: '发布', type: 'publish', id: deployId, func: func})
+    setRequire({open: true, more: false, keyword: '发布', type: 'Publish', id: deployId, func: func})
+  }
+
+  const cancelPackageApp = (deployId, func) => {
+    setRequire({open: true, more: false, keyword: '取消', type: 'Cancel', id: deployId, func: func})
   }
 
   const handleRequireClose = () => {
-    setRequire({open: false, keyword: ''})
+    setRequire({open: false, more: false, keyword: ''})
+  }
+
+  const updateBranchName = (event) => {
+    setBranchName(event.target.value)
+    dataResults.forEach(dataOne => {
+      if (dataOne.id === require.id) {
+        dataOne.branchName = event.target.value
+      }
+    })
   }
 
   return (
@@ -251,7 +267,8 @@ const DeployList = ({
                                     navigateToInner={navigateToInner}
                                     getBuildPods={getBuildPods}
                                     gotoPackageApp={requirePackageApp}
-                                    gotoPublishApp={requirePublishApp}/>
+                                    gotoPublishApp={requirePublishApp}
+                                    gotoCancelApp={cancelPackageApp}/>
                     </Grid>
                   </TableCell>
                 </TableRow>
@@ -329,7 +346,42 @@ const DeployList = ({
             </Table>
           </Dialog>
           <Dialog
-            open={require.open}
+            open={require.open && require.more}
+            onClose={handleRequireClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                {`确定继续${require.keyword}?`}
+              </DialogContentText>
+              <Typography id="alert-dialog-readme" variant="overline" mt={2}>
+                仓库分支留空则使用默认分支，否则将会使用并把输入分支作为默认分支
+              </Typography>
+              <TextField id="alert-dialog-branch-name" variant="outlined"
+                         label="仓库分支名" defaultValue=""
+                         onChange={updateBranchName}/>
+            </DialogContent>
+            <DialogActions>
+              <Button variant="outlined" color="primary"
+                      onClick={handleRequireClose}>
+                取消
+              </Button>
+              <Button variant="outlined" color="primary" autoFocus
+                      onClick={() => {
+                        if (require.type && require.id && require.func) {
+                          gotoPackageApp(require.id, branchName, require.func)
+                        } else {
+                          ShowSnackbar('Select type not found', 'warn')
+                        }
+                        handleRequireClose()
+                      }}>
+                确定
+              </Button>
+            </DialogActions>
+          </Dialog>
+          <Dialog
+            open={require.open && !require.more}
             onClose={handleRequireClose}
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description"
@@ -347,10 +399,22 @@ const DeployList = ({
               <Button variant="outlined" color="primary" autoFocus
                       onClick={() => {
                         if (require.type && require.id && require.func) {
-                          if (require.type === 'publish') {
-                            gotoPublishApp(require.id, require.func)
-                          } else {
-                            gotoPackageApp(require.id, require.func)
+                          switch (require.type) {
+                            case 'Publish': {
+                              gotoPublishApp(require.id, require.func)
+                              break
+                            }
+                            case 'Package': {
+                              gotoPackageApp(require.id, branchName, require.func)
+                              break
+                            }
+                            case 'Cancel': {
+                              gotoCancelApp(require.id, require.func)
+                              break
+                            }
+                            default: {
+                              ShowSnackbar('Select type not found', 'warn')
+                            }
                           }
                           handleRequireClose()
                         } else {
@@ -368,7 +432,6 @@ const DeployList = ({
       <TablePagination
         component="div"
         count={dataProvider.total}
-        onChangePage={handlePageChange}
         onChangeRowsPerPage={handleLimitChange}
         page={page}
         rowsPerPage={limit}

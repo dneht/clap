@@ -52,10 +52,18 @@ func checkBuildJob(deployId uint64) (*batchv1.JobStatus, *[]*refer.PodInfo, erro
 	return &job.Status, &pods, err
 }
 
-func createBuildJob(deployId uint64) (string, *batchv1.JobStatus, error) {
+func createBuildJob(deployId uint64, branchName string) (string, *batchv1.JobStatus, error) {
 	envBase, spaceBase, appBase, deployBase, err := getMoreModels(deployId)
 	if nil != err {
 		return "", nil, err
+	}
+	if "" == branchName {
+		branchName = deployBase.BranchName
+	} else {
+		err = updateDeployBranch(deployId, branchName)
+		if nil != err {
+			return "", nil, err
+		}
 	}
 	if appBase.AppType == refer.NoneAppType {
 		return "", nil, errors.New("no need to pack")
@@ -128,7 +136,7 @@ func createBuildJob(deployId uint64) (string, *batchv1.JobStatus, error) {
 								{Name: "ENV_SPACE", Value: spaceBase.SpaceInfo},
 								{Name: "REPO_URL", Value: repoUrl},
 								{Name: "CODE_URL", Value: codeUrl},
-								{Name: "CODE_BRANCH", Value: deployBase.BranchName},
+								{Name: "CODE_BRANCH", Value: branchName},
 								{Name: "TIME_TAG", Value: timeTag},
 								{Name: "SKIP_TEST", Value: util.ConvertBoolToYesOrNo(deploymentProp.MavenSkipTests)},
 							},

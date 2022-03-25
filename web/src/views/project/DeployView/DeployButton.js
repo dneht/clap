@@ -19,6 +19,7 @@ class DeployButton extends React.Component {
     if (props.dataProvider.spaceBase) {
       this.spaceName = props.dataProvider.spaceBase.spaceName
     }
+    this.canBranch = props.dataProvider.isBranch === 1
     this.disablePack = props.dataProvider.isPackage === 0
     this.enableDocument = false
     const baseProps = currentBaseProp()
@@ -34,6 +35,7 @@ class DeployButton extends React.Component {
     this.getBuildPods = props.getBuildPods
     this.gotoPackageApp = props.gotoPackageApp
     this.gotoPublishApp = props.gotoPublishApp
+    this.gotoCancelApp = props.gotoCancelApp
     this.navigateToDoc = props.navigateToDoc
     this.navigateToInner = props.navigateToInner
     this.gotoAppDocument = this.gotoAppDocument.bind(this)
@@ -41,6 +43,7 @@ class DeployButton extends React.Component {
     this.reloadPackageStatus = this.reloadPackageStatus.bind(this)
     this.doPackageApp = this.doPackageApp.bind(this)
     this.doPublishApp = this.doPublishApp.bind(this)
+    this.doCancelApp = this.doCancelApp.bind(this)
   }
 
   gotoAppDocument() {
@@ -67,14 +70,14 @@ class DeployButton extends React.Component {
         if (!data.pods || data.pods.length === 0) {
           ShowSnackbar('创建中，请稍后...', 'info')
         } else {
-          ShowSnackbar('点击左边按钮即可查看日志', 'info')
+          ShowSnackbar('点击[打包中]即可查看日志', 'info')
         }
       }
     })
   }
 
   doPackageApp() {
-    this.gotoPackageApp(this.deployId, (data) => {
+    this.gotoPackageApp(this.deployId, this.canBranch, (data) => {
       this.setState({
         buttonStatus: 1
       })
@@ -88,6 +91,15 @@ class DeployButton extends React.Component {
         buttonStatus: 6
       })
       ShowSnackbar('发布中', 'error')
+    })
+  }
+
+  doCancelApp() {
+    this.gotoCancelApp(this.deployId, (data) => {
+      this.setState({
+        buttonStatus: 6
+      })
+      ShowSnackbar('取消打包', 'error')
     })
   }
 
@@ -125,6 +137,11 @@ class DeployButton extends React.Component {
                     style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
                     onClick={this.reloadPackageStatus}>
               刷新状态
+            </Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
+                    onClick={this.doCancelApp}>
+              取消打包
             </Button>
           </div>
         )

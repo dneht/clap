@@ -143,6 +143,7 @@ create table deployment
     deploy_tag    varchar(24) comment '记录最近一次打包使用的tag',
     app_info      json comment '创建部署时覆盖原始的项目信息',
     is_package    boolean              default true comment '是否能打包，默认能',
+    is_branch     boolean              default false comment '是否能修改分支，默认不能',
     is_disable    boolean              default false comment '是否已被禁用',
     created_at    datetime    not null default current_timestamp comment '添加时间',
     updated_at    datetime    not null default current_timestamp on update current_timestamp comment '更新时间',

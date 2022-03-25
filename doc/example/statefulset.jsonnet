@@ -39,8 +39,9 @@ local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Con
         spec: {
             replicas: if "replicas" in app then app.replicas else 1,
             serviceName: defaultservicename,
-            minReadySeconds: if "minReadySeconds" in app then app.minReadySeconds else 60,
-            revisionHistoryLimit: if "revisionHistoryLimit" in app then app.revisionHistoryLimit else 2,
+            [if "minReadySeconds" in app then "minReadySeconds"]: app.minReadySeconds,
+            [if "revisionHistoryLimit" in app then "revisionHistoryLimit"]: app.revisionHistoryLimit,
+            [if "podManagementPolicy" in app then "podManagementPolicy"]: app.podManagementPolicy,
             selector: {
                 matchLabels: app.selector
             },

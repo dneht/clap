@@ -27,6 +27,7 @@ web/build
 web/node_modules
 
 conf/*.properties
+release.sh
 generate.sh
 generate.go
 

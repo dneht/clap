@@ -24,6 +24,13 @@ type UpdateDomainSecret struct {
 	SecretName string `json:"secretName"`
 }
 
+type ExistDomainSecret struct {
+	EnvId      uint64            `json:"envId"`
+	Namespace  string            `json:"namespace"`
+	SecretName string            `json:"secretName"`
+	SecretData map[string]string `json:"secretData"`
+}
+
 type UpdateDomainResult struct {
 	Secrets *[]UpdateDomainSecret      `json:"secrets"`
 	Results *map[string]AcmeTaskResult `json:"results"`

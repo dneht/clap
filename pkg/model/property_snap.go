@@ -25,5 +25,5 @@ type PropertySnap struct {
 	PropId      uint64    `xorm:"not null comment('配置id') BIGINT(20)" json:"propId"`
 	FileName    string    `xorm:"not null comment('文件名，不包含文件路径') index(idx_link_res_id) VARCHAR(64)" json:"fileName"`
 	FileContent string    `xorm:"not null comment('配置文件文本') TEXT" json:"fileContent"`
-	CreatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') TIMESTAMP" json:"createdAt"`
+	CreatedAt   time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`
 }

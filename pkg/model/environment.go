@@ -32,6 +32,6 @@ type Environment struct {
 	DeployInfo string    `xorm:"comment('部署信息，主要是部署时用到的信息，如cli、git、repo等') JSON" json:"deployInfo"`
 	FormatInfo string    `xorm:"comment('规格信息，包含类型对应的仓库、代理、默认启动参数等') JSON" json:"formatInfo"`
 	IsDisable  int       `xorm:"default 0 comment('是否已被禁用') TINYINT(1)" json:"isDisable"`
-	CreatedAt  time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') TIMESTAMP" json:"createdAt"`
-	UpdatedAt  time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('更新时间') TIMESTAMP" json:"updatedAt"`
+	CreatedAt  time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`
+	UpdatedAt  time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"updatedAt"`
 }
