@@ -61,7 +61,7 @@ func countRoleWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	return sql.Count(&info)
 }
 
-func findRoleWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.RoleInfo, error) {
+func findRoleWithPage(c *fiber.Ctx, input *util.MainInput) (int, []model.RoleInfo, error) {
 	var list []model.RoleInfo
 	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
 	err := SelectAuth(c, model.RoleInfoTable, sql)
@@ -72,24 +72,24 @@ func findRoleWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.RoleIn
 		input.ApplyWithoutDisable(sql)
 	}
 	err = sql.Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
-func findAllRoleSimple(c *fiber.Ctx) (int, *[]model.RoleInfo, error) {
+func findAllRoleSimple(c *fiber.Ctx) (int, []model.RoleInfo, error) {
 	var list []model.RoleInfo
 	sql := base.Engine.Cols(model.IdInRoleInfo, model.RoleNameInRoleInfo)
 	err := sql.Where(model.IsDisableInRoleInfo + " = 0").
 		Where(model.IsSuperInRoleInfo + " = 0").
 		Where(model.RoleFromInRoleInfo + " = 0").Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
-func findRoleSimpleByIds(c *fiber.Ctx, ids []uint64) (*[]model.RoleInfo, error) {
+func findRoleSimpleByIds(c *fiber.Ctx, ids []uint64) ([]model.RoleInfo, error) {
 	var list []model.RoleInfo
 	sql := base.Engine.Cols(model.IdInRoleInfo, model.RoleNameInRoleInfo, model.IsSuperInRoleInfo, model.IsManageInRoleInfo)
 	err := sql.Where(model.IsDisableInRoleInfo+" = 0").
 		In(model.IdInRoleInfo, ids).Find(&list)
-	return &list, err
+	return list, err
 }
 
 func insertRole(c *fiber.Ctx, session *xorm.Session, info *model.RoleInfo) (int64, error) {

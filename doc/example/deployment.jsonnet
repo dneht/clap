@@ -106,6 +106,7 @@ local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Con
                                limits: {
                                    cpu: if "limitCpu" in app.specs[one.format] then app.specs[one.format].limitCpu else "2",
                                    memory: if "limitMemory" in app.specs[one.format] then app.specs[one.format].limitMemory else "8Gi",
+                                   [if "limitNvidia" in app.specs[one.format] then "nvidia.com/gpu"]: app.specs[one.format].limitNvidia,
                                },
                             },
                             [if "command" in one then "command"]: one.command,

@@ -57,8 +57,8 @@ func ListRes(c *fiber.Ctx) error {
 
 func SimpleRes(c *fiber.Ctx) error {
 	list, _ := base.Resources()
-	result := make([]map[string]interface{}, 0, len(*list))
-	for _, one := range *list {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, one := range list {
 		result = append(result, map[string]interface{}{
 			"id":   one.Id,
 			"name": one.ResName,

@@ -81,12 +81,17 @@ type PasswordProp struct {
 }
 
 type PackageProp struct {
-	BuildJobImage      string `json:"build_job_image"`
-	ImagePullPolicy    string `json:"image_pull_policy"`
-	ImagePullSecret    string `json:"image_pull_secret"`
-	MavenSkipTests     bool   `json:"maven_skip_tests"`
-	BackoffLimit       int32  `json:"backoff_limit"`
-	CleanAfterFinished int32  `json:"clean_after_finished"`
+	BuildJobImage      string            `json:"build_job_image"`
+	ImagePullPolicy    string            `json:"image_pull_policy"`
+	ImagePullSecret    string            `json:"image_pull_secret"`
+	MavenSkipTests     bool              `json:"maven_skip_tests"`
+	BackoffLimit       int32             `json:"backoff_limit"`
+	CleanAfterFinished int32             `json:"clean_after_finished"`
+	NodeSelector       map[string]string `json:"node_selector"`
+	ResCPURequest      string            `json:"res_cpu_request"`
+	ResCPULimit        string            `json:"res_cpu_limit"`
+	ResMemoryRequest   string            `json:"res_memory_request"`
+	ResMemoryLimit     string            `json:"res_memory_limit"`
 }
 
 type VolumeMountInfo struct {
@@ -163,8 +168,8 @@ func DatabaseConf() *Database {
 
 func BuildProperty() {
 	propList := dangListFullBoot()
-	propMap := make(map[string]string, len(*propList))
-	for _, prop := range *propList {
+	propMap := make(map[string]string, len(propList))
+	for _, prop := range propList {
 		propMap[strings.TrimSpace(prop.Prop)] = strings.TrimSpace(prop.Value)
 	}
 	buildImage := propMap["package.build_job_image"]
@@ -231,8 +236,8 @@ func BuildProperty() {
 				ApiUrl: parseString(propMap["message.dingding.api_url"], ""),
 			},
 		},
-		Document: parseDocument(&propMap),
-		Website:  parseWebsite(&propMap),
+		Document: parseDocument(propMap),
+		Website:  parseWebsite(propMap),
 		Package: PackageProp{
 			BuildJobImage:      parseString(buildImage, "dneht/clap-build:"+nowVersion),
 			ImagePullPolicy:    parseString(propMap["package.image_pull_policy"], "Always"),
@@ -240,6 +245,11 @@ func BuildProperty() {
 			MavenSkipTests:     parseBool(propMap["package.maven_skip_tests"], true),
 			BackoffLimit:       int32(parseInt(propMap["package.backoff_limit"], 0)),
 			CleanAfterFinished: int32(parseInt(propMap["package.clean_after_finished"], 3*24*60*60)),
+			NodeSelector:       parseMap(propMap["package.node_selector"]),
+			ResCPURequest:      parseString(propMap["package.res_cpu_request"], "1"),
+			ResCPULimit:        parseString(propMap["package.res_cpu_limit"], "4"),
+			ResMemoryRequest:   parseString(propMap["package.res_memory_request"], "1Gi"),
+			ResMemoryLimit:     parseString(propMap["package.res_memory_limit"], "4Gi"),
 		},
 	}
 }

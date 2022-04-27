@@ -12,6 +12,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serror "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"strings"
@@ -20,7 +21,7 @@ import (
 
 const jobNamePre = "clap-build-"
 
-func checkBuildJob(deployId uint64) (*batchv1.JobStatus, *[]*refer.PodInfo, error) {
+func checkBuildJob(deployId uint64) (*batchv1.JobStatus, []*refer.PodInfo, error) {
 	deployBase, err := getDeployById(deployId)
 	if nil != err {
 		return nil, nil, err
@@ -39,7 +40,7 @@ func checkBuildJob(deployId uint64) (*batchv1.JobStatus, *[]*refer.PodInfo, erro
 	job, err := k8s.BatchV1().Jobs(conf.Namespace).Get(context.TODO(), jobNamePre+timeTag, metav1.GetOptions{})
 	if nil != err {
 		if k8serror.IsNotFound(err) {
-			return &batchv1.JobStatus{Succeeded: 1}, &[]*refer.PodInfo{}, nil
+			return &batchv1.JobStatus{Succeeded: 1}, []*refer.PodInfo{}, nil
 		} else {
 			return nil, nil, err
 		}
@@ -49,7 +50,7 @@ func checkBuildJob(deployId uint64) (*batchv1.JobStatus, *[]*refer.PodInfo, erro
 	if nil == err {
 		pods = refer.BuildListFromPod(podList)
 	}
-	return &job.Status, &pods, err
+	return &job.Status, pods, err
 }
 
 func createBuildJob(deployId uint64, branchName string) (string, *batchv1.JobStatus, error) {
@@ -140,11 +141,22 @@ func createBuildJob(deployId uint64, branchName string) (string, *batchv1.JobSta
 								{Name: "TIME_TAG", Value: timeTag},
 								{Name: "SKIP_TEST", Value: util.ConvertBoolToYesOrNo(deploymentProp.MavenSkipTests)},
 							},
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse(deploymentProp.ResCPURequest),
+									corev1.ResourceMemory: resource.MustParse(deploymentProp.ResMemoryRequest),
+								},
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse(deploymentProp.ResCPULimit),
+									corev1.ResourceMemory: resource.MustParse(deploymentProp.ResMemoryLimit),
+								},
+							},
 						},
 					},
 					HostAliases:      hostAliases,
 					RestartPolicy:    corev1.RestartPolicyNever,
 					ImagePullSecrets: imagePullSecret,
+					NodeSelector:     deploymentProp.NodeSelector,
 				},
 			},
 		},

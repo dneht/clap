@@ -56,7 +56,7 @@ func invalidAppInfoById(id uint64) {
 	delete(appInfoMap, id)
 }
 
-func findAllAppSimple(c *fiber.Ctx) (int, *[]model.Project, error) {
+func findAllAppSimple(c *fiber.Ctx) (int, []model.Project, error) {
 	var list []model.Project
 	sql := base.Engine.Cols(model.IdInProject, model.AppNameInProject, model.AppTypeInProject).
 		Where(model.IsDisableInProject + " = 0")
@@ -65,7 +65,7 @@ func findAllAppSimple(c *fiber.Ctx) (int, *[]model.Project, error) {
 		return 0, nil, err
 	}
 	err = sql.Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
 func countAppWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
@@ -78,7 +78,7 @@ func countAppWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	return input.ApplyWithoutDisable(sql).Count(&info)
 }
 
-func findAppWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Project, error) {
+func findAppWithPage(c *fiber.Ctx, input *util.MainInput) (int, []model.Project, error) {
 	var list []model.Project
 	sql := base.Engine.Omit(model.AppDescInProject, model.AppInfoInProject, model.SourceInfoInProject, model.InjectInfoInProject,
 		model.CreatedAt, model.UpdatedAt)
@@ -87,7 +87,7 @@ func findAppWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Project
 		return 0, nil, err
 	}
 	err = input.ApplyWithoutDisable(sql).Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
 func updateAppById(c *fiber.Ctx, session *xorm.Session, info *model.Project) (int64, error) {

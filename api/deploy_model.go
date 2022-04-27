@@ -66,7 +66,7 @@ func countDeployWithPage(c *fiber.Ctx, input *util.MainInput, planId uint64) (in
 	return input.ApplyWithoutDisable(sql).Count(&info)
 }
 
-func findDeployWithPage(c *fiber.Ctx, input *util.MainInput, planId uint64) (int, *[]model.Deployment, error) {
+func findDeployWithPage(c *fiber.Ctx, input *util.MainInput, planId uint64) (int, []model.Deployment, error) {
 	var list []model.Deployment
 	sql := base.Engine.Omit(model.AppInfoInDeployment, model.CreatedAt, model.UpdatedAt).Where(model.PlanIdInDeployment+" = ?", planId)
 	err := SelectAuth(c, model.DeploymentTable, sql)
@@ -74,7 +74,7 @@ func findDeployWithPage(c *fiber.Ctx, input *util.MainInput, planId uint64) (int
 		return 0, nil, err
 	}
 	err = input.ApplyWithoutDisable(sql).Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
 func updateDeployById(session *xorm.Session, info *model.Deployment) (int64, error) {

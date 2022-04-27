@@ -32,6 +32,6 @@ type ExistDomainSecret struct {
 }
 
 type UpdateDomainResult struct {
-	Secrets *[]UpdateDomainSecret      `json:"secrets"`
-	Results *map[string]AcmeTaskResult `json:"results"`
+	Secrets []UpdateDomainSecret      `json:"secrets"`
+	Results map[string]AcmeTaskResult `json:"results"`
 }

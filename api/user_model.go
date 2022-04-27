@@ -94,7 +94,7 @@ func countUserWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	return sql.Count(&info)
 }
 
-func findUserWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.UserInfo, error) {
+func findUserWithPage(c *fiber.Ctx, input *util.MainInput) (int, []model.UserInfo, error) {
 	var list []model.UserInfo
 	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
 	err := SelectAuth(c, model.UserInfoTable, sql)
@@ -105,7 +105,7 @@ func findUserWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.UserIn
 		input.ApplyWithoutDisable(sql)
 	}
 	err = sql.Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
 func insertUser(c *fiber.Ctx, session *xorm.Session, info *model.UserInfo) (int64, error) {

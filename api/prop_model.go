@@ -28,16 +28,16 @@ func getPropsById(id uint64) (*model.PropertyFile, bool, error) {
 	return &info, result, err
 }
 
-func getPropsByLink(id, res uint64) (*[]model.PropertyFile, error) {
+func getPropsByLink(id, res uint64) ([]model.PropertyFile, error) {
 	var list []model.PropertyFile
 	err := base.Engine.Omit(model.CreatedAt, model.UpdatedAt).
 		Where(model.ResIdInPropertyFile+" = ?", res).
 		Where(model.LinkIdInPropertyFile+" = ?", id).
 		Where(model.IsDisableInPropertyFile + " = 0").Find(&list)
-	return &list, err
+	return list, err
 }
 
-func getPropsByLinkWithName(id uint64, name string) *[]model.PropertyFile {
+func getPropsByLinkWithName(id uint64, name string) []model.PropertyFile {
 	res, ok := base.ResourceId(CommonPre + name)
 	if ok {
 		list, err := getPropsByLink(id, res)

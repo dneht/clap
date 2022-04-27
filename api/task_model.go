@@ -66,20 +66,20 @@ func insertTimetableResult(session *xorm.Session, info *model.TimetableResult) (
 	return session.InsertOne(info)
 }
 
-func findReadyTimetableForTask() (*[]model.Timetable, error) {
+func findReadyTimetableForTask() ([]model.Timetable, error) {
 	var list []model.Timetable
 	err := base.Engine.Cols(model.IdInTimetable, model.TaskCronInTimetable,
 		model.TaskTypeInTimetable, model.TaskInfoInTimetable).
 		Where(model.TaskStatusInTimetable + " = 0").Where(model.IsDisableInTimetable + " = 0").
 		Find(&list)
-	return &list, err
+	return list, err
 }
 
-func findAllSpaceForTask() (*[]model.EnvironmentSpace, error) {
+func findAllSpaceForTask() ([]model.EnvironmentSpace, error) {
 	var list []model.EnvironmentSpace
 	err := base.Engine.Cols(model.IdInEnvironmentSpace, model.EnvIdInEnvironmentSpace,
 		model.SpaceKeepInEnvironmentSpace, model.SpaceInfoInEnvironmentSpace).
 		Where(model.IsDisableInEnvironmentSpace + " = 0").
 		Find(&list)
-	return &list, err
+	return list, err
 }

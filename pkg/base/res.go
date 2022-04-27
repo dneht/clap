@@ -24,7 +24,7 @@ import (
 
 func ResInit() {
 	list := dangListFullRes()
-	for _, one := range *list {
+	for _, one := range list {
 		val := one
 		resIdMap[one.Id] = &val
 		resNameMap[one.ResName] = one.Id
@@ -35,17 +35,17 @@ func ResInit() {
 			if nil != err {
 				log.Warnf("get res error: %v", err)
 			} else {
-				resInfoMap[one.Id] = &info
+				resInfoMap[one.Id] = info
 			}
 		}
 	}
 }
 
-func Resources() (*map[uint64]*model.Resource, *map[uint64]*map[string]interface{}) {
-	return &resIdMap, &resInfoMap
+func Resources() (map[uint64]*model.Resource, map[uint64]map[string]interface{}) {
+	return resIdMap, resInfoMap
 }
 
-func Resource(id uint64) (*model.Resource, *map[string]interface{}) {
+func Resource(id uint64) (*model.Resource, map[string]interface{}) {
 	return resIdMap[id], resInfoMap[id]
 }
 
@@ -54,7 +54,7 @@ func ResourceId(name string) (uint64, bool) {
 	return id, ok
 }
 
-func ResourceName(name string) (*model.Resource, *map[string]interface{}) {
+func ResourceName(name string) (*model.Resource, map[string]interface{}) {
 	id, ok := resNameMap[name]
 	if !ok {
 		return nil, nil
@@ -62,12 +62,12 @@ func ResourceName(name string) (*model.Resource, *map[string]interface{}) {
 	return resIdMap[id], resInfoMap[id]
 }
 
-func dangListFullRes() *[]model.Resource {
+func dangListFullRes() []model.Resource {
 	var list []model.Resource
 	err := Engine.Omit(model.CreatedAt, model.UpdatedAt).
 		OrderBy(model.ResOrderInResource).Find(&list)
 	if nil != err {
 		panic(err)
 	}
-	return &list
+	return list
 }

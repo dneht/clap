@@ -33,7 +33,7 @@ var lock sync.Mutex
 
 func EnvInit() {
 	list := dangListFullEnv()
-	for _, one := range *list {
+	for _, one := range list {
 		val := one
 		envIdMap[one.Id] = &val
 		envNameMap[one.Env] = one.Id
@@ -107,12 +107,12 @@ func K8D(envId uint64) (dynamic.Interface, *rest.Config, error) {
 	return crdCli, k8sConf, nil
 }
 
-func dangListFullEnv() *[]model.Environment {
+func dangListFullEnv() []model.Environment {
 	var list []model.Environment
 	err := Engine.Omit(model.CreatedAt, model.UpdatedAt).
 		Where(model.IsDisableInEnvironment + "=0").Find(&list)
 	if nil != err {
 		panic(err)
 	}
-	return &list
+	return list
 }

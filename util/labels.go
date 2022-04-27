@@ -6,14 +6,14 @@ import (
 	"strconv"
 )
 
-func SelectAppLabelList(envBase *model.Environment, appBase *model.Project) *[]string {
-	return &[]string{refer.LabelAppEnv + "=" + envBase.Env,
+func SelectAppLabelList(envBase *model.Environment, appBase *model.Project) []string {
+	return []string{refer.LabelAppEnv + "=" + envBase.Env,
 		refer.LabelAppName + "=" + appBase.AppName,
 		refer.LabelAppType + "=" + refer.ConvertAppType(appBase.AppType)}
 }
 
-func SelectDeployLabelList(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project) *[]string {
-	return &[]string{refer.LabelAppEnv + "=" + envBase.Env,
+func SelectDeployLabelList(envBase *model.Environment, spaceBase *model.EnvironmentSpace, appBase *model.Project) []string {
+	return []string{refer.LabelAppEnv + "=" + envBase.Env,
 		refer.LabelAppSpace + "=" + spaceBase.SpaceName,
 		refer.LabelAppName + "=" + appBase.AppName,
 		refer.LabelAppType + "=" + refer.ConvertAppType(appBase.AppType)}
@@ -28,8 +28,8 @@ func SelectJobLabelMap(appType, jobName string) map[string]string {
 	}
 }
 
-func SelectJobLabelList(jobName string) *[]string {
-	return &[]string{refer.LabelAppType + "=build",
+func SelectJobLabelList(jobName string) []string {
+	return []string{refer.LabelAppType + "=build",
 		refer.LabelAppName + "=" + jobName,
 		refer.LabelAppComponent + "=deployment",
 		refer.LabelAppManaged + "=Clap"}

@@ -14,7 +14,7 @@ func getEnvById(id uint64) (*model.Environment, error) {
 	return base.Env(id)
 }
 
-func findAllEnvSimple(c *fiber.Ctx) (int, *[]model.Environment, error) {
+func findAllEnvSimple(c *fiber.Ctx) (int, []model.Environment, error) {
 	var list []model.Environment
 	sql := base.Engine.Cols(model.IdInEnvironment, model.EnvInEnvironment, model.EnvNameInEnvironment).
 		Where(model.IsDisableInEnvironment + " = 0")
@@ -23,7 +23,7 @@ func findAllEnvSimple(c *fiber.Ctx) (int, *[]model.Environment, error) {
 		return 0, nil, err
 	}
 	err = sql.OrderBy(model.IdInEnvironmentSpace).Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
 func countEnvWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
@@ -36,7 +36,7 @@ func countEnvWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	return input.ApplyWithoutDisable(sql).Count(&info)
 }
 
-func findEnvWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Environment, error) {
+func findEnvWithPage(c *fiber.Ctx, input *util.MainInput) (int, []model.Environment, error) {
 	var list []model.Environment
 	sql := base.Engine.Omit(model.SyncInfoInEnvironment, model.DeployInfoInEnvironment, model.FormatInfoInEnvironment,
 		model.CreatedAt, model.UpdatedAt)
@@ -45,7 +45,7 @@ func findEnvWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Environ
 		return 0, nil, err
 	}
 	err = input.ApplyWithoutDisable(sql).Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
 func getSpaceById(id uint64) (*model.EnvironmentSpace, error) {
@@ -89,7 +89,7 @@ func invalidSpaceById(id uint64) {
 	delete(spaceInfoMap, id)
 }
 
-func findAllSpaceSimple(c *fiber.Ctx, envId uint64) (int, *[]model.EnvironmentSpace, error) {
+func findAllSpaceSimple(c *fiber.Ctx, envId uint64) (int, []model.EnvironmentSpace, error) {
 	var list []model.EnvironmentSpace
 	sql := base.Engine.Cols(model.IdInEnvironmentSpace, model.EnvIdInEnvironmentSpace, model.SpaceNameInEnvironmentSpace).
 		Where(model.EnvIdInEnvironmentSpace+" = ?", envId).And(model.IsViewInEnvironmentSpace + " = 0").And(model.IsDisableInEnvironmentSpace + " = 0")
@@ -98,7 +98,7 @@ func findAllSpaceSimple(c *fiber.Ctx, envId uint64) (int, *[]model.EnvironmentSp
 		return 0, nil, err
 	}
 	err = sql.OrderBy(model.IdInEnvironmentSpace).Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
 func countSpaceWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
@@ -111,7 +111,7 @@ func countSpaceWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	return input.ApplyWithoutDisable(sql).Count(&info)
 }
 
-func findSpaceWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.EnvironmentSpace, error) {
+func findSpaceWithPage(c *fiber.Ctx, input *util.MainInput) (int, []model.EnvironmentSpace, error) {
 	var list []model.EnvironmentSpace
 	sql := base.Engine.Omit(model.SpaceInfoInEnvironmentSpace, model.CreatedAt, model.UpdatedAt)
 	err := SelectAuth(c, model.EnvironmentSpaceTable, sql)
@@ -119,5 +119,5 @@ func findSpaceWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Envir
 		return 0, nil, err
 	}
 	err = input.ApplyWithoutDisable(sql).Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }

@@ -33,7 +33,7 @@ import (
 func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
 	secrets, exists, domains := allNeedAcmeDomains()
 	log.Infof("this time secrets is: %v, domains is: %v", secrets, domains)
-	if nil == secrets || nil == domains || len(*secrets) == 0 || len(*domains) == 0 {
+	if nil == secrets || nil == domains || len(secrets) == 0 || len(domains) == 0 {
 		log.Infof("no domains found to execute: %v, %v", secrets, domains)
 		return nil, nil
 	}
@@ -53,13 +53,13 @@ func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
 			if nil != err {
 				log.Warnf("decode task latest result failed: %v, continue execute", err)
 			}
-			if nil != domainResult.Secrets && nil != domainResult.Results && len(*domainResult.Secrets) > 0 && len(*domainResult.Results) > 0 {
-				secretMap := make(map[string]bool, len(*domainResult.Secrets))
-				domainMap := make(map[string]bool, len(*domainResult.Results))
-				for _, secret := range *domainResult.Secrets {
+			if nil != domainResult.Secrets && nil != domainResult.Results && len(domainResult.Secrets) > 0 && len(domainResult.Results) > 0 {
+				secretMap := make(map[string]bool, len(domainResult.Secrets))
+				domainMap := make(map[string]bool, len(domainResult.Results))
+				for _, secret := range domainResult.Secrets {
 					secretMap[strconv.FormatUint(secret.EnvId, 10)+secret.Namespace+secret.SecretName] = true
 				}
-				for _, secret := range *secrets {
+				for _, secret := range secrets {
 					_, ok := secretMap[strconv.FormatUint(secret.EnvId, 10)+secret.Namespace+secret.SecretName]
 					if !ok {
 						log.Infof("secret is change: %v -> %v", domainResult.Secrets, secrets)
@@ -68,10 +68,10 @@ func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
 					}
 				}
 				if !needExec {
-					for main := range *domainResult.Results {
+					for main := range domainResult.Results {
 						domainMap[main] = true
 					}
-					for main := range *domains {
+					for main := range domains {
 						_, ok := domainMap[main]
 						if !ok {
 							log.Infof("domain is change: %v -> %v", domainResult.Results, domains)
@@ -99,9 +99,9 @@ func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
 			log.Warnf("generate acme cert failed: %v, skip execute", err)
 			return nil, err
 		}
-		for _, secret := range *secrets {
+		for _, secret := range secrets {
 			if "" != secret.SecretName && "" != secret.Domain && "" != secret.MainDomain {
-				result, ok := (*results)[secret.MainDomain]
+				result, ok := results[secret.MainDomain]
 				if !ok {
 					log.Warnf("can not get cert result: %v, %v", secret, results)
 					continue
@@ -126,8 +126,8 @@ func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
 				}
 			}
 		}
-		if nil != exists && len(*exists) > 0 {
-			for _, secret := range *exists {
+		if nil != exists && len(exists) > 0 {
+			for _, secret := range exists {
 				if "" != secret.SecretName && len(secret.SecretData) > 0 {
 					cli, _, err := base.K8S(secret.EnvId)
 					if nil != err {
@@ -159,7 +159,7 @@ func execTaskAcmeDomains(task *model.Timetable) (interface{}, error) {
 	}
 }
 
-func allNeedAcmeDomains() (*[]refer.UpdateDomainSecret, *[]refer.ExistDomainSecret, *map[string][]string) {
+func allNeedAcmeDomains() ([]refer.UpdateDomainSecret, []refer.ExistDomainSecret, map[string][]string) {
 	spaces, err := findAllSpaceForTask()
 	if nil != err {
 		log.Warnf("get space for task failed: %v", err)
@@ -172,7 +172,7 @@ func allNeedAcmeDomains() (*[]refer.UpdateDomainSecret, *[]refer.ExistDomainSecr
 	updateDup := make(map[string]bool)
 	domainDup := make(map[string]bool)
 	wildcardDup := make(map[string]bool)
-	for _, space := range *spaces {
+	for _, space := range spaces {
 		var info refer.SpaceRealInfo
 		err = json.Unmarshal([]byte(space.SpaceInfo), &info)
 		if nil != err {
@@ -256,5 +256,5 @@ func allNeedAcmeDomains() (*[]refer.UpdateDomainSecret, *[]refer.ExistDomainSecr
 			domains[main] = nList
 		}
 	}
-	return &updates, &exists, &domains
+	return updates, exists, domains
 }

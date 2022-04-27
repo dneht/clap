@@ -35,7 +35,7 @@ func InitTask() {
 		return
 	}
 
-	for _, task := range *tasks {
+	for _, task := range tasks {
 		if "" == task.TaskCron {
 			continue
 		}

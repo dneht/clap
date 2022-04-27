@@ -64,9 +64,9 @@ func getPropHashByContent(content string) string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func mergePropByName(list *[]model.PropertyFile) map[string]string {
+func mergePropByName(list []model.PropertyFile) map[string]string {
 	files := make(map[string][]string, 8)
-	for _, one := range *list {
+	for _, one := range list {
 		if "" == one.FileContent {
 			continue
 		}
@@ -79,7 +79,7 @@ func mergePropByName(list *[]model.PropertyFile) map[string]string {
 		}
 	}
 
-	table := make(map[string]string, len(*list))
+	table := make(map[string]string, len(list))
 	for key, value := range files {
 		table[key] = strings.Join(util.RemoveRepeatedElement(value, "="), "\n")
 	}

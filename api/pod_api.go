@@ -32,7 +32,7 @@ func ListSpacePod(c *fiber.Ctx) error {
 	if nil != err {
 		return util.ErrorInternal(c, err)
 	}
-	return listPodByType(c, spaceBase.EnvId, &[]string{refer.LabelAppEnv + "=" + envBase.Env, refer.LabelAppSpace + "=" + spaceBase.SpaceName})
+	return listPodByType(c, spaceBase.EnvId, []string{refer.LabelAppEnv + "=" + envBase.Env, refer.LabelAppSpace + "=" + spaceBase.SpaceName})
 }
 
 func ListDeployPod(c *fiber.Ctx) error {
@@ -290,7 +290,7 @@ func execOtherSelect(ws *websocket.Conn, resourceType string) (*xterm.ExecInput,
 	return input, nil
 }
 
-func listPodByType(c *fiber.Ctx, envId uint64, labels *[]string) error {
+func listPodByType(c *fiber.Ctx, envId uint64, labels []string) error {
 	namespace := c.Query("namespace")
 	//sinceTime := c.QueryParam("since")
 	list, err := listPodByLabel(envId, namespace, labels)

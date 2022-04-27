@@ -39,11 +39,11 @@ func countResourceWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	return input.Apply(sql).Count(&info)
 }
 
-func findResourceWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Resource, error) {
+func findResourceWithPage(c *fiber.Ctx, input *util.MainInput) (int, []model.Resource, error) {
 	var list []model.Resource
 	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
 	err := input.Apply(sql).Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
 func getPermissionById(id uint64) (*model.Permission, error) {
@@ -69,23 +69,23 @@ func countPermissionWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error)
 	return input.Apply(sql).Count(&info)
 }
 
-func findPermissionWithPage(c *fiber.Ctx, input *util.MainInput) (int, *[]model.Permission, error) {
+func findPermissionWithPage(c *fiber.Ctx, input *util.MainInput) (int, []model.Permission, error) {
 	var list []model.Permission
 	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
 	err := input.Apply(sql).Find(&list)
-	return len(list), &list, err
+	return len(list), list, err
 }
 
-func findPermissionByRole(c *fiber.Ctx, role []uint64) (*[]model.Permission, error) {
+func findPermissionByRole(c *fiber.Ctx, role []uint64) ([]model.Permission, error) {
 	var list []model.Permission
 	err := base.Engine.Omit(model.CreatedAt, model.UpdatedAt).
 		In(model.RoleIdInPermission, role).Find(&list)
-	return &list, err
+	return list, err
 }
 
-func batchInsertPermission(c *fiber.Ctx, session *xorm.Session, list *[]model.Permission) (int64, error) {
-	batch := make([]interface{}, 0, len(*list))
-	for _, one := range *list {
+func batchInsertPermission(c *fiber.Ctx, session *xorm.Session, list []model.Permission) (int64, error) {
+	batch := make([]interface{}, 0, len(list))
+	for _, one := range list {
 		batch = append(batch, one)
 	}
 	return session.Insert(batch...)

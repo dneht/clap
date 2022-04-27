@@ -21,14 +21,14 @@ func listAllPod(envId uint64, namespace string) (*v1.PodList, error) {
 	return k8s.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 }
 
-func listPodByLabel(envId uint64, namespace string, labels *[]string) (*v1.PodList, error) {
+func listPodByLabel(envId uint64, namespace string, labels []string) (*v1.PodList, error) {
 	k8s, _, err := base.K8S(envId)
 	if nil != err {
 		return nil, err
 	}
 	return k8s.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: refer.LabelAppManaged + "=Clap, " +
-			strings.Join(*labels, ", "),
+			strings.Join(labels, ", "),
 	})
 }
 

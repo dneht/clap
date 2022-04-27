@@ -111,7 +111,7 @@ func getAllAuthInfo(c *fiber.Ctx, token string) error {
 	if nil != err {
 		return err
 	}
-	for _, roleInfo := range *roleInfos {
+	for _, roleInfo := range roleInfos {
 		if roleInfo.IsSuper == 1 {
 			authInfo.IsSuper = true
 			authInfo.IsManage = true
@@ -120,7 +120,8 @@ func getAllAuthInfo(c *fiber.Ctx, token string) error {
 			authInfo.IsManage = true
 		}
 		if authInfo.IsSuper || authInfo.IsManage {
-			authInfo.ResInfo = getAdminResInfo()
+			resInfo := getAdminResInfo()
+			authInfo.ResInfo = &resInfo
 			authInfoMap[token] = &authInfo
 			return nil
 		}
@@ -134,8 +135,8 @@ func getAllAuthInfo(c *fiber.Ctx, token string) error {
 	if nil == powerInfos {
 		return fiber.ErrForbidden
 	}
-	resIds := make([]uint64, 0, len(*powerInfos))
-	for _, powerInfo := range *powerInfos {
+	resIds := make([]uint64, 0, len(powerInfos))
+	for _, powerInfo := range powerInfos {
 		resInfo, err := getResourceById(powerInfo.ResId)
 		if nil != err {
 			return err
@@ -162,7 +163,8 @@ func getAllAuthInfo(c *fiber.Ctx, token string) error {
 		}
 		authPower[resInfo.ResName] = powerOne
 	}
-	authInfo.ResInfo = getUserResInfo(resIds)
+	resInfo := getUserResInfo(resIds)
+	authInfo.ResInfo = &resInfo
 	authInfo.ResPower = &authPower
 	authInfoMap[token] = &authInfo
 	return nil
@@ -182,14 +184,14 @@ func getUserRoleIds(user *model.UserInfo) ([]uint64, error) {
 	return arr, nil
 }
 
-func getAdminResInfo() *map[string]interface{} {
+func getAdminResInfo() map[string]interface{} {
 	allInfo, allRes := base.Resources()
 	resOrder := make(map[string]int)
 	resInfo := make(map[string]interface{})
-	for id, oneRes := range *allRes {
-		oneInfo, ok := (*allInfo)[id]
+	for id, oneRes := range allRes {
+		oneInfo, ok := allInfo[id]
 		if ok {
-			for key, value := range *oneRes {
+			for key, value := range oneRes {
 				order, sok := resOrder[key]
 				if !sok || oneInfo.ResOrder > order {
 					resOrder[key] = oneInfo.ResOrder
@@ -198,13 +200,13 @@ func getAdminResInfo() *map[string]interface{} {
 			}
 		}
 	}
-	return &resInfo
+	return resInfo
 }
 
-func getUserResInfo(ids []uint64) *map[string]interface{} {
+func getUserResInfo(ids []uint64) map[string]interface{} {
 	resInfo := make(map[string]interface{})
 	if len(ids) == 0 {
-		return &resInfo
+		return resInfo
 	}
 
 	for _, id := range ids {
@@ -212,11 +214,11 @@ func getUserResInfo(ids []uint64) *map[string]interface{} {
 		if nil == oneRes {
 			continue
 		}
-		for key, value := range *oneRes {
+		for key, value := range oneRes {
 			resInfo[key] = value
 		}
 	}
-	return &resInfo
+	return resInfo
 }
 
 func getAuthFromHeader(c *fiber.Ctx) (*refer.AuthInfo, error) {
@@ -274,24 +276,24 @@ func RequestAuth(c *fiber.Ctx) error {
 	case fiber.MethodConnect:
 		return nil
 	case fiber.MethodGet:
-		return requestAuth(c, auth.ResPower, path, CommonPre, AllowThisSelect)
+		return requestAuth(c, *auth.ResPower, path, CommonPre, AllowThisSelect)
 	case fiber.MethodPut:
-		return requestAuth(c, auth.ResPower, path, CreatePre, AllowThisCreate)
+		return requestAuth(c, *auth.ResPower, path, CreatePre, AllowThisCreate)
 	case fiber.MethodPost:
-		return requestAuth(c, auth.ResPower, path, CommonPre, AllowThisUpdate)
+		return requestAuth(c, *auth.ResPower, path, CommonPre, AllowThisUpdate)
 	case fiber.MethodDelete:
-		return requestAuth(c, auth.ResPower, path, CommonPre, AllowThisDelete)
+		return requestAuth(c, *auth.ResPower, path, CommonPre, AllowThisDelete)
 	}
 	return fiber.ErrForbidden
 }
 
-func requestAuth(c *fiber.Ctx, pow *map[string][]refer.AuthPower, path, pre string, allow uint) error {
+func requestAuth(c *fiber.Ctx, pow map[string][]refer.AuthPower, path, pre string, allow uint) error {
 	table, err := getTableByPath(path)
 	if nil != err {
 		return err
 	}
 
-	list, ok := (*pow)[pre+table]
+	list, ok := pow[pre+table]
 	if ok {
 		if pre == CommonPre {
 			id, err := util.CheckIdInput(c, "id")

@@ -34,8 +34,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func ApplyCert(task *model.Timetable, domains *map[string][]string) (*map[string]refer.AcmeTaskResult, error) {
-	if nil == task || "" == task.TaskInfo || nil == domains || len(*domains) == 0 {
+func ApplyCert(task *model.Timetable, domains map[string][]string) (map[string]refer.AcmeTaskResult, error) {
+	if nil == task || "" == task.TaskInfo || nil == domains || len(domains) == 0 {
 		return nil, nil
 	}
 	var info refer.AcmeTaskInfo
@@ -78,8 +78,8 @@ func ApplyCert(task *model.Timetable, domains *map[string][]string) (*map[string
 	}
 	user.Registration = register
 
-	result := make(map[string]refer.AcmeTaskResult, len(*domains))
-	for key, group := range *domains {
+	result := make(map[string]refer.AcmeTaskResult, len(domains))
+	for key, group := range domains {
 		request := certificate.ObtainRequest{
 			Domains: group,
 			Bundle:  true,
@@ -99,7 +99,7 @@ func ApplyCert(task *model.Timetable, domains *map[string][]string) (*map[string
 			PrivateKey: string(cert.PrivateKey),
 		}
 	}
-	return &result, nil
+	return result, nil
 }
 
 func getDNSProvider(task *model.Timetable, info *refer.AcmeTaskInfo) (challenge.Provider, error) {

@@ -65,13 +65,13 @@ func DbInit() {
 	BuildProperty()
 }
 
-func dangListFullBoot() *[]model.Bootstrap {
+func dangListFullBoot() []model.Bootstrap {
 	var list []model.Bootstrap
 	err := Engine.Omit(model.CreatedAt, model.UpdatedAt).
 		Where(model.EnvInBootstrap+"=?", *envFlag).
-		Where(model.IsDisableInBootstrap+"=0").Find(&list)
+		Where(model.IsDisableInBootstrap + "=0").Find(&list)
 	if nil != err {
 		panic(err)
 	}
-	return &list
+	return list
 }

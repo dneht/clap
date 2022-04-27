@@ -45,7 +45,7 @@ var envIdMap = make(map[uint64]*model.Environment)
 var envNameMap = make(map[string]uint64)
 var resIdMap = make(map[uint64]*model.Resource)
 var resNameMap = make(map[string]uint64)
-var resInfoMap = make(map[uint64]*map[string]interface{})
+var resInfoMap = make(map[uint64]map[string]interface{})
 
 func Init() {
 	log.Init(zapcore.DebugLevel)
@@ -84,6 +84,6 @@ func Reset() {
 
 	resIdMap = make(map[uint64]*model.Resource)
 	resNameMap = make(map[string]uint64)
-	resInfoMap = make(map[uint64]*map[string]interface{})
+	resInfoMap = make(map[uint64]map[string]interface{})
 	ResInit()
 }

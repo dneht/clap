@@ -71,12 +71,12 @@ func ExecRender(c *fiber.Ctx) error {
 		return c.SendString(jsonStr)
 	} else if "property" == selectType {
 		propMap := generateNeedProps(appBase.Id, envBase.Id, spaceBase.Id, deployId)
-		if nil == propMap || len(*propMap) == 0 {
+		if nil == propMap || len(propMap) == 0 {
 			return c.SendString("")
 		}
 		var sb strings.Builder
-		sb.Grow(len(*propMap) * 32)
-		for key, value := range *propMap {
+		sb.Grow(len(propMap) * 32)
+		for key, value := range propMap {
 			sb.WriteString(key)
 			sb.WriteString("=")
 			sb.WriteString(value)

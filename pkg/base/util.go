@@ -65,6 +65,28 @@ func parseList(value string) []string {
 	return list
 }
 
+func parseMap(value string) map[string]string {
+	set := make(map[string]string)
+	value = strings.TrimSpace(value)
+	if "" == value {
+		return set
+	}
+	split := strings.Split(value, ",")
+	for _, one := range split {
+		add := strings.TrimSpace(one)
+		if "" != add {
+			kv := strings.Split(add, ":")
+			if len(kv) == 2 {
+				key := strings.TrimSpace(kv[0])
+				if "" != key {
+					set[key] = strings.TrimSpace(kv[1])
+				}
+			}
+		}
+	}
+	return set
+}
+
 func parseListElse(value string, def []string) []string {
 	list := parseList(value)
 	if nil == def {
@@ -76,13 +98,13 @@ func parseListElse(value string, def []string) []string {
 	return list
 }
 
-func parseDocument(kv *map[string]string) map[string]DocumentProp {
+func parseDocument(kv map[string]string) map[string]DocumentProp {
 	return parseDocumentPre("document", kv)
 }
 
-func parseDocumentPre(pre string, kv *map[string]string) map[string]DocumentProp {
+func parseDocumentPre(pre string, kv map[string]string) map[string]DocumentProp {
 	props := make(map[string]DocumentProp, 8)
-	for key, value := range *kv {
+	for key, value := range kv {
 		key = strings.TrimSpace(key)
 		if strings.HasPrefix(key, pre) {
 			split := strings.Split(key, ".")
@@ -131,13 +153,13 @@ func parseDocumentPre(pre string, kv *map[string]string) map[string]DocumentProp
 	return props
 }
 
-func parseWebsite(kv *map[string]string) map[string]WebsiteProp {
+func parseWebsite(kv map[string]string) map[string]WebsiteProp {
 	return parseWebsitePre("website", kv)
 }
 
-func parseWebsitePre(pre string, kv *map[string]string) map[string]WebsiteProp {
+func parseWebsitePre(pre string, kv map[string]string) map[string]WebsiteProp {
 	props := make(map[string]WebsiteProp, 2)
-	for key, value := range *kv {
+	for key, value := range kv {
 		key = strings.TrimSpace(key)
 		if strings.HasPrefix(key, pre) {
 			split := strings.Split(key, ".")

@@ -52,8 +52,8 @@ func GetProp(c *fiber.Ctx) error {
 	if nil != err {
 		return util.ErrorInternal(c, err)
 	}
-	files := make([]refer.PropBaseOutput, 0, len(*list))
-	for _, one := range *list {
+	files := make([]refer.PropBaseOutput, 0, len(list))
+	for _, one := range list {
 		files = append(files, refer.PropBaseOutput{
 			Id:      one.Id,
 			Name:    one.FileName,
@@ -159,13 +159,13 @@ func UpdateProp(c *fiber.Ctx) error {
 
 	if needKube {
 		propMap := generateNeedProps(appBase.Id, envBase.Id, spaceBase.Id, deployBase.Id)
-		if nil != propMap && len(*propMap) > 0 {
+		if nil != propMap && len(propMap) > 0 {
 			configName := refer.GetConfigName(appBase, spaceBase, refer.PropGenerateName)
 			err = onlyUpdateConfig(k8s, spaceBase.SpaceKeep, configName, &v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: configName,
 				},
-				Data: *propMap,
+				Data: propMap,
 			})
 			if nil != err {
 				return util.ErrorInternal(c, err)
@@ -230,13 +230,13 @@ func checkNeedUpdateKube(info *model.PropertyFile) (bool, string, *model.Environ
 	return false, "", nil, nil, nil, nil, nil
 }
 
-func generateNeedProps(appId, envId, spaceId, deployId uint64) *map[string]string {
+func generateNeedProps(appId, envId, spaceId, deployId uint64) map[string]string {
 	allList := make([]model.PropertyFile, 0, 8)
 	existNames := make(map[string]bool)
 	deployList := getPropsByLinkWithName(deployId, model.DeploymentTable)
-	if nil != deployList && len(*deployList) > 0 {
-		allList = append(allList, *deployList...)
-		for _, deployOne := range *deployList {
+	if nil != deployList && len(deployList) > 0 {
+		allList = append(allList, deployList...)
+		for _, deployOne := range deployList {
 			name := strings.TrimSpace(deployOne.FileName)
 			if "" != name {
 				existNames[name] = true
@@ -245,39 +245,39 @@ func generateNeedProps(appId, envId, spaceId, deployId uint64) *map[string]strin
 	}
 
 	spaceList := getPropsByLinkWithName(spaceId, model.EnvironmentSpaceTable)
-	if nil != spaceList && len(*spaceList) > 0 {
-		allList = append(allList, *appendNeedProps(&existNames, spaceList)...)
+	if nil != spaceList && len(spaceList) > 0 {
+		allList = append(allList, appendNeedProps(existNames, spaceList)...)
 	}
 	envList := getPropsByLinkWithName(envId, model.EnvironmentTable)
-	if nil != envList && len(*envList) > 0 {
-		allList = append(allList, *appendNeedProps(&existNames, envList)...)
+	if nil != envList && len(envList) > 0 {
+		allList = append(allList, appendNeedProps(existNames, envList)...)
 	}
 	appList := getPropsByLinkWithName(appId, model.ProjectTable)
-	if nil != appList && len(*appList) > 0 {
-		allList = append(allList, *appendNeedProps(&existNames, appList)...)
+	if nil != appList && len(appList) > 0 {
+		allList = append(allList, appendNeedProps(existNames, appList)...)
 	}
 	if len(allList) == 0 {
 		return nil
 	}
 
-	allData := mergePropByName(&allList)
+	allData := mergePropByName(allList)
 	if nil == allData || len(allData) == 0 {
 		allData = make(map[string]string, 0)
-		return &allData
+		return allData
 	}
-	return &allData
+	return allData
 }
 
-func appendNeedProps(names *map[string]bool, props *[]model.PropertyFile) *[]model.PropertyFile {
-	list := make([]model.PropertyFile, 0, len(*props))
-	for _, prop := range *props {
+func appendNeedProps(names map[string]bool, props []model.PropertyFile) []model.PropertyFile {
+	list := make([]model.PropertyFile, 0, len(props))
+	for _, prop := range props {
 		name := strings.TrimSpace(prop.FileName)
-		_, ok := (*names)[name]
+		_, ok := names[name]
 		if ok {
 			list = append(list, prop)
 		}
 	}
-	return &list
+	return list
 }
 
 func generateRenderProps(appId, envId, spaceId, deployId uint64, appInfo *refer.AppInfo) error {
@@ -302,7 +302,7 @@ func generateRenderProps(appId, envId, spaceId, deployId uint64, appInfo *refer.
 	}
 
 	allData := generateNeedProps(appId, envId, spaceId, deployId)
-	if nil == allData || len(*allData) == 0 {
+	if nil == allData || len(allData) == 0 {
 		return nil
 	}
 
@@ -314,7 +314,7 @@ func generateRenderProps(appId, envId, spaceId, deployId uint64, appInfo *refer.
 		refer.VolumeMountInfo{
 			Name:      volumeName,
 			Type:      "Config",
-			Data:      *allData,
+			Data:      allData,
 			MountPath: mountPath,
 			ReadOnly:  true,
 		},
