@@ -51,6 +51,7 @@
     "comma-dangle": "off",
     "comma-spacing": "off",
     "object-shorthand": "off",
+    "object-property-newline": "off",
     "object-curly-newline": "off",
     "object-curly-spacing": "off",
     "prefer-promise-reject-errors": "off",

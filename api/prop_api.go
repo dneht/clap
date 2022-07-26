@@ -79,7 +79,7 @@ func CreateProp(c *fiber.Ctx) error {
 		if nil != err {
 			return 0, util.ErrorInternal(c, err)
 		}
-		_, err = insertPropSnap(session, &model.PropertySnap{
+		_, err = insertConfigSnap(session, &model.PropertySnap{
 			UserId:      contextUserId(c),
 			ResId:       info.ResId,
 			LinkId:      info.LinkId,
@@ -141,14 +141,14 @@ func UpdateProp(c *fiber.Ctx) error {
 		if nil != err {
 			return 0, util.ErrorInternal(c, err)
 		}
-		if "" != get.FileContent {
-			_, err = insertPropSnap(session, &model.PropertySnap{
+		if "" != get.FileContent && fileHash != get.FileHash {
+			_, err = insertConfigSnap(session, &model.PropertySnap{
 				UserId:      userId,
 				ResId:       get.ResId,
 				LinkId:      get.LinkId,
 				PropId:      get.Id,
 				FileName:    get.FileName,
-				FileContent: get.FileContent,
+				FileContent: info.FileContent,
 			})
 			if nil != err {
 				return 0, util.ErrorInternal(c, err)

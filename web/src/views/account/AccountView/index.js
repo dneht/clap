@@ -38,7 +38,7 @@ const MainView = () => {
   const [selectRole, setSelectRole] = useState([])
 
   useEffect(() => {
-    http.getList('/api/user').then(data => setUserList(data))
+    http.post('/api/user/high').then(data => setUserList(data))
     http.getSimple('/api/role').then(data => setRoleList(data))
   }, [])
 
@@ -58,7 +58,7 @@ const MainView = () => {
         password: passwdHash(newPasswd),
         roleList: JSON.stringify(selectRole)
       }).then(res => {
-        http.getList('/api/user').then(data => setUserList(data))
+        http.post('/api/user/high').then(data => setUserList(data))
         ShowSnackbar('用户创建成功', 'info')
         handleClose()
       }).catch(err => {

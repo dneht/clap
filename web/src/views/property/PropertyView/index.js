@@ -6,7 +6,14 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
+  Grid,
+  makeStyles,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
   Tabs,
   TextField,
   Typography
@@ -14,6 +21,14 @@ import {
 import http from 'src/requests'
 import hiddenEle from 'src/utils/hiddenele'
 import {ShowSnackbar} from 'src/utils/globalshow'
+import timeToLocal from 'src/utils/timetolocal'
+
+const useStyles = makeStyles((theme) => ({
+  statsItem: {
+    alignItems: 'center',
+    display: 'flex'
+  }
+}))
 
 const PropertyView = ({
                         className,
@@ -24,11 +39,14 @@ const PropertyView = ({
                         setPropOpen,
                         ...rest
                       }) => {
+  const classes = useStyles()
   const [select, setSelect] = useState(0)
   const [readme, setReadme] = useState('')
   const [content, setContent] = useState('')
   const [propList, setPropList] = useState([])
-  const [require, setRequire] = useState({open: false, keyword: ''})
+  const [snapList, setSnapList] = useState([])
+  const [require, setRequire] = useState({open: false, keyword: '', type: ''})
+  const [rollback, setRollback] = useState({open: false, id: 0})
 
   const handlePropClose = () => {
     setPropOpen(false)
@@ -37,7 +55,11 @@ const PropertyView = ({
   }
 
   const handleRequireClose = () => {
-    setRequire({open: false, keyword: ''})
+    setRequire({open: false, keyword: '', type: ''})
+  }
+
+  const handleRollbackClose = () => {
+    setRollback({open: false, id: 0, deploy: 0})
   }
 
   const handleTableChange = (event, select) => {
@@ -54,19 +76,55 @@ const PropertyView = ({
     })
   }
 
-  const handlePropUpdate = () => {
-    const current = propList[select]
-    http.post('/prop/' + inputType + '/' + current.id, {
-      fileReadme: readme,
-      fileContent: content,
-    }).then(res => {
-      ShowSnackbar('更新配置文件成功', 'info')
+  const getDeployPropSnaps = (id) => {
+    http.get('/snaps/config/' + id).then(data => {
+      http.moreInfo([
+        {key: 'userId', addr: '/api/user', field: 'userInfo'},
+      ], data).then(results => {
+        setSnapList(results)
+      })
     }).catch(err => {
-      ShowSnackbar('更新配置文件失败: ' + err, 'error')
-    }).finally(() => {
-      handleRequireClose()
-      handlePropClose()
+      ShowSnackbar('获取配置历史失败: ' + err, 'error')
     })
+  }
+
+  const handleRollbackOpen = (id, deploy) => {
+    setRollback({open: true, id: id, deploy: deploy})
+    getDeployPropSnaps(id)
+  }
+
+  const handlePropUpdate = () => {
+    switch (require.type) {
+      case 'Update': {
+        const current = propList[select]
+        http.post('/prop/' + inputType + '/' + current.id, {
+          fileContent: content,
+        }).then(res => {
+          ShowSnackbar('更新配置文件成功', 'info')
+        }).catch(err => {
+          ShowSnackbar('更新配置文件失败: ' + err, 'error')
+        }).finally(() => {
+          handleRequireClose()
+          handlePropClose()
+        })
+        break
+      }
+      case 'Rollback': {
+        http.post('/snaps/config/' + require.id).then(res => {
+          ShowSnackbar('回滚配置文件成功', 'info')
+        }).catch(err => {
+          ShowSnackbar('回滚配置文件失败: ' + err, 'error')
+        }).finally(() => {
+          handleRequireClose()
+          handleRollbackClose()
+          handlePropClose()
+        })
+        break
+      }
+      default: {
+        ShowSnackbar('操作类型未找到', 'info')
+      }
+    }
   }
 
   useEffect(() => {
@@ -127,12 +185,12 @@ const PropertyView = ({
           <DialogActions>
             <Button variant="outlined" color="primary"
                     style={{display: hiddenEle(dataProvider.id, inputType, 'propEdit', powerMap)}}
-                    onClick={() => setRequire({open: true, keyword: '更新', type: 'update'})}>
+                    onClick={() => setRequire({open: true, keyword: '更新', type: 'Update'})}>
               更新
             </Button>
             <Button variant="outlined" color="primary"
-                    style={{display: hiddenEle(dataProvider.id, inputType, 'thisRollback', powerMap)}}
-                    onClick={handlePropClose}>
+                    style={{display: hiddenEle(dataProvider.id, inputType, 'propEdit', powerMap)}}
+                    onClick={() => handleRollbackOpen(propList[select].id, dataProvider.id)}>
               回滚
             </Button>
             <Button variant="outlined" color="primary"
@@ -140,6 +198,51 @@ const PropertyView = ({
               取消
             </Button>
           </DialogActions>
+        </Dialog>
+        <Dialog maxWidth="lg" open={rollback.open} onClose={handleRollbackClose}
+                aria-labelledby="rollback-dialog-title">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  创建者
+                </TableCell>
+                <TableCell>
+                  更新时间
+                </TableCell>
+                <TableCell>
+                  操作
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {snapList.map((snap) => (
+                <TableRow
+                  hover
+                  key={`rollback-select-${snap.id}`}
+                >
+                  <TableCell>
+                    {snap.userInfo && snap.userInfo.nickname ? snap.userInfo.nickname : '已禁用'}
+                  </TableCell>
+                  <TableCell>
+                    {timeToLocal(snap.createdAt)}
+                  </TableCell>
+                  <TableCell>
+                    <Grid
+                      className={classes.statsItem}
+                      item
+                    >
+                      <Button variant="outlined" color="primary"
+                              style={{display: hiddenEle(rollback.deploy, inputType, 'propEdit', powerMap)}}
+                              onClick={() => setRequire({open: true, keyword: '回滚', type: 'Rollback', id: snap.id})}>
+                        回滚
+                      </Button>
+                    </Grid>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </Dialog>
         <Dialog
           open={require.open}

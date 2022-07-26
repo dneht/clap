@@ -30,9 +30,11 @@ class DeployButton extends React.Component {
       }
     }
     this.appType = props.dataProvider.appBase.appType
+    this.openDeployRollback = props.openDeployRollback
     this.openPodDialog = props.openPodDialog
     this.openPropOpen = props.openPropOpen
     this.getBuildPods = props.getBuildPods
+    this.getDeploySnaps = props.getDeploySnaps
     this.gotoPackageApp = props.gotoPackageApp
     this.gotoPublishApp = props.gotoPublishApp
     this.gotoCancelApp = props.gotoCancelApp
@@ -41,6 +43,7 @@ class DeployButton extends React.Component {
     this.gotoAppDocument = this.gotoAppDocument.bind(this)
     this.logPackageApp = this.logPackageApp.bind(this)
     this.reloadPackageStatus = this.reloadPackageStatus.bind(this)
+    this.showRollbackList = this.showRollbackList.bind(this)
     this.doPackageApp = this.doPackageApp.bind(this)
     this.doPublishApp = this.doPublishApp.bind(this)
     this.doCancelApp = this.doCancelApp.bind(this)
@@ -73,6 +76,12 @@ class DeployButton extends React.Component {
           ShowSnackbar('点击[打包中]即可查看日志', 'info')
         }
       }
+    })
+  }
+
+  showRollbackList() {
+    this.getDeploySnaps(this.deployId, (data) => {
+      this.openDeployRollback(this.deployId, data)
     })
   }
 
@@ -211,6 +220,12 @@ class DeployButton extends React.Component {
                 打包
               </Button>
               <Button variant="outlined" color="primary"
+                      style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisRollback', this.powerMap)}}
+                      onClick={this.showRollbackList}
+                      disabled={this.disablePack}>
+                回滚
+              </Button>
+              <Button variant="outlined" color="primary"
                       style={{display: hiddenEle(this.deployId, 'deployment', 'docView', this.powerMap)}}
                       onClick={this.gotoAppDocument}>
                 文档
@@ -236,6 +251,12 @@ class DeployButton extends React.Component {
                       disabled={this.disablePack}>
                 打包
               </Button>
+              <Button variant="outlined" color="primary"
+                      style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisRollback', this.powerMap)}}
+                      onClick={this.showRollbackList}
+                      disabled={this.disablePack}>
+                回滚
+              </Button>
             </div>
           )
         }
@@ -257,6 +278,12 @@ class DeployButton extends React.Component {
                     style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisPack', this.powerMap)}}
                     onClick={this.doPublishApp}>
               发布
+            </Button>
+            <Button variant="outlined" color="primary"
+                    style={{display: this.disablePack ? 'none' : hiddenEle(this.deployId, 'deployment', 'thisRollback', this.powerMap)}}
+                    onClick={this.showRollbackList}
+                    disabled={this.disablePack}>
+              回滚
             </Button>
           </div>
         )

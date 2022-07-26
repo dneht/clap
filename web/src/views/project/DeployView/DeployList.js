@@ -46,11 +46,14 @@ const DeployList = ({
                       getDeployProps,
                       getDeployPods,
                       getBuildPods,
+                      getDeploySnaps,
                       downloadPod,
                       restartPod,
                       gotoPackageApp,
+                      gotoAutoDeployApp,
                       gotoPublishApp,
                       gotoCancelApp,
+                      gotoRollbackApp,
                       ...rest
                     }) => {
   const classes = useStyles()
@@ -62,8 +65,10 @@ const DeployList = ({
   const [podList, setPodList] = useState([])
   const [selectDeploy, setSelectDeploy] = useState({})
   const [branchName, setBranchName] = useState('')
+  const [snapList, setSnapList] = useState([])
   const [propOpen, setPropOpen] = useState(false)
-  const [require, setRequire] = useState({open: false, more: false, keyword: ''})
+  const [require, setRequire] = useState({open: false, more: false, keyword: '', type: ''})
+  const [rollback, setRollback] = useState({open: false, id: 0})
 
   const navigateToAttach = (data, podData) => {
     podData.envId = data.spaceBase.envId
@@ -144,6 +149,15 @@ const DeployList = ({
     setPropOpen(true)
   }
 
+  const handleRollbackOpen = (id, list) => {
+    setSnapList(list)
+    setRollback({open: true, id: id})
+  }
+
+  const handleRollbackClose = () => {
+    setRollback({open: false, id: 0})
+  }
+
   const requirePackageApp = (deployId, canBranch, func) => {
     setRequire({open: true, more: canBranch, keyword: '打包', type: 'Package', id: deployId, func: func})
   }
@@ -157,7 +171,7 @@ const DeployList = ({
   }
 
   const handleRequireClose = () => {
-    setRequire({open: false, more: false, keyword: ''})
+    setRequire({open: false, more: false, keyword: '', type: ''})
   }
 
   const updateBranchName = (event) => {
@@ -261,11 +275,13 @@ const DeployList = ({
                       item
                     >
                       <DeployButton dataProvider={data} powerMap={powerMap}
+                                    openDeployRollback={handleRollbackOpen}
                                     openPodDialog={handleDialogOpen}
                                     openPropOpen={handlePropOpen}
                                     navigateToDoc={navigateToDoc}
                                     navigateToInner={navigateToInner}
                                     getBuildPods={getBuildPods}
+                                    getDeploySnaps={getDeploySnaps}
                                     gotoPackageApp={requirePackageApp}
                                     gotoPublishApp={requirePublishApp}
                                     gotoCancelApp={cancelPackageApp}/>
@@ -295,7 +311,7 @@ const DeployList = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {podList.slice(0, limit).map((pod) => (
+                {podList.map((pod) => (
                   <TableRow
                     hover
                     key={`pod-select-${pod.podName}`}
@@ -378,7 +394,80 @@ const DeployList = ({
                       }}>
                 确定
               </Button>
+              <Button variant="outlined" color="primary" autoFocus
+                      onClick={() => {
+                        if (require.type && require.id && require.func) {
+                          gotoAutoDeployApp(require.id, branchName, require.func)
+                        } else {
+                          ShowSnackbar('Select type not found', 'warn')
+                        }
+                        handleRequireClose()
+                      }}>
+                自动发布
+              </Button>
             </DialogActions>
+          </Dialog>
+          <Dialog maxWidth="lg" open={rollback.open} onClose={handleRollbackClose}
+                  aria-labelledby="rollback-dialog-title">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    创建者
+                  </TableCell>
+                  <TableCell>
+                    发布时间
+                  </TableCell>
+                  <TableCell>
+                    分支名
+                  </TableCell>
+                  <TableCell>
+                    发布版本
+                  </TableCell>
+                  <TableCell>
+                    操作
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {snapList.map((snap) => (
+                  <TableRow
+                    hover
+                    key={`rollback-select-${snap.id}`}
+                  >
+                    <TableCell>
+                      {snap.userInfo && snap.userInfo.nickname ? snap.userInfo.nickname : '已禁用'}
+                    </TableCell>
+                    <TableCell>
+                      {timeToLocal(snap.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      {snap.branchName}
+                    </TableCell>
+                    <TableCell>
+                      {snap.deployTag}
+                    </TableCell>
+                    <TableCell>
+                      <Grid
+                        className={classes.statsItem}
+                        item
+                      >
+                        <Button variant="outlined" color="primary"
+                                style={{display: hiddenEle(snap.deployId, 'deployment', 'thisRollback', powerMap)}}
+                                onClick={() => setRequire({
+                                  open: true, more: false, keyword: '回滚', type: 'Rollback', id: snap.id, func: (data) => {
+                                    handleRollbackClose()
+                                    ShowSnackbar('回滚中', 'error')
+                                  }
+                                })}>
+                          回滚
+                        </Button>
+                      </Grid>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </Dialog>
           <Dialog
             open={require.open && !require.more}
@@ -410,6 +499,10 @@ const DeployList = ({
                             }
                             case 'Cancel': {
                               gotoCancelApp(require.id, require.func)
+                              break
+                            }
+                            case 'Rollback': {
+                              gotoRollbackApp(require.id, require.func)
                               break
                             }
                             default: {

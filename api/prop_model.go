@@ -68,9 +68,17 @@ func updatePropStatusById(session *xorm.Session, id uint64, disable int) (int64,
 	return res.RowsAffected()
 }
 
-func findPropByIds(ids []uint64) (*model.PropertySnap, error) {
+func findPropSnapByMain(id uint64) ([]model.PropertySnap, error) {
+	var list []model.PropertySnap
+	err := base.Engine.Omit(model.ResIdInPropertySnap, model.LinkIdInPropertySnap, model.CreatedAt).
+		Where(model.PropIdInPropertySnap+" = ?", id).Limit(10).
+		Find(&list)
+	return list, err
+}
+
+func findPropSnapByIds(ids []uint64) (*model.PropertySnap, error) {
 	var info model.PropertySnap
-	err := base.Engine.Omit(model.CreatedAt).
+	err := base.Engine.Omit(model.ResIdInPropertySnap, model.LinkIdInPropertySnap, model.CreatedAt).
 		In(model.IdInPropertySnap, ids).
 		Find(&info)
 	return &info, err

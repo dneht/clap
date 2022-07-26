@@ -107,11 +107,30 @@ const MainView = () => {
   const getBuildPods = (deployId, func) => {
     http.get('/deploy/check/' + deployId).then(data => func(data))
   }
+  const getDeploySnaps = (deployId, func) => {
+    http.get('/snaps/deploy/' + deployId).then(data => {
+      http.moreInfo([
+        {key: 'userId', addr: '/api/user', field: 'userInfo'},
+      ], data).then(results => {
+        func(results)
+      })
+    }).catch(err => {
+      ShowSnackbar('获取发布历史失败: ' + err, 'error')
+    })
+  }
+
   const gotoPackageApp = (deployId, branchName, func) => {
     if (branchName) {
       http.get('/deploy/build/' + deployId, {branch: branchName}).then(data => func(data))
     } else {
       http.get('/deploy/build/' + deployId).then(data => func(data))
+    }
+  }
+  const gotoAutoDeployApp = (deployId, branchName, func) => {
+    if (branchName) {
+      http.get('/deploy/auto_deploy/' + deployId, {branch: branchName}).then(data => func(data))
+    } else {
+      http.get('/deploy/auto_deploy/' + deployId).then(data => func(data))
     }
   }
   const gotoPublishApp = (deployId, func) => {
@@ -120,6 +139,10 @@ const MainView = () => {
   const gotoCancelApp = (deployId, func) => {
     http.get('/deploy/cancel/' + deployId).then(data => func(data))
   }
+  const gotoRollbackApp = (snapId, func) => {
+    http.post('/snaps/deploy/' + snapId).then(data => func(data))
+  }
+
   const downloadPod = (data, podData) => {
     http.get('/pod/download/' + data.id,
       {
@@ -154,10 +177,10 @@ const MainView = () => {
                  spaceProvider={spaceList} spaceSelect={spaceSelect} getSpaceList={getSpaceList}/>
         <Box mt={3}>
           <DeployList dataProvider={deployList} powerMap={powerMap}
-                      getDeployPods={getDeployPods} getBuildPods={getBuildPods}
-                      downloadPod={downloadPod}
-                      restartPod={restartPod}
-                      gotoPackageApp={gotoPackageApp} gotoPublishApp={gotoPublishApp} gotoCancelApp={gotoCancelApp}/>
+                      getDeployPods={getDeployPods} getBuildPods={getBuildPods} getDeploySnaps={getDeploySnaps}
+                      downloadPod={downloadPod} restartPod={restartPod}
+                      gotoPackageApp={gotoPackageApp} gotoAutoDeployApp={gotoAutoDeployApp} gotoPublishApp={gotoPublishApp}
+                      gotoCancelApp={gotoCancelApp} gotoRollbackApp={gotoRollbackApp}/>
         </Box>
       </Container>
     </Page>
