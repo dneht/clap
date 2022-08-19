@@ -84,27 +84,38 @@ func invalidUserById(id uint64) {
 func countUserWithPage(c *fiber.Ctx, input *util.MainInput) (int64, error) {
 	var info model.UserInfo
 	sql := base.Engine.Cols()
-	err := SelectAuth(c, model.UserInfoTable, sql)
-	if nil != err {
-		return 0, err
+	if 0 == contextUserId(c) {
+		return 0, errors.New("user not login")
 	}
-	if !ManagerAuth(c) {
-		input.ApplyWithoutDisable(sql)
-	}
-	return sql.Count(&info)
+	return input.ApplyWithoutDisable(sql).Count(&info)
 }
 
 func findUserWithPage(c *fiber.Ctx, input *util.MainInput) (int, []model.UserInfo, error) {
 	var list []model.UserInfo
-	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
-	err := SelectAuth(c, model.UserInfoTable, sql)
-	if nil != err {
-		return 0, nil, err
+	sql := base.Engine.Cols(model.IdInUserInfo, model.NicknameInUserInfo)
+	if 0 == contextUserId(c) {
+		return 0, nil, errors.New("user not login")
 	}
+	err := input.ApplyWithoutDisable(sql).Find(&list)
+	return len(list), list, err
+}
+
+func countUserWithManager(c *fiber.Ctx, input *util.MainInput) (int64, error) {
+	var info model.UserInfo
+	sql := base.Engine.Cols()
 	if !ManagerAuth(c) {
-		input.ApplyWithoutDisable(sql)
+		return 0, errors.New("not support")
 	}
-	err = sql.Find(&list)
+	return sql.Count(&info)
+}
+
+func findUserWithManager(c *fiber.Ctx, input *util.MainInput) (int, []model.UserInfo, error) {
+	var list []model.UserInfo
+	sql := base.Engine.Omit(model.CreatedAt, model.UpdatedAt)
+	if !ManagerAuth(c) {
+		return 0, nil, errors.New("not support")
+	}
+	err := sql.Find(&list)
 	return len(list), list, err
 }
 

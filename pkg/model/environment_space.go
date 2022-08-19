@@ -21,8 +21,8 @@ const (
 )
 
 type EnvironmentSpace struct {
-	Id        uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
-	EnvId     uint64    `xorm:"not null comment('环境，一个环境创建时会添加一个默认space') unique(uk_space_name) BIGINT(20)" json:"envId"`
+	Id        uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
+	EnvId     uint64    `xorm:"not null comment('环境，一个环境创建时会添加一个默认space') unique(uk_space_name) BIGINT" json:"envId"`
 	SpaceName string    `xorm:"not null comment('空间名') unique(uk_space_name) VARCHAR(16)" json:"spaceName"`
 	SpaceKeep string    `xorm:"not null comment('空间所处位置，通常是命名空间') VARCHAR(16)" json:"spaceKeep"`
 	SpaceDesc string    `xorm:"comment('描述') VARCHAR(256)" json:"spaceDesc"`

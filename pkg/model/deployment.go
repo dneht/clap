@@ -25,19 +25,19 @@ const (
 )
 
 type Deployment struct {
-	Id           uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
-	AppId        uint64    `xorm:"not null comment('项目') index BIGINT(20)" json:"appId"`
-	EnvId        uint64    `xorm:"not null comment('环境') index BIGINT(20)" json:"envId"`
-	SpaceId      uint64    `xorm:"not null comment('环境空间') index unique(uk_deploy_name) BIGINT(20)" json:"spaceId"`
-	PlanId       int64     `xorm:"default 0 comment('计划id，关联使用，如果不为0则包含在发布计划中') index BIGINT(20)" json:"planId"`
+	Id           uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
+	AppId        uint64    `xorm:"not null comment('项目') index BIGINT" json:"appId"`
+	EnvId        uint64    `xorm:"not null comment('环境') index BIGINT" json:"envId"`
+	SpaceId      uint64    `xorm:"not null comment('环境空间') index unique(uk_deploy_name) BIGINT" json:"spaceId"`
+	PlanId       int64     `xorm:"default 0 comment('计划id，关联使用，如果不为0则包含在发布计划中') index BIGINT" json:"planId"`
 	BranchName   string    `xorm:"comment('代码分支') VARCHAR(64)" json:"branchName"`
 	DeployName   string    `xorm:"not null comment('部署名') unique(uk_deploy_name) VARCHAR(64)" json:"deployName"`
-	DeployStatus int       `xorm:"default 0 comment('部署状态，修改需要加锁。0默认、1打包中、2打包完成、3打包失败、6已发布') TINYINT(4)" json:"deployStatus"`
+	DeployStatus int       `xorm:"default 0 comment('部署状态，修改需要加锁。0默认、1打包中、2打包完成、3打包失败、6已发布') TINYINT" json:"deployStatus"`
 	DeployTag    string    `xorm:"comment('记录当前或者上次一打包使用的tag') VARCHAR(24)" json:"deployTag"`
 	AppInfo      string    `xorm:"comment('创建部署时覆盖原始的项目信息') JSON" json:"appInfo"`
 	IsPackage    int       `xorm:"default 1 comment('是否能打包，默认能') TINYINT(1)" json:"isPackage"`
-	IsBranch     int       `xorm:"default 0 comment('是否能修改分支，默认不能') TINYINT(3)" json:"isBranch"`
-	IsDisable    int       `xorm:"default 0 comment('是否已被禁用') TINYINT(3)" json:"isDisable"`
+	IsBranch     int       `xorm:"default 0 comment('是否能修改分支，默认不能') TINYINT" json:"isBranch"`
+	IsDisable    int       `xorm:"default 0 comment('是否已被禁用') TINYINT" json:"isDisable"`
 	CreatedAt    time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`
 	UpdatedAt    time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"updatedAt"`
 }

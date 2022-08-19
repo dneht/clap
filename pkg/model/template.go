@@ -18,7 +18,7 @@ const (
 )
 
 type Template struct {
-	Id              uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
+	Id              uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
 	TemplateName    string    `xorm:"not null comment('模版名') unique VARCHAR(16)" json:"templateName"`
 	TemplateKind    string    `xorm:"not null comment('模版类型') VARCHAR(16)" json:"templateKind"`
 	TemplateDesc    string    `xorm:"not null comment('模版描述') VARCHAR(256)" json:"templateDesc"`

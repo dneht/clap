@@ -45,6 +45,7 @@ func main() {
 	app.Post(api.PowApiPre+api.SimpleSuffix, api.SimplePow)
 	app.Get(api.PowApiPre+"/:id", api.GetPow)
 
+	app.Post(api.UserApiPre+"/high", api.AdminListUser)
 	app.Post(api.UserApiPre+api.ListSuffix, api.ListUser)
 	app.Get(api.UserApiPre+"/:id", api.GetUser)
 	app.Put(api.UserApiPre, api.CreateUser)
@@ -89,6 +90,9 @@ func main() {
 	app.Get("/pod/download/:id", api.DownloadDeployPod)
 	// type=check, build, deploy
 	app.Get("/deploy/:type/:deploy", api.ExecDeploy)
+	// type=deploy, config
+	app.Get("/snaps/:type/:snap", api.ListSnaps)
+	app.Post("/snaps/:type/:snap", api.RollSnaps)
 	// type=jsonnet, property
 	app.Get("/render/:type/:deploy", api.ExecRender)
 	// type=exec, attach, inner

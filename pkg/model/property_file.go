@@ -20,9 +20,9 @@ const (
 )
 
 type PropertyFile struct {
-	Id          uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
-	ResId       uint64    `xorm:"not null comment('资源id') unique(uk_link_res_id) BIGINT(20)" json:"resId"`
-	LinkId      uint64    `xorm:"not null comment('关联id') unique(uk_link_res_id) BIGINT(20)" json:"linkId"`
+	Id          uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
+	ResId       uint64    `xorm:"not null comment('资源id') unique(uk_link_res_id) BIGINT" json:"resId"`
+	LinkId      uint64    `xorm:"not null comment('关联id') unique(uk_link_res_id) BIGINT" json:"linkId"`
 	FileName    string    `xorm:"not null comment('文件名，不包含文件路径') unique(uk_link_res_id) VARCHAR(64)" json:"fileName"`
 	FileReadme  string    `xorm:"not null comment('配置文件说明') VARCHAR(256)" json:"fileReadme"`
 	FileContent string    `xorm:"not null comment('配置文件文本') TEXT" json:"fileContent"`

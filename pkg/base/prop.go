@@ -249,7 +249,7 @@ func BuildProperty() {
 			ResCPURequest:      parseString(propMap["package.res_cpu_request"], "1"),
 			ResCPULimit:        parseString(propMap["package.res_cpu_limit"], "4"),
 			ResMemoryRequest:   parseString(propMap["package.res_memory_request"], "1Gi"),
-			ResMemoryLimit:     parseString(propMap["package.res_memory_limit"], "4Gi"),
+			ResMemoryLimit:     parseString(propMap["package.res_memory_limit"], "8Gi"),
 		},
 	}
 }

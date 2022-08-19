@@ -149,7 +149,8 @@ const DeployList = ({
     setPropOpen(true)
   }
 
-  const handleRollbackOpen = (id, list) => {
+  const handleRollbackOpen = (id, deploy, list) => {
+    setSelectDeploy(deploy)
     setSnapList(list)
     setRollback({open: true, id: id})
   }
@@ -454,8 +455,15 @@ const DeployList = ({
                       >
                         <Button variant="outlined" color="primary"
                                 style={{display: hiddenEle(snap.deployId, 'deployment', 'thisRollback', powerMap)}}
+                                disabled={snap.deployTag === selectDeploy.deployTag}
                                 onClick={() => setRequire({
-                                  open: true, more: false, keyword: '回滚', type: 'Rollback', id: snap.id, func: (data) => {
+                                  open: true,
+                                  more: false,
+                                  keyword: '回滚',
+                                  type: 'Rollback',
+                                  id: snap.id,
+                                  func: (data) => {
+                                    selectDeploy.deployTag = snap.deployTag
                                     handleRollbackClose()
                                     ShowSnackbar('回滚中', 'error')
                                   }

@@ -22,7 +22,7 @@ import (
 	"xorm.io/xorm"
 )
 
-func getPropsById(id uint64) (*model.PropertyFile, bool, error) {
+func getPropById(id uint64) (*model.PropertyFile, bool, error) {
 	var info model.PropertyFile
 	result, err := base.Engine.ID(id).Get(&info)
 	return &info, result, err
@@ -68,15 +68,34 @@ func updatePropStatusById(session *xorm.Session, id uint64, disable int) (int64,
 	return res.RowsAffected()
 }
 
-func findPropSnapByMain(id uint64) ([]model.PropertySnap, error) {
-	var list []model.PropertySnap
-	err := base.Engine.Omit(model.ResIdInPropertySnap, model.LinkIdInPropertySnap, model.CreatedAt).
-		Where(model.PropIdInPropertySnap+" = ?", id).Limit(10).
+func getConfigSnapById(id uint64) (*model.PropertySnap, error) {
+	var info model.PropertySnap
+	_, err := base.Engine.Omit(model.ResIdInPropertySnap, model.LinkIdInPropertySnap).
+		ID(id).Get(&info)
+	return &info, err
+}
+
+func getLatestConfigSnapByMain(id uint64) (*model.PropertySnap, error) {
+	var info model.PropertySnap
+	err := base.Engine.Omit(model.ResIdInPropertySnap, model.LinkIdInPropertySnap,
+		model.FileContentInPropertySnap).
+		Where(model.PropIdInPropertySnap+" = ?", id).
+		Desc(model.IdInPropertySnap).Limit(1).
+		Find(&info)
+	return &info, err
+}
+
+func findConfigSnapByMain(id uint64) ([]model.PropertySnap, error) {
+	list := make([]model.PropertySnap, 0)
+	err := base.Engine.Omit(model.ResIdInPropertySnap, model.LinkIdInPropertySnap,
+		model.FileContentInPropertySnap).
+		Where(model.PropIdInPropertySnap+" = ?", id).
+		Desc(model.IdInPropertySnap).Limit(10).
 		Find(&list)
 	return list, err
 }
 
-func findPropSnapByIds(ids []uint64) (*model.PropertySnap, error) {
+func findConfigSnapByIds(ids []uint64) (*model.PropertySnap, error) {
 	var info model.PropertySnap
 	err := base.Engine.Omit(model.ResIdInPropertySnap, model.LinkIdInPropertySnap, model.CreatedAt).
 		In(model.IdInPropertySnap, ids).
@@ -84,16 +103,7 @@ func findPropSnapByIds(ids []uint64) (*model.PropertySnap, error) {
 	return &info, err
 }
 
-func getLatestPropSnap(res, prop uint64) (*model.PropertySnap, error) {
-	var info model.PropertySnap
-	err := base.Engine.Omit(model.CreatedAt).
-		Where(model.ResIdInPropertySnap+"?", res).Where(model.PropIdInPropertySnap+"?", prop).
-		Desc(model.IdInPropertySnap).Limit(1).
-		Find(&info)
-	return &info, err
-}
-
-func insertPropSnap(session *xorm.Session, info *model.PropertySnap) (int64, error) {
+func insertConfigSnap(session *xorm.Session, info *model.PropertySnap) (int64, error) {
 	return session.Omit(model.IdInPropertySnap, model.CreatedAt).
 		InsertOne(info)
 }

@@ -138,15 +138,15 @@ create table deployment
     env_id        bigint unsigned not null comment '环境',
     space_id      bigint unsigned not null comment '环境空间',
     branch_name   varchar(64) comment '代码分支',
-    deploy_name   varchar(64) not null comment '部署名',
-    deploy_status tinyint              default 0 comment '部署状态，修改需要加锁。0默认、1打包中、2打包完成、3打包失败、6已发布',
+    deploy_name   varchar(64)  not null comment '部署名',
+    deploy_status tinyint               default 0 comment '部署状态，修改需要加锁。0默认、1打包中、2打包完成、3打包失败、6已发布',
     deploy_tag    varchar(24) comment '记录最近一次打包使用的tag',
     app_info      json comment '创建部署时覆盖原始的项目信息',
-    is_package    boolean              default true comment '是否能打包，默认能',
-    is_branch     boolean              default false comment '是否能修改分支，默认不能',
-    is_disable    boolean              default false comment '是否已被禁用',
-    created_at    datetime    not null default current_timestamp comment '添加时间',
-    updated_at    datetime    not null default current_timestamp on update current_timestamp comment '更新时间',
+    is_package    boolean               default true comment '是否能打包，默认能',
+    is_branch     boolean               default false comment '是否能修改分支，默认不能',
+    is_disable    boolean               default false comment '是否已被禁用',
+    created_at    datetime     not null default current_timestamp comment '添加时间',
+    updated_at    datetime     not null default current_timestamp on update current_timestamp comment '更新时间',
     index         idx_deploy_app (app_id),
     index         idx_deploy_env (env_id),
     index         idx_deploy_space (space_id),
@@ -157,8 +157,8 @@ create table deployment
   default charset = utf8mb4 comment = '发布信息';
 
 
-drop table if exists deployment_log;
-create table deployment_log
+drop table if exists deployment_snap;
+create table deployment_snap
 (
     id            bigint unsigned not null auto_increment,
     user_id       bigint unsigned not null comment '用户id',
@@ -166,16 +166,20 @@ create table deployment_log
     env_id        bigint unsigned not null comment '环境id',
     space_id      bigint unsigned not null comment '空间id',
     deploy_id     bigint unsigned not null comment '部署id',
-    flow_id       bigint unsigned comment '关联的流程id，可以为空',
+    flow_id       bigint unsigned default 0 comment '关联的流程id，可以为空',
     branch_name   varchar(64) comment '代码分支',
+    deploy_status tinyint           default -1 comment '部署状态，flow_id=0时即直接使用为-1，否则同主表',
+    deploy_name   varchar(128) comment '打包使用的name',
+    deploy_kind   varchar(128) comment '打包使用的kind',
     deploy_tag    varchar(24) comment '打包使用的tag',
-    snapshot_info json comment '部署时的信息快照，合并后的信息',
-    property_file text comment '部署时的配置快照，合并后的信息，可以为空',
+    deploy_render json comment '部署时的信息快照，合并后的信息',
     created_at    datetime not null default current_timestamp comment '添加时间',
     index         idx_app_id (env_id, app_id),
+    index         idx_deploy_id (deploy_id),
+    index         idx_flow_id (flow_id),
     primary key (id)
 ) engine = innodb
-  default charset = utf8mb4 comment = '发布日志';
+  default charset = utf8mb4 comment = '发布快照';
 
 
 drop table if exists process;
@@ -244,7 +248,8 @@ create table property_snap
     file_content text        not null comment '配置文件文本',
     created_at   datetime    not null default current_timestamp comment '添加时间',
     index        idx_link_res_id (link_id, res_id, file_name),
-    primary key (id)
+    index        idx_prop_id (prop_id desc);
+primary key (id)
 ) engine = innodb
   default charset = utf8mb4 comment = '配置快照';
 

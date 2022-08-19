@@ -340,6 +340,7 @@ local getallconfig = if "volumeMounts" in app then std.filter(function(vol) "Con
                             "retryCount": svc.router.retryCount,
                             [if "retryPerTryTimeout" in svc.router then "perTryTimeout"]: svc.router.retryPerTryTimeout,
                         },
+                        [if "permitInsecure" in svc.router then "permitInsecure"]: svc.router.permitInsecure,
                         [if "loadBalanceStrategy" in svc.router then "loadBalancerPolicy"]: {
                             "strategy": svc.router.loadBalanceStrategy,
                         },

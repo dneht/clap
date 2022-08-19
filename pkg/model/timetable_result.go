@@ -15,8 +15,8 @@ const (
 )
 
 type TimetableResult struct {
-	Id         uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
-	TaskId     uint64    `xorm:"not null comment('任务id') index BIGINT(20)" json:"taskId"`
+	Id         uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
+	TaskId     uint64    `xorm:"not null comment('任务id') index BIGINT" json:"taskId"`
 	LastStatus int       `xorm:"default 1 comment('执行状态，true成功、false失败') TINYINT(1)" json:"lastStatus"`
 	LastResult string    `xorm:"comment('上次执行结果，有的任务可能有输出') JSON" json:"lastResult"`
 	CreatedAt  time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`

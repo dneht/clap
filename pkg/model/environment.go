@@ -22,7 +22,7 @@ const (
 )
 
 type Environment struct {
-	Id         uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
+	Id         uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
 	Env        string    `xorm:"not null comment('环境') VARCHAR(16)" json:"env"`
 	EnvName    string    `xorm:"not null comment('环境名') unique VARCHAR(64)" json:"envName"`
 	EnvDesc    string    `xorm:"comment('环境描述') VARCHAR(256)" json:"envDesc"`

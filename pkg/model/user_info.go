@@ -21,9 +21,9 @@ const (
 )
 
 type UserInfo struct {
-	Id          uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
+	Id          uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
 	UserName    string    `xorm:"not null comment('用户名') unique(uk_user_from_name) VARCHAR(64)" json:"userName"`
-	UserFrom    uint      `xorm:"default 0 comment('用户来源、本系统0') unique(uk_user_from_name) INT(10)" json:"userFrom"`
+	UserFrom    uint      `xorm:"default 0 comment('用户来源、本系统0') unique(uk_user_from_name) INT" json:"userFrom"`
 	Nickname    string    `xorm:"not null comment('昵称') VARCHAR(128)" json:"nickname"`
 	Password    string    `xorm:"not null comment('密码') VARCHAR(128)" json:"password"`
 	Avatar      string    `xorm:"not null comment('用户头像') VARCHAR(256)" json:"avatar"`

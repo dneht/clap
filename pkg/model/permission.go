@@ -18,11 +18,11 @@ const (
 )
 
 type Permission struct {
-	Id        uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
-	RoleId    uint64    `xorm:"not null comment('角色id') index BIGINT(20)" json:"roleId"`
-	ResId     uint64    `xorm:"not null comment('资源id') index(idx_res_link_id) BIGINT(20)" json:"resId"`
-	ResPower  uint      `xorm:"comment('二进制表示，从右到左的二进制位表示select，update、insert、delete、manage') INT(10)" json:"resPower"`
-	LinkId    uint64    `xorm:"default 0 index(idx_res_link_id) BIGINT(20)" json:"linkId"`
+	Id        uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
+	RoleId    uint64    `xorm:"not null comment('角色id') index BIGINT" json:"roleId"`
+	ResId     uint64    `xorm:"not null comment('资源id') index(idx_res_link_id) BIGINT" json:"resId"`
+	ResPower  uint      `xorm:"comment('二进制表示，从右到左的二进制位表示select，update、insert、delete、manage') INT" json:"resPower"`
+	LinkId    uint64    `xorm:"default 0 index(idx_res_link_id) BIGINT" json:"linkId"`
 	PowerInfo string    `xorm:"comment('权限附加信息') JSON" json:"powerInfo"`
 	CreatedAt time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"createdAt"`
 	UpdatedAt time.Time `xorm:"not null default CURRENT_TIMESTAMP comment('添加时间') DATETIME" json:"updatedAt"`

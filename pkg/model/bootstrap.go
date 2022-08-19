@@ -17,7 +17,7 @@ const (
 )
 
 type Bootstrap struct {
-	Id        uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
+	Id        uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
 	Env       string    `xorm:"not null comment('环境') unique(uk_bootstrap_key) VARCHAR(128)" json:"env"`
 	Prop      string    `xorm:"not null comment('属性名') unique(uk_bootstrap_key) VARCHAR(128)" json:"prop"`
 	Value     string    `xorm:"not null comment('属性值') VARCHAR(4096)" json:"value"`

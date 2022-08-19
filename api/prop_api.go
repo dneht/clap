@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"strings"
+	"time"
 	"xorm.io/xorm"
 )
 
@@ -74,13 +75,14 @@ func CreateProp(c *fiber.Ctx) error {
 	}
 	info.FileHash = getPropHashByContent(info.FileContent)
 
+	userId := contextUserId(c)
 	_, err = base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
 		_, err = insertProp(session, info)
 		if nil != err {
 			return 0, util.ErrorInternal(c, err)
 		}
 		_, err = insertConfigSnap(session, &model.PropertySnap{
-			UserId:      contextUserId(c),
+			UserId:      userId,
 			ResId:       info.ResId,
 			LinkId:      info.LinkId,
 			PropId:      info.Id,
@@ -104,7 +106,11 @@ func UpdateProp(c *fiber.Ctx) error {
 	if nil != err {
 		return err
 	}
-	get, result, err := getPropsById(id)
+	return updateProp(c, id, 0, info, false)
+}
+
+func updateProp(c *fiber.Ctx, id, user uint64, info *model.PropertyFile, rollback bool) error {
+	get, result, err := getPropById(id)
 	if nil != err || !result {
 		return util.ErrorInternal(c, err)
 	}
@@ -135,15 +141,19 @@ func UpdateProp(c *fiber.Ctx) error {
 	}
 	info.FileHash = fileHash
 
-	userId := contextUserId(c)
+	if !rollback {
+		user = contextUserId(c)
+		info.CreatedAt = time.Now()
+	}
+	info.FileReadme = getPropReadme(user, &info.CreatedAt, rollback)
 	_, err = base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
 		_, err = updatePropById(session, id, info)
 		if nil != err {
 			return 0, util.ErrorInternal(c, err)
 		}
-		if "" != get.FileContent && fileHash != get.FileHash {
+		if !rollback && "" != get.FileContent && fileHash != get.FileHash {
 			_, err = insertConfigSnap(session, &model.PropertySnap{
-				UserId:      userId,
+				UserId:      user,
 				ResId:       get.ResId,
 				LinkId:      get.LinkId,
 				PropId:      get.Id,
@@ -161,7 +171,7 @@ func UpdateProp(c *fiber.Ctx) error {
 		propMap := generateNeedProps(appBase.Id, envBase.Id, spaceBase.Id, deployBase.Id)
 		if nil != propMap && len(propMap) > 0 {
 			configName := refer.GetConfigName(appBase, spaceBase, refer.PropGenerateName)
-			err = onlyUpdateConfig(k8s, spaceBase.SpaceKeep, configName, &v1.ConfigMap{
+			err = createOrUpdateConfig(k8s, spaceBase.SpaceKeep, configName, &v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: configName,
 				},

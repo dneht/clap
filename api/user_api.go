@@ -77,11 +77,27 @@ func ListUser(c *fiber.Ctx) error {
 	if nil != err {
 		return util.ErrorInputLog(c, err, "main input error")
 	}
+	if len(param.Ids) == 0 {
+		return util.ResultListEmpty(c, nil)
+	}
 	return util.ResultPageOrList(c, param,
 		func(input *util.MainInput) (int64, error) {
 			return countUserWithPage(c, input)
 		}, func(input *util.MainInput) (int, interface{}, error) {
 			return findUserWithPage(c, input)
+		})
+}
+
+func AdminListUser(c *fiber.Ctx) error {
+	param, err := util.CheckMainInput(c)
+	if nil != err {
+		return util.ErrorInputLog(c, err, "main input error")
+	}
+	return util.ResultPageOrList(c, param,
+		func(input *util.MainInput) (int64, error) {
+			return countUserWithManager(c, input)
+		}, func(input *util.MainInput) (int, interface{}, error) {
+			return findUserWithManager(c, input)
 		})
 }
 

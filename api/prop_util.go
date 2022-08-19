@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"sort"
 	"strings"
+	"time"
 )
 
 func splitPropBySpace(content string) []string {
@@ -84,4 +85,51 @@ func mergePropByName(list []model.PropertyFile) map[string]string {
 		table[key] = strings.Join(util.RemoveRepeatedElement(value, "="), "\n")
 	}
 	return table
+}
+
+func getPropReadme(userId uint64, created *time.Time, rollback bool) string {
+	var readme string
+	user, err := getUserById(userId)
+	if nil == err {
+		if rollback {
+			readme = rollbackPropReadme(user.Nickname, created)
+		} else {
+			readme = updatePropReadme(user.Nickname, created)
+		}
+	} else {
+		if rollback {
+			readme = rollbackPropReadme("", created)
+		} else {
+			readme = updatePropReadme("", created)
+		}
+	}
+	return readme
+}
+
+func updatePropReadme(name string, created *time.Time) string {
+	if nil == created {
+		return ""
+	}
+
+	if name == "" {
+		return "配置在" + formatPropCreatedAt(created) + "被更新"
+	} else {
+		return "配置在" + formatPropCreatedAt(created) + "由[" + name + "]更新"
+	}
+}
+
+func rollbackPropReadme(name string, created *time.Time) string {
+	if nil == created {
+		return ""
+	}
+
+	if name == "" {
+		return "已回滚到" + formatPropCreatedAt(created) + "创建的配置"
+	} else {
+		return "已回滚到由[" + name + "]在" + formatPropCreatedAt(created) + "创建的配置"
+	}
+}
+
+func formatPropCreatedAt(created *time.Time) string {
+	return created.Format("2006年01月02日15点04分")
 }

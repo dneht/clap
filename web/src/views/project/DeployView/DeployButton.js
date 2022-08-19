@@ -65,9 +65,17 @@ class DeployButton extends React.Component {
 
   reloadPackageStatus() {
     this.getBuildPods(this.deployId, (data) => {
-      if (data.status && data.status.succeeded && data.status.succeeded > 0) {
+      if (data.status === 'Complete') {
+        this.setState({
+          buttonStatus: 6
+        })
+      } else if (data.status === 'Success') {
         this.setState({
           buttonStatus: 2
+        })
+      } else if (data.status === 'Failed') {
+        this.setState({
+          buttonStatus: 3
         })
       } else {
         if (!data.pods || data.pods.length === 0) {
@@ -81,7 +89,7 @@ class DeployButton extends React.Component {
 
   showRollbackList() {
     this.getDeploySnaps(this.deployId, (data) => {
-      this.openDeployRollback(this.deployId, data)
+      this.openDeployRollback(this.deployId, this.dataProvider, data)
     })
   }
 
@@ -90,6 +98,9 @@ class DeployButton extends React.Component {
       this.setState({
         buttonStatus: 1
       })
+      if (data && data.tag) {
+        this.dataProvider.deployTag = data.tag
+      }
       ShowSnackbar('打包中', 'error')
     })
   }

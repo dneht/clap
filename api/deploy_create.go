@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"xorm.io/xorm"
 )
 
 const jobNamePre = "clap-build-"
@@ -190,7 +191,7 @@ func deleteBuildJob(deployId uint64) {
 	}
 }
 
-func createPlatformApp(deployId uint64) (refer.DeployStatus, error) {
+func createPlatformApp(userId, deployId uint64) (refer.DeployStatus, error) {
 	envBase, spaceBase, appBase, deployBase, err := getMoreModels(deployId)
 	if nil != err {
 		return refer.FailedDeployStatus, err
@@ -199,27 +200,38 @@ func createPlatformApp(deployId uint64) (refer.DeployStatus, error) {
 	if nil != err {
 		return refer.FailedDeployStatus, err
 	}
-	repoFullUrl, err := checkPlatformParam(appInfo)
+	fullUrl, repoVersion, err := checkPlatformParam(appInfo)
 	if nil != err {
 		return refer.FailedDeployStatus, err
 	}
 
-	appKind, jsonStr, err := renderJsonnet(envBase, spaceBase, appBase, deployBase, repoFullUrl)
+	appKind, jsonStr, err := renderJsonnet(envBase, spaceBase, appBase, deployBase, fullUrl)
 	if nil != err {
 		return refer.FailedDeployStatus, err
 	}
 	namespace := spaceBase.SpaceKeep
 	appDeployName := refer.GetAppName(appBase, spaceBase)
-	if appKind == refer.KindDeploy {
-		return handleDeployment(envBase.Id, namespace, jsonStr, appDeployName)
-	} else if appKind == refer.KindStateful {
-		return handleStatefulSet(envBase.Id, namespace, jsonStr, appDeployName)
-	} else {
-		return refer.FailedDeployStatus, errors.New("can not support this kind: " + appKind)
-	}
+	_, err = base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
+		return insertDeploySnap(session, &model.DeploymentSnap{
+			UserId:       userId,
+			AppId:        appBase.Id,
+			EnvId:        envBase.Id,
+			SpaceId:      spaceBase.Id,
+			DeployId:     deployBase.Id,
+			FlowId:       0,
+			BranchName:   deployBase.BranchName,
+			DeployStatus: -1,
+			DeployName:   appDeployName,
+			DeployKind:   appKind,
+			DeployTag:    repoVersion,
+			DeployRender: jsonStr,
+		})
+	})
+
+	return handleWithKind(envBase.Id, appKind, namespace, jsonStr, appDeployName)
 }
 
-func createTemplateApp(deployId uint64) (refer.DeployStatus, error) {
+func createTemplateApp(userId, deployId uint64) (refer.DeployStatus, error) {
 	envBase, spaceBase, appBase, deployBase, err := getMoreModels(deployId)
 	if nil != err {
 		return refer.FailedDeployStatus, err
@@ -243,12 +255,32 @@ func createTemplateApp(deployId uint64) (refer.DeployStatus, error) {
 	}
 	namespace := spaceBase.SpaceKeep
 	appDeployName := refer.GetAppName(appBase, spaceBase)
+	_, err = base.Engine.Transaction(func(session *xorm.Session) (interface{}, error) {
+		return insertDeploySnap(session, &model.DeploymentSnap{
+			UserId:       userId,
+			AppId:        appBase.Id,
+			EnvId:        envBase.Id,
+			SpaceId:      spaceBase.Id,
+			DeployId:     deployBase.Id,
+			FlowId:       0,
+			BranchName:   deployBase.BranchName,
+			DeployStatus: -1,
+			DeployName:   appDeployName,
+			DeployKind:   appKind,
+			DeployTag:    timeTag,
+			DeployRender: jsonStr,
+		})
+	})
 
 	util.DingDingDeployMessage(envBase.Env, spaceBase.SpaceName, appBase.AppName, appBase.AppDesc)
+	return handleWithKind(envBase.Id, appKind, namespace, jsonStr, appDeployName)
+}
+
+func handleWithKind(envId uint64, appKind, namespace, jsonStr, appDeployName string) (refer.DeployStatus, error) {
 	if appKind == refer.KindDeploy {
-		return handleDeployment(envBase.Id, namespace, jsonStr, appDeployName)
+		return handleDeployment(envId, namespace, jsonStr, appDeployName)
 	} else if appKind == refer.KindStateful {
-		return handleStatefulSet(envBase.Id, namespace, jsonStr, appDeployName)
+		return handleStatefulSet(envId, namespace, jsonStr, appDeployName)
 	} else {
 		return refer.FailedDeployStatus, errors.New("can not support this kind: " + appKind)
 	}
@@ -264,11 +296,11 @@ func generateTimeTag() string {
 		Format("20060102150405.999999999"), ".", "", 1)
 }
 
-func checkPlatformParam(appInfo *refer.AppInfo) (string, error) {
+func checkPlatformParam(appInfo *refer.AppInfo) (string, string, error) {
 	if nil == appInfo.Ready || "" == appInfo.Ready.Url || "" == appInfo.Ready.Version {
-		return "", errors.New("this app type must provide image url and version")
+		return "", "", errors.New("this app type must provide image url and version")
 	}
-	return appInfo.Ready.Url + ":" + appInfo.Ready.Version, nil
+	return appInfo.Ready.Url + ":" + appInfo.Ready.Version, appInfo.Ready.Version, nil
 }
 
 func checkProjectParam(spaceBase *model.EnvironmentSpace, appBase *model.Project, appInfo *refer.AppInfo) (string, string, error) {

@@ -19,9 +19,9 @@ const (
 )
 
 type RoleInfo struct {
-	Id         uint64    `xorm:"not null pk autoincr BIGINT(20)" json:"id"`
+	Id         uint64    `xorm:"not null pk autoincr BIGINT" json:"id"`
 	RoleName   string    `xorm:"not null comment('角色名') unique(uk_role_from_name) VARCHAR(64)" json:"roleName"`
-	RoleFrom   uint      `xorm:"default 0 comment('角色来源、本系统0') unique(uk_role_from_name) INT(10)" json:"roleFrom"`
+	RoleFrom   uint      `xorm:"default 0 comment('角色来源、本系统0') unique(uk_role_from_name) INT" json:"roleFrom"`
 	RoleRemark string    `xorm:"not null comment('备注信息') VARCHAR(256)" json:"roleRemark"`
 	IsManage   int       `xorm:"default 0 comment('是否是管理角色') TINYINT(1)" json:"isManage"`
 	IsSuper    int       `xorm:"default 0 comment('是否是超级管理角色') TINYINT(1)" json:"isSuper"`

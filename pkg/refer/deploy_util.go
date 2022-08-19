@@ -24,6 +24,14 @@ var FailedDeployStatus = DeployStatus{
 	Status: "Failed",
 }
 
+var SuccessDeployStatus = DeployStatus{
+	Status: "Success",
+}
+
+var CompleteDeployStatus = DeployStatus{
+	Status: "Complete",
+}
+
 var DefaultDeployStatus = DeployStatus{
 	Status: "Creating",
 }

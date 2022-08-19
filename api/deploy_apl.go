@@ -8,6 +8,8 @@ import (
 	"cana.io/clap/util"
 	"errors"
 	"github.com/gofiber/fiber/v2"
+	batchv1 "k8s.io/api/batch/v1"
+	"time"
 	"xorm.io/xorm"
 )
 
@@ -120,56 +122,120 @@ func ExecDeploy(c *fiber.Ctx) error {
 	if nil != err {
 		return err
 	}
+	userId := contextUserId(c)
 
 	if appBase.AppType == refer.NoneAppType {
-		status, err := createPlatformApp(deployId)
+		status, err := createPlatformApp(userId, deployId)
 		return util.ResultParamMapOne(c, err, "status", status)
 	} else {
 		selectType := c.Params("type")
+		branchName := ""
+		if deployBase.IsBranch != 0 {
+			branchName = c.Query("branch")
+		}
 		if "check" == selectType {
-			status, pods, err := checkBuildJob(deployId)
-			if nil != err {
-				return err
-			}
-			limit := base.Now().Package.BackoffLimit
-			if status.Succeeded > 0 {
-				err = updateDeployStatus(deployId, refer.DeployStatusBuildEnd, "")
-			} else if status.Failed > limit {
-				log.Infof("build job failed: %v, %v, %v", deployId, limit, status)
-				err = updateDeployStatus(deployId, refer.DeployStatusBuildFail, "")
-			}
+			_, pods, status, err := execCheckDeploy(deployId)
 			return util.ResultParamMapTwo(c, err, "pods", pods, "status", status)
 		} else if "build" == selectType {
-			if deployBase.IsPackage == 0 {
-				return errors.New("this deploy can not package")
-			}
-			branchName := ""
-			if deployBase.IsBranch != 0 {
-				branchName = c.Query("branch")
-			}
-			tag, status, err := createBuildJob(deployId, branchName)
-			if nil != err {
-				return err
-			}
-			err = updateDeployStatus(deployId, refer.DeployStatusBuilding, tag)
+			tag, status, err := execBuildDeploy(deployId, branchName, deployBase)
 			return util.ResultParamMapTwo(c, err, "tag", tag, "status", status)
 		} else if "cancel" == selectType {
-			deleteBuildJob(deployId)
-			deployGet, ok := deployMap[deployId]
-			if ok {
-				deployGet.DeployStatus = refer.DeployStatusPackHear
-			}
-			err = updateDeployStatus(deployId, refer.DeployStatusPackHear, "")
-			return util.ResultParamEmpty(c, err)
+			return util.ResultParamEmpty(c, execCancelDeploy(deployId))
 		} else if "deploy" == selectType {
-			deleteBuildJob(deployId)
-			status, err := createTemplateApp(deployId)
-			if nil != err {
-				return err
-			}
-			err = updateDeployStatus(deployId, refer.DeployStatusPackHear, "")
+			status, err := execDeployDeploy(userId, deployId)
 			return util.ResultParamMapOne(c, err, "status", status)
+		} else if "auto_deploy" == selectType {
+			tag, status, err := execBuildDeploy(deployId, branchName, deployBase)
+			if nil != err {
+				return util.ErrorInternal(c, err)
+			}
+			go execAutoCheckDeploy(userId, deployId)
+			return util.ResultParamMapTwo(c, nil, "tag", tag, "status", status)
 		}
 		return errors.New("select type is not support")
+	}
+}
+
+func execCheckDeploy(deployId uint64) (int, []*refer.PodInfo, string, error) {
+	status, pods, err := checkBuildJob(deployId)
+	if nil != err {
+		return refer.DeployStatusBuilding, nil, "", err
+	}
+	get, err := getDeployById(deployId)
+	if nil != err {
+		return refer.DeployStatusBuilding, nil, "", err
+	}
+	if get.DeployStatus == refer.DeployStatusPackHear {
+		return refer.DeployStatusPackHear, pods, refer.CompleteDeployStatus.Status, nil
+	}
+
+	res := refer.DeployStatusBuilding
+	ds := refer.DefaultDeployStatus
+	limit := base.Now().Package.BackoffLimit
+	if status.Succeeded > 0 {
+		res = refer.DeployStatusBuildEnd
+		ds = refer.SuccessDeployStatus
+		err = updateDeployStatus(deployId, refer.DeployStatusBuildEnd, "")
+	} else if status.Failed > limit {
+		log.Infof("build job failed: %v, %v, %v", deployId, limit, status)
+		res = refer.DeployStatusBuildFail
+		ds = refer.FailedDeployStatus
+		err = updateDeployStatus(deployId, refer.DeployStatusBuildFail, "")
+	}
+	return res, pods, ds.Status, err
+}
+
+func execBuildDeploy(deployId uint64, branchName string, deployBase *model.Deployment) (string, *batchv1.JobStatus, error) {
+	if deployBase.IsPackage == 0 {
+		return "", nil, errors.New("this deploy can not package")
+	}
+	tag, status, err := createBuildJob(deployId, branchName)
+	if nil != err {
+		return "", nil, err
+	}
+	return tag, status, updateDeployStatus(deployId, refer.DeployStatusBuilding, tag)
+}
+
+func execCancelDeploy(deployId uint64) error {
+	deleteBuildJob(deployId)
+	deployGet, ok := deployMap[deployId]
+	if ok {
+		deployGet.DeployStatus = refer.DeployStatusPackHear
+	}
+	return updateDeployStatus(deployId, refer.DeployStatusPackHear, "")
+}
+
+func execDeployDeploy(userId, deployId uint64) (*refer.DeployStatus, error) {
+	deleteBuildJob(deployId)
+	status, err := createTemplateApp(userId, deployId)
+	if nil != err {
+		return nil, err
+	}
+	return &status, updateDeployStatus(deployId, refer.DeployStatusPackHear, "")
+}
+
+func execAutoCheckDeploy(userId, deployId uint64) {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	num, limit := 0, 300
+	for range ticker.C {
+		res, _, _, _ := execCheckDeploy(deployId)
+		if res == refer.DeployStatusBuildEnd {
+			log.Infof("auto deploy[%v] package success", deployId)
+			break
+		} else if res == refer.DeployStatusBuildFail {
+			log.Warnf("auto deploy[%v] package failed", deployId)
+			return
+		}
+		num += 1
+		if num > limit {
+			log.Warnf("auto deploy[%v] package to long", deployId)
+			return
+		}
+	}
+	_, err := execDeployDeploy(userId, deployId)
+	if nil != err {
+		log.Warnf("auto deploy[%v] failed: %v", deployId, err)
 	}
 }

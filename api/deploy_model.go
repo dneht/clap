@@ -113,6 +113,15 @@ func updateDeployStatusById(session *xorm.Session, id uint64, status int, tag st
 	if nil != err {
 		return result, err
 	}
+	get, err := getDeployById(id)
+	if nil != err {
+		invalidDeployById(id)
+	} else {
+		get.DeployStatus = status
+		if "" != tag {
+			get.DeployTag = tag
+		}
+	}
 	return 1, nil
 }
 
@@ -126,6 +135,32 @@ func updateDeployBranchById(session *xorm.Session, id uint64, branch string) (in
 		Where(model.IdInDeployment+" = ?", id).Update(info)
 	if nil != err {
 		return result, err
+	}
+	get, err := getDeployById(id)
+	if nil != err {
+		invalidDeployById(id)
+	} else {
+		get.BranchName = branch
+	}
+	return 1, nil
+}
+
+func updateDeployTagById(session *xorm.Session, id uint64, tag string) (interface{}, error) {
+	result, info, err := selectDeployWithUpdate(session, id)
+	if nil != err {
+		return result, err
+	}
+	info.DeployTag = tag
+	result, err = session.Cols(model.DeployTagInDeployment).
+		Where(model.IdInDeployment+" = ?", id).Update(info)
+	if nil != err {
+		return result, err
+	}
+	get, err := getDeployById(id)
+	if nil != err {
+		invalidDeployById(id)
+	} else {
+		get.DeployTag = tag
 	}
 	return 1, nil
 }
@@ -141,4 +176,34 @@ func selectDeployWithUpdate(session *xorm.Session, id uint64) (int64, *model.Dep
 		return 0, nil, errors.New("deploy not exist")
 	}
 	return 0, &info, nil
+}
+
+func getDeploySnapById(id uint64) (*model.DeploymentSnap, error) {
+	var info model.DeploymentSnap
+	_, err := base.Engine.Omit(model.BranchNameInDeploymentSnap).
+		ID(id).Get(&info)
+	return &info, err
+}
+
+func getLatestDeploySnapByMain(id uint64) (*model.DeploymentSnap, error) {
+	var info model.DeploymentSnap
+	err := base.Engine.Omit(model.AppIdInDeploymentSnap, model.EnvIdInDeploymentSnap, model.SpaceIdInDeploymentSnap, model.DeployRenderInDeploymentSnap).
+		Where(model.DeployIdInDeploymentSnap+" = ?", id).
+		Desc(model.IdInDeploymentSnap).Limit(1).
+		Find(&info)
+	return &info, err
+}
+
+func findDeploySnapByMain(id uint64) ([]model.DeploymentSnap, error) {
+	list := make([]model.DeploymentSnap, 0)
+	err := base.Engine.Omit(model.AppIdInDeploymentSnap, model.EnvIdInDeploymentSnap, model.SpaceIdInDeploymentSnap, model.DeployRenderInDeploymentSnap).
+		Where(model.DeployIdInDeploymentSnap+" = ?", id).
+		Desc(model.IdInDeploymentSnap).Limit(10).
+		Find(&list)
+	return list, err
+}
+
+func insertDeploySnap(session *xorm.Session, info *model.DeploymentSnap) (int64, error) {
+	return session.Omit(model.IdInPropertySnap, model.CreatedAt).
+		InsertOne(info)
 }
