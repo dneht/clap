@@ -31,7 +31,7 @@ type FormatInfo struct {
 	// Agent is FormatAgentInfo list
 	Agent []map[string]string `json:"agent,omitempty"`
 	// Spec is FormatSpecInfo map, this key is reference to AppInfo.Format
-	Spec map[string]map[string]string `json:"spec,omitempty"`
+	Spec map[string]map[string]interface{} `json:"spec,omitempty"`
 }
 
 type FormatPlainInfo struct {

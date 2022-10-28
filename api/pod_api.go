@@ -117,7 +117,7 @@ func ExecSelect(ws *websocket.Conn) {
 		}
 	})
 	if nil != err {
-		log.Warnf("elect exec pod failed: ", err)
+		log.Warnf("select exec pod failed: ", err)
 	}
 }
 

@@ -234,8 +234,8 @@ func execAutoCheckDeploy(userId, deployId uint64) {
 			return
 		}
 	}
-	_, err := execDeployDeploy(userId, deployId)
+	status, err := execDeployDeploy(userId, deployId)
 	if nil != err {
-		log.Warnf("auto deploy[%v] failed: %v", deployId, err)
+		log.Error("auto deploy[%v] failed: %v, %v", deployId, status, err)
 	}
 }

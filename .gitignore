@@ -21,8 +21,6 @@ doc/xorm
 .dart_tool/
 .packages
 
-ui/build
-ui/node_modules
 web/build
 web/node_modules
 

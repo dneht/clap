@@ -18,6 +18,7 @@ package api
 
 import (
 	"cana.io/clap/pkg/base"
+	"cana.io/clap/pkg/log"
 	"cana.io/clap/pkg/refer"
 	"context"
 	"encoding/json"
@@ -28,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"strings"
 )
 
 func handleDeployment(envId uint64, namespace, jsonStr, appDeployName string) (refer.DeployStatus, error) {
@@ -43,7 +45,7 @@ func handleDeployment(envId uint64, namespace, jsonStr, appDeployName string) (r
 	}
 	get, err := k8s.AppsV1().Deployments(namespace).Get(context.TODO(), appDeployName, metav1.GetOptions{})
 	if nil != err {
-		if k8serror.IsNotFound(err) {
+		if isNotFound(err) {
 			get = nil
 			err = nil
 		} else {
@@ -60,11 +62,23 @@ func handleDeployment(envId uint64, namespace, jsonStr, appDeployName string) (r
 	}
 
 	status := refer.DefaultDeployStatus
-	status, err = handleService(envId, &median.CommonExtend, namespace, status)
-	status, err = handleContour(envId, &median.CommonExtend, namespace, status)
 	status, err = handleSecret(envId, &median.CommonExtend, namespace, status)
+	if nil != err {
+		return status, err
+	}
 	status, err = handleConfig(envId, &median.CommonExtend, namespace, status)
-	return status, err
+	if nil != err {
+		return status, err
+	}
+	status, err = handleService(envId, &median.CommonExtend, namespace, status)
+	if nil != err {
+		return status, err
+	}
+	status, err = handleContour(envId, &median.CommonExtend, namespace, status)
+	if nil != err {
+		return status, err
+	}
+	return status, nil
 }
 
 func handleStatefulSet(envId uint64, namespace, jsonStr, appDeployName string) (refer.DeployStatus, error) {
@@ -80,7 +94,7 @@ func handleStatefulSet(envId uint64, namespace, jsonStr, appDeployName string) (
 	}
 	get, err := k8s.AppsV1().StatefulSets(namespace).Get(context.TODO(), appDeployName, metav1.GetOptions{})
 	if nil != err {
-		if k8serror.IsNotFound(err) {
+		if isNotFound(err) {
 			get = nil
 			err = nil
 		} else {
@@ -97,113 +111,23 @@ func handleStatefulSet(envId uint64, namespace, jsonStr, appDeployName string) (
 	}
 
 	status := refer.DefaultDeployStatus
-	status, err = handleService(envId, &median.CommonExtend, namespace, status)
-	status, err = handleContour(envId, &median.CommonExtend, namespace, status)
 	status, err = handleSecret(envId, &median.CommonExtend, namespace, status)
+	if nil != err {
+		return status, err
+	}
 	status, err = handleConfig(envId, &median.CommonExtend, namespace, status)
-	return status, err
-}
-
-func handleService(envId uint64, extend *refer.CommonExtend, namespace string, status refer.DeployStatus) (refer.DeployStatus, error) {
-	if nil == extend.Services {
-		return status, nil
-	}
-	serviceList := *extend.Services
-	if len(serviceList) <= 0 {
-		return status, nil
-	}
-
-	var err error
-	var k8s *kubernetes.Clientset
-	k8s, _, err = base.K8S(envId)
 	if nil != err {
-		return refer.ConnectErrorDeployStatus, err
+		return status, err
 	}
-
-	for serviceName, serviceData := range serviceList {
-		if nil == serviceData {
-			continue
-		}
-		err = createOrUpdateService(k8s, namespace, serviceName, serviceData)
-		if nil != err {
-			status = refer.UnknownErrorDeployStatus
-			return status, err
-		}
-	}
-
-	return status, err
-}
-
-func createOrUpdateService(k8s *kubernetes.Clientset, namespace string, serviceName string, serviceData *corev1.Service) error {
-	if nil == k8s {
-		return errors.New("could not get cluster info")
-	}
-	get, err := k8s.CoreV1().Services(namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
+	status, err = handleService(envId, &median.CommonExtend, namespace, status)
 	if nil != err {
-		if k8serror.IsNotFound(err) {
-			get = nil
-			err = nil
-		} else {
-			return err
-		}
+		return status, err
 	}
-	if nil == get {
-		get, err = k8s.CoreV1().Services(namespace).Create(context.TODO(), serviceData, metav1.CreateOptions{})
-	} else {
-		get, err = k8s.CoreV1().Services(namespace).Update(context.TODO(), serviceData, metav1.UpdateOptions{})
-	}
-	return err
-}
-
-func handleContour(envId uint64, extend *refer.CommonExtend, namespace string, status refer.DeployStatus) (refer.DeployStatus, error) {
-	if nil == extend.Contours {
-		return status, nil
-	}
-	contourList := *extend.Contours
-	if len(contourList) <= 0 {
-		return status, nil
-	}
-
-	crd, _, err := base.K8D(envId)
+	status, err = handleContour(envId, &median.CommonExtend, namespace, status)
 	if nil != err {
-		return refer.ConnectErrorDeployStatus, err
+		return status, err
 	}
-
-	for contourName, contourData := range contourList {
-		if nil == contourData {
-			continue
-		}
-		err = createOrUpdateContour(crd, namespace, contourName, contourData)
-		if nil != err {
-			status = refer.UnknownErrorDeployStatus
-			return status, err
-		}
-	}
-
-	return status, err
-}
-
-func createOrUpdateContour(crd dynamic.Interface, namespace string, contourName string, contourData *unstructured.Unstructured) error {
-	if nil == crd {
-		return errors.New("could not get cluster info")
-	}
-	get, err := crd.Resource(refer.ContourGvr).Namespace(namespace).Get(context.TODO(), contourName, metav1.GetOptions{})
-	if nil != err {
-		if k8serror.IsNotFound(err) {
-			get = nil
-			err = nil
-		} else {
-			return err
-		}
-	}
-
-	if nil == get {
-		get, err = crd.Resource(refer.ContourGvr).Namespace(namespace).Create(context.TODO(), contourData, metav1.CreateOptions{})
-	} else {
-		contourData.SetResourceVersion(get.GetResourceVersion())
-		get, err = crd.Resource(refer.ContourGvr).Namespace(namespace).Update(context.TODO(), contourData, metav1.UpdateOptions{})
-	}
-	return err
+	return status, nil
 }
 
 func handleSecret(envId uint64, extend *refer.CommonExtend, namespace string, status refer.DeployStatus) (refer.DeployStatus, error) {
@@ -242,7 +166,8 @@ func createOrUpdateSecret(k8s *kubernetes.Clientset, namespace string, secretNam
 	}
 	get, err := k8s.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if nil != err {
-		if k8serror.IsNotFound(err) {
+		log.Debugf("get secret[%s] with error: %v", secretName, err)
+		if isNotFound(err) {
 			get = nil
 			err = nil
 		} else {
@@ -250,9 +175,10 @@ func createOrUpdateSecret(k8s *kubernetes.Clientset, namespace string, secretNam
 		}
 	}
 	if nil == get {
-		get, err = k8s.CoreV1().Secrets(namespace).Create(context.TODO(), secretData, metav1.CreateOptions{})
+		_, err = k8s.CoreV1().Secrets(namespace).Create(context.TODO(), secretData, metav1.CreateOptions{})
 	} else {
-		get, err = k8s.CoreV1().Secrets(namespace).Update(context.TODO(), secretData, metav1.UpdateOptions{})
+		secretData.SetResourceVersion(get.ResourceVersion)
+		_, err = k8s.CoreV1().Secrets(namespace).Update(context.TODO(), secretData, metav1.UpdateOptions{})
 	}
 	return err
 }
@@ -293,7 +219,8 @@ func createOrUpdateConfig(k8s *kubernetes.Clientset, namespace string, configNam
 	}
 	get, err := k8s.CoreV1().ConfigMaps(namespace).Get(context.TODO(), configName, metav1.GetOptions{})
 	if nil != err {
-		if k8serror.IsNotFound(err) {
+		log.Debugf("get config[%s] with error: %v", configName, err)
+		if isNotFound(err) {
 			get = nil
 			err = nil
 		} else {
@@ -301,9 +228,10 @@ func createOrUpdateConfig(k8s *kubernetes.Clientset, namespace string, configNam
 		}
 	}
 	if nil == get {
-		get, err = k8s.CoreV1().ConfigMaps(namespace).Create(context.TODO(), configData, metav1.CreateOptions{})
+		_, err = k8s.CoreV1().ConfigMaps(namespace).Create(context.TODO(), configData, metav1.CreateOptions{})
 	} else {
-		get, err = k8s.CoreV1().ConfigMaps(namespace).Update(context.TODO(), configData, metav1.UpdateOptions{})
+		configData.SetResourceVersion(get.ResourceVersion)
+		_, err = k8s.CoreV1().ConfigMaps(namespace).Update(context.TODO(), configData, metav1.UpdateOptions{})
 	}
 	return err
 }
@@ -319,17 +247,126 @@ func onlyUpdateConfig(k8s *kubernetes.Clientset, namespace string, configName st
 	if nil == get {
 		return errors.New("config not exist")
 	} else {
-		get, err = k8s.CoreV1().ConfigMaps(namespace).Update(context.TODO(), configData, metav1.UpdateOptions{})
+		_, err = k8s.CoreV1().ConfigMaps(namespace).Update(context.TODO(), configData, metav1.UpdateOptions{})
 	}
 	return err
 }
 
-//TODO handleBudget
+func handleService(envId uint64, extend *refer.CommonExtend, namespace string, status refer.DeployStatus) (refer.DeployStatus, error) {
+	if nil == extend.Services {
+		return status, nil
+	}
+	serviceList := *extend.Services
+	if len(serviceList) <= 0 {
+		return status, nil
+	}
+
+	var err error
+	var k8s *kubernetes.Clientset
+	k8s, _, err = base.K8S(envId)
+	if nil != err {
+		return refer.ConnectErrorDeployStatus, err
+	}
+
+	for serviceName, serviceData := range serviceList {
+		if nil == serviceData {
+			continue
+		}
+		err = createOrUpdateService(k8s, namespace, serviceName, serviceData)
+		if nil != err {
+			status = refer.UnknownErrorDeployStatus
+			return status, err
+		}
+	}
+
+	return status, err
+}
+
+func createOrUpdateService(k8s *kubernetes.Clientset, namespace string, serviceName string, serviceData *corev1.Service) error {
+	if nil == k8s {
+		return errors.New("could not get cluster info")
+	}
+	get, err := k8s.CoreV1().Services(namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
+	if nil != err {
+		log.Debugf("get service[%s] with error: %v", serviceName, err)
+		if isNotFound(err) {
+			get = nil
+			err = nil
+		} else {
+			return err
+		}
+	}
+	if nil == get {
+		_, err = k8s.CoreV1().Services(namespace).Create(context.TODO(), serviceData, metav1.CreateOptions{})
+	} else {
+		serviceData.SetResourceVersion(get.ResourceVersion)
+		_, err = k8s.CoreV1().Services(namespace).Update(context.TODO(), serviceData, metav1.UpdateOptions{})
+	}
+	return err
+}
+
+func handleContour(envId uint64, extend *refer.CommonExtend, namespace string, status refer.DeployStatus) (refer.DeployStatus, error) {
+	if nil == extend.Contours {
+		return status, nil
+	}
+	contourList := *extend.Contours
+	if len(contourList) <= 0 {
+		return status, nil
+	}
+
+	crd, _, err := base.K8D(envId)
+	if nil != err {
+		return refer.ConnectErrorDeployStatus, err
+	}
+
+	for contourName, contourData := range contourList {
+		if nil == contourData {
+			continue
+		}
+		err = createOrUpdateContour(crd, namespace, contourName, contourData)
+		if nil != err {
+			status = refer.UnknownErrorDeployStatus
+			return status, err
+		}
+	}
+
+	return status, err
+}
+
+func createOrUpdateContour(crd dynamic.Interface, namespace string, contourName string, contourData *unstructured.Unstructured) error {
+	if nil == crd {
+		return errors.New("could not get cluster info")
+	}
+	get, err := crd.Resource(refer.ContourGvr).Namespace(namespace).Get(context.TODO(), contourName, metav1.GetOptions{})
+	if nil != err {
+		log.Debugf("get contour[%s] with error: %v", contourName, err)
+		if isNotFound(err) {
+			get = nil
+			err = nil
+		} else {
+			return err
+		}
+	}
+
+	if nil == get {
+		_, err = crd.Resource(refer.ContourGvr).Namespace(namespace).Create(context.TODO(), contourData, metav1.CreateOptions{})
+	} else {
+		contourData.SetResourceVersion(get.GetResourceVersion())
+		_, err = crd.Resource(refer.ContourGvr).Namespace(namespace).Update(context.TODO(), contourData, metav1.UpdateOptions{})
+	}
+	return err
+}
+
+// TODO handleBudget
 func handleBudget() {
 
 }
 
-//TODO handlePolicy
+// TODO handlePolicy
 func handlePolicy() {
 
+}
+
+func isNotFound(err error) bool {
+	return strings.Contains(err.Error(), "not found") || k8serror.IsNotFound(err)
 }

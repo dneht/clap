@@ -63,7 +63,7 @@ func getLatestTimetableResult(taskId uint64) (*model.TimetableResult, error) {
 }
 
 func insertTimetableResult(session *xorm.Session, info *model.TimetableResult) (int64, error) {
-	return session.InsertOne(info)
+	return session.Insert(info)
 }
 
 func findReadyTimetableForTask() ([]model.Timetable, error) {

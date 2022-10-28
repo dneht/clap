@@ -227,7 +227,9 @@ func createPlatformApp(userId, deployId uint64) (refer.DeployStatus, error) {
 			DeployRender: jsonStr,
 		})
 	})
-
+	if nil != err {
+		return refer.FailedDeployStatus, err
+	}
 	return handleWithKind(envBase.Id, appKind, namespace, jsonStr, appDeployName)
 }
 
@@ -271,6 +273,9 @@ func createTemplateApp(userId, deployId uint64) (refer.DeployStatus, error) {
 			DeployRender: jsonStr,
 		})
 	})
+	if nil != err {
+		return refer.FailedDeployStatus, err
+	}
 
 	util.DingDingDeployMessage(envBase.Env, spaceBase.SpaceName, appBase.AppName, appBase.AppDesc)
 	return handleWithKind(envBase.Id, appKind, namespace, jsonStr, appDeployName)
